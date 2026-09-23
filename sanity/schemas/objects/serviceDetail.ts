@@ -6,6 +6,7 @@ export const serviceDetail = defineType({
   type: 'object',
   fields: [
     defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
+    defineField({name: 'summary', type: 'text', rows: 2, description: 'Short blurb for service cards.'}),
     defineField({name: 'description', type: 'text', rows: 4}),
     defineField({
       name: 'highlights',

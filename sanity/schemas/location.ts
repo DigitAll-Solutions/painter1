@@ -51,6 +51,7 @@ export const location = defineType({
       initialValue: 'growth',
       validation: (rule) => rule.required(),
     }),
+    defineField({name: 'tagline', type: 'string', group: 'basics'}),
     defineField({name: 'phone', type: 'string', group: 'basics'}),
     defineField({name: 'email', type: 'string', group: 'basics', validation: (rule) => rule.email()}),
     defineField({
@@ -87,6 +88,7 @@ export const location = defineType({
         defineField({name: 'google', type: 'url'}),
         defineField({name: 'instagram', type: 'url'}),
         defineField({name: 'yelp', type: 'url'}),
+        defineField({name: 'youtube', type: 'url'}),
       ],
     }),
 
