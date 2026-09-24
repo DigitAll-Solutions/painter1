@@ -15,7 +15,7 @@ export default function CtaButton({ variant = 'orange', size = 'lg', className =
   return (
     <Link
       {...props}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-bold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${sizing} ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl font-bold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${sizing} ${variants[variant]} ${className}`}
     />
   )
 }

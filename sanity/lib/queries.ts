@@ -14,6 +14,7 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
   ownerPhoto{${image}},
   heroImage{${image}},
   heroVideo{asset->{url, mimeType}},
+  warrantyImage{${image}},
   galleryImages[]{_key, caption, serviceType, ${image}},
   services{
     interior${service},

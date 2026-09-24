@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 
+import FloatingCta from '@/components/FloatingCta'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import MobileCtaBar from '@/components/MobileCtaBar'
@@ -19,11 +20,13 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
 
   return (
     <>
+      <div id="top" />
       <Header location={location} />
       <main className="flex-1 pb-16 sm:pb-0">{children}</main>
       <div className="pb-16 sm:pb-0">
         <Footer location={location} />
       </div>
+      <FloatingCta location={location} />
       <MobileCtaBar location={location} />
     </>
   )

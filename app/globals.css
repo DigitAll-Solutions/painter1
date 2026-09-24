@@ -8,8 +8,9 @@
   /* darker shades for small text on light backgrounds (WCAG AA) */
   --color-brand-orange-text: #b35400;
   --color-brand-blue-text: #0077b3;
-  --color-ink: #0f172a;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #0b1b33;
+  --color-mist: #f1f3f6;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -19,4 +20,22 @@ html {
 body {
   background: #ffffff;
   color: var(--color-ink);
+}
+
+/* Services: the first card is wide by default; on desktop the hovered card takes its place */
+@media (min-width: 64rem) {
+  .service-cards > li {
+    flex: 1 1 0%;
+    transition: flex-grow 500ms ease;
+  }
+  .service-cards > li:first-child {
+    flex-grow: 2.4;
+  }
+  .service-cards:hover > li {
+    flex-grow: 1;
+  }
+  .service-cards > li:hover,
+  .service-cards > li:focus-within {
+    flex-grow: 2.4;
+  }
 }

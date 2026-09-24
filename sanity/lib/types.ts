@@ -73,6 +73,7 @@ export type Location = {
   hasScheduling?: boolean
   schedulingUrl?: string
   warranty?: PortableTextBlock[]
+  warrantyImage?: SanityImage
   privacyPolicy?: PortableTextBlock[]
   metaTitle?: string
   metaDescription?: string

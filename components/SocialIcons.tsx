@@ -23,7 +23,7 @@ export default function SocialIcons({ links }: { links: Location['socialLinks'] 
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
-            className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-brand-orange"
+            className="flex size-12 items-center justify-center rounded-full bg-white text-ink shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-brand-blue hover:text-white hover:ring-brand-blue"
           >
             <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden>
               <path d={icon.path} />

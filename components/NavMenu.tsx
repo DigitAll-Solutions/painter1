@@ -37,7 +37,7 @@ export default function NavMenu({ links, cta, phone, tel }: Props) {
         aria-expanded={open}
         aria-controls="site-menu"
         aria-label={open ? 'Close menu' : 'Open menu'}
-        className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-2.5 font-semibold text-ink hover:border-slate-300"
+        className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-2.5 font-bold text-ink transition-colors hover:border-slate-300 group-data-[solid=false]/header:border-white/40 group-data-[solid=false]/header:text-white"
       >
         {open ? <X className="size-6" aria-hidden /> : <Menu className="size-6" aria-hidden />}
         <span className="hidden lg:inline">Menu</span>
