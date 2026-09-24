@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 
 import SocialIcons from './SocialIcons'
-import { formatAddress, getCta, telHref } from '@/lib/location'
+import { formatAddress, getCta, servicePages, telHref } from '@/lib/location'
 import type { Location } from '@/sanity/lib/types'
 
 export default function Footer({ location }: { location: Location }) {
@@ -12,17 +12,25 @@ export default function Footer({ location }: { location: Location }) {
   const tel = telHref(location.phone)
   const address = formatAddress(location.address)
 
-  const links = [
-    ...(location.locationType === 'maintenance'
+  const maintenance = location.locationType === 'maintenance'
+  const services = maintenance
+    ? []
+    : servicePages.flatMap(({ key, path }) => {
+        const title = location.services?.[key]?.title
+        return title ? [{ label: title, href: `${base}/${path}` }] : []
+      })
+  const serviceLinks = [...services, ...(maintenance ? [] : [{ label: 'Our Work', href: `${base}/our-work` }]), { label: 'Free Estimate', href: cta.href }]
+
+  const legalLinks = [
+    { label: 'About Us', href: `${base}/about-us` },
+    ...(maintenance
       ? []
       : [
-          { label: 'Our Work', href: `${base}/our-work` },
           { label: 'Reviews', href: `${base}/reviews` },
           { label: 'Warranty', href: `${base}/warranty` },
         ]),
-    { label: 'About Us', href: `${base}/about-us` },
-    { label: 'Free Estimate', href: cta.href },
     { label: 'Privacy Policy', href: `${base}/privacy-policy` },
+    { label: 'Do Not Sell or Share My Personal Information', href: `${base}/privacy-policy#do-not-sell` },
   ]
 
   return (
@@ -35,9 +43,9 @@ export default function Footer({ location }: { location: Location }) {
         </div>
 
         <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-white">Our Links</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-white">Our Services</h2>
           <ul className="mt-4 space-y-2.5">
-            {links.map((link) => (
+            {serviceLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-white">
                   {link.label}
@@ -107,16 +115,13 @@ export default function Footer({ location }: { location: Location }) {
             Copyright © {new Date().getFullYear()} {location.name}. All Rights Reserved.
           </p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
-            <li>
-              <Link href={`${base}/privacy-policy`} className="hover:text-white">
-                Privacy Policy
-              </Link>
-            </li>
-            <li>
-              <Link href={`${base}/privacy-policy#do-not-sell`} className="hover:text-white">
-                Do Not Sell or Share My Personal Information
-              </Link>
-            </li>
+            {legalLinks.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="hover:text-white">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

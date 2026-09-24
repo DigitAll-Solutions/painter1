@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {altField} from './objects/altField'
 import {Rocket} from 'lucide-react'
 
 export const franchiseOpportunities = defineType({
@@ -9,7 +10,7 @@ export const franchiseOpportunities = defineType({
   fields: [
     defineField({name: 'heroHeadline', type: 'string', validation: (rule) => rule.required()}),
     defineField({name: 'heroSubheadline', type: 'text', rows: 2}),
-    defineField({name: 'heroImage', type: 'image', options: {hotspot: true}, fields: [defineField({name: 'alt', type: 'string'})]}),
+    defineField({name: 'heroImage', type: 'image', options: {hotspot: true}, fields: [altField]}),
     defineField({name: 'ctaLabel', type: 'string'}),
     defineField({name: 'ctaUrl', type: 'string'}),
     defineField({

@@ -13,8 +13,7 @@ export default function ServiceAreas({ location }: { location: Location }) {
     <Section
       className="bg-slate-50"
       eyebrow="Areas we serve"
-      title={`Proudly Painting ${home ?? ''} & Surrounding Areas`}
-      intro={location.serviceArea && <p>Serving homeowners and businesses throughout {location.serviceArea}.</p>}
+      title={`Serving ${home ?? location.name} and Surrounding Areas`}
     >
       <ul className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {cities.map((city) => (

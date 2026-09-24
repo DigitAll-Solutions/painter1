@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {altField} from './objects/altField'
 import {MapPin} from 'lucide-react'
 
 const imageWithAlt = (name: string, title?: string) =>
@@ -7,7 +8,7 @@ const imageWithAlt = (name: string, title?: string) =>
     title,
     type: 'image',
     options: {hotspot: true},
-    fields: [defineField({name: 'alt', type: 'string'})],
+    fields: [altField],
   })
 
 export const location = defineType({
@@ -156,6 +157,13 @@ export const location = defineType({
     // Images
     {...imageWithAlt('heroImage'), group: 'media'},
     defineField({
+      name: 'heroVideo',
+      type: 'file',
+      group: 'media',
+      description: 'Optional muted background video for the homepage hero. The hero image is used as its poster.',
+      options: {accept: 'video/mp4,video/webm'},
+    }),
+    defineField({
       name: 'galleryImages',
       type: 'array',
       group: 'media',
@@ -164,7 +172,7 @@ export const location = defineType({
           type: 'image',
           options: {hotspot: true},
           fields: [
-            defineField({name: 'alt', type: 'string'}),
+            altField,
             defineField({name: 'caption', type: 'string'}),
             defineField({
               name: 'serviceType',

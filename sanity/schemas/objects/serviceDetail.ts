@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {altField} from './altField'
 
 export const serviceDetail = defineType({
   name: 'serviceDetail',
@@ -42,7 +43,7 @@ export const serviceDetail = defineType({
           fields: [
             defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
             defineField({name: 'description', type: 'text', rows: 4}),
-            defineField({name: 'image', type: 'image', options: {hotspot: true}, fields: [defineField({name: 'alt', type: 'string'})]}),
+            defineField({name: 'image', type: 'image', options: {hotspot: true}, fields: [altField]}),
           ],
         }),
       ],
@@ -54,7 +55,7 @@ export const serviceDetail = defineType({
         defineArrayMember({
           type: 'image',
           options: {hotspot: true},
-          fields: [defineField({name: 'alt', type: 'string'})],
+          fields: [altField],
         }),
       ],
     }),

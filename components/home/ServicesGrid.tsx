@@ -34,7 +34,7 @@ export default function ServicesGrid({ location }: { location: Location }) {
                 <h3 className="text-xl font-bold">{service.title}</h3>
                 {service.summary && <p className="mt-2 flex-1 text-slate-600">{service.summary}</p>}
                 {linkable && (
-                  <Link href={service.href} className="mt-5 inline-flex items-center gap-1.5 font-bold text-brand-blue after:absolute after:inset-0">
+                  <Link href={service.href} className="mt-5 inline-flex items-center justify-center gap-1.5 self-start rounded-lg border-2 border-brand-blue px-4 py-2 font-bold text-brand-blue-text transition-colors group-hover:bg-brand-blue group-hover:text-white after:absolute after:inset-0">
                     Learn More <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
                     <span className="sr-only">about {service.title}</span>
                   </Link>

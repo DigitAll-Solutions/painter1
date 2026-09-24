@@ -5,6 +5,9 @@
   --color-brand-blue-dark: #006ea6;
   --color-brand-orange: #e86e00;
   --color-brand-orange-dark: #c75e00;
+  /* darker shades for small text on light backgrounds (WCAG AA) */
+  --color-brand-orange-text: #b35400;
+  --color-brand-blue-text: #0077b3;
   --color-ink: #0f172a;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }

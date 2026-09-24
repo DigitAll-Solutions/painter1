@@ -64,6 +64,7 @@ export type Location = {
   aboutSections?: { _key: string; heading?: string; body?: string }[]
   services?: { interior?: ServiceDetail; exterior?: ServiceDetail; cabinet?: ServiceDetail }
   heroImage?: SanityImage
+  heroVideo?: { asset?: { url: string; mimeType?: string } }
   galleryImages?: GalleryImage[]
   testimonials?: Testimonial[]
   reviewsCount?: number

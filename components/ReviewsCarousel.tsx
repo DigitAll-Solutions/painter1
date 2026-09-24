@@ -14,7 +14,7 @@ export default function ReviewsCarousel({ reviews }: { reviews: Testimonial[] })
           key={review._key}
           className="flex w-[85%] shrink-0 snap-center flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:w-auto"
         >
-          <div className="flex text-yellow-400" aria-label={`${review.rating ?? 5} out of 5 stars`}>
+          <div className="flex text-yellow-400" role="img" aria-label={`${review.rating ?? 5} out of 5 stars`}>
             {Array.from({ length: review.rating ?? 5 }, (_, i) => (
               <Star key={i} className="size-5 fill-current" aria-hidden />
             ))}
