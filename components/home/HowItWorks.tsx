@@ -23,7 +23,7 @@ export default function HowItWorks({ location }: { location: Location }) {
             <span className="absolute -top-4 -right-1 text-[7rem] leading-none font-extrabold text-brand-blue/10 select-none" aria-hidden>
               {i + 1}
             </span>
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-orange text-xl font-extrabold text-white">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-cta text-xl font-extrabold text-white">
               {i + 1}
             </span>
             <h3 className="mt-6 text-2xl font-extrabold tracking-tight">{step.title}</h3>

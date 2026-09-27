@@ -97,6 +97,91 @@ export const location = defineType({
     defineField({name: 'ownerName', type: 'string', group: 'owner'}),
     defineField({name: 'ownerBio', type: 'text', rows: 12, group: 'owner'}),
     {...imageWithAlt('ownerPhoto'), group: 'owner'},
+    defineField({
+      name: 'ownerPronoun',
+      type: 'string',
+      group: 'owner',
+      description: 'Used in the "Why homeowners call…" copy (e.g. "He does every estimate himself").',
+      options: {
+        list: [
+          {title: 'He / his', value: 'he'},
+          {title: 'She / her', value: 'she'},
+          {title: 'They / their', value: 'they'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'he',
+    }),
+    defineField({name: 'ownerSinceYear', title: 'Owner since (year)', type: 'string', group: 'owner', validation: (rule) => rule.regex(/^\d{4}$/, {name: 'year'})}),
+    defineField({
+      name: 'ownerBackground',
+      type: 'text',
+      rows: 2,
+      group: 'owner',
+      description: 'Completes "…opened Painter1 of [City] in [Year] after ___". E.g. "15 years running crews for a Knoxville remodeler".',
+    }),
+    defineField({name: 'ownerPersonalLine', type: 'text', rows: 2, group: 'owner', description: 'One personal line shown on the owner card for teams.'}),
+    defineField({
+      name: 'ownerQuote',
+      type: 'text',
+      rows: 3,
+      group: 'owner',
+      description: "The owner's own words — recorded, not written for them.",
+    }),
+    defineField({name: 'ownerQuoteAttribution', type: 'string', group: 'owner', description: 'Defaults to "[Owner Full Name], Owner".'}),
+    {
+      ...defineField({
+        name: 'ownerActionPhoto',
+        title: 'Owner on the job photo',
+        type: 'image',
+        options: {hotspot: true},
+        description: 'Owner doing an estimate or walkthrough. Falls back to the owner photo.',
+        fields: [
+          altField,
+          defineField({name: 'caption', type: 'string', description: 'E.g. "Sequoyah Hills estimate · May 2026"'}),
+        ],
+      }),
+      group: 'owner',
+    },
+    defineField({
+      name: 'franchiseStructure',
+      type: 'string',
+      group: 'owner',
+      description: 'Owner-led: the owner runs every estimate and job. Owner with team: the owner plus 1–2 named estimators or leads.',
+      options: {
+        list: [
+          {title: 'Owner-led', value: 'owner-led'},
+          {title: 'Owner with team', value: 'owner-with-team'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'owner-led',
+    }),
+    defineField({
+      name: 'teamMembers',
+      type: 'array',
+      group: 'owner',
+      hidden: ({document}) => document?.franchiseStructure !== 'owner-with-team',
+      validation: (rule) => rule.max(2),
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'teamMember',
+          fields: [
+            defineField({name: 'name', type: 'string', validation: (rule) => rule.required()}),
+            defineField({name: 'jobTitle', type: 'string', validation: (rule) => rule.required()}),
+            defineField({name: 'withOwnerSince', title: 'With owner since (year)', type: 'string', validation: (rule) => rule.regex(/^\d{4}$/, {name: 'year'})}),
+            defineField({name: 'bio', type: 'text', rows: 2, description: 'One or two lines: background, specialty.'}),
+            defineField({name: 'photo', type: 'image', options: {hotspot: true}, fields: [altField]}),
+            defineField({name: 'namedInReviews', title: 'Named in Google reviews', type: 'boolean', initialValue: false}),
+          ],
+          preview: {select: {title: 'name', subtitle: 'jobTitle', media: 'photo'}},
+        }),
+      ],
+    }),
+    defineField({name: 'projectsCount', type: 'number', group: 'owner'}),
+    defineField({name: 'interiorProjectsCount', type: 'number', group: 'owner'}),
+    defineField({name: 'exteriorProjectsCount', type: 'number', group: 'owner'}),
 
     // Page content
     defineField({name: 'heroHeadline', type: 'string', group: 'content'}),

@@ -1,15 +1,16 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowRight, Star } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 import CTASection from '@/components/CTASection'
 import GalleryGrid from '@/components/GalleryGrid'
 import HeroSection from '@/components/HeroSection'
 import JsonLd from '@/components/JsonLd'
-import ReviewsCarousel from '@/components/ReviewsCarousel'
 import Section, { Accent } from '@/components/Section'
 import HowItWorks from '@/components/home/HowItWorks'
+import OwnerSection from '@/components/home/OwnerSection'
+import ReviewsSection from '@/components/home/ReviewsSection'
 import ServiceAreas from '@/components/home/ServiceAreas'
 import ServicesGrid from '@/components/home/ServicesGrid'
 import StatsRow from '@/components/home/StatsRow'
@@ -39,24 +40,25 @@ export default async function LocationHomePage({ params }: PageProps<'/[location
   const location = await getLocation((await params).location)
   if (!location) notFound()
 
-  const maintenance = location.locationType === 'maintenance'
   const gallery = location.galleryImages?.slice(0, 6) ?? []
-  const reviews = location.testimonials?.slice(0, 3) ?? []
 
   return (
     <>
       <JsonLd data={localBusinessSchema(location)} />
 
-      {/* 1 + 2 — Hero with owner seal and trust bar */}
+      {/* Hero with owner seal and trust bar */}
       <HeroSection location={location} home />
 
-      {/* 3 — Services */}
+      {/* Why [City] homeowners call [Owner] first — owner-led or owner-with-team variant */}
+      <OwnerSection location={location} />
+
       <ServicesGrid location={location} />
 
-      {/* 4 — How it works */}
       <HowItWorks location={location} />
 
-      {/* 5 — Gallery preview */}
+      {/* Trustindex widget: rating badge + review carousel */}
+      <ReviewsSection location={location} />
+
       {gallery.length > 0 && (
         <Section
           title={
@@ -66,7 +68,7 @@ export default async function LocationHomePage({ params }: PageProps<'/[location
           }
         >
           <GalleryGrid images={gallery} />
-          {!maintenance && (
+          {location.locationType !== 'maintenance' && (
             <div className="mt-10 text-center">
               <Link
                 href={`/${location.slug}/our-work`}
@@ -79,50 +81,12 @@ export default async function LocationHomePage({ params }: PageProps<'/[location
         </Section>
       )}
 
-      {/* 6 — Reviews */}
-      {reviews.length > 0 && (
-        <Section
-          className="overflow-hidden bg-white"
-          title={
-            location.rating && location.reviewsCount ? (
-              <span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-                <span className="flex text-yellow-400" aria-hidden>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star key={i} className="size-8 fill-current" />
-                  ))}
-                </span>
-                {location.rating} Stars — <Accent>{location.reviewsCount} Google Reviews</Accent>
-              </span>
-            ) : (
-              'Customer Reviews'
-            )
-          }
-        >
-          <svg className="pointer-events-none absolute top-0 left-0 -z-10 h-full w-1/2 text-mist" viewBox="0 0 400 800" preserveAspectRatio="none" aria-hidden>
-            <path fill="currentColor" d="M0 0h160c120 200 150 420 30 800H0z" />
-          </svg>
-          <ReviewsCarousel reviews={reviews} />
-          {!maintenance && (
-            <div className="mt-10 text-center">
-              <Link
-                href={`/${location.slug}/reviews`}
-                className="inline-flex items-center gap-2 text-lg font-bold text-brand-blue-text hover:underline"
-              >
-                Read All Reviews <ArrowRight className="size-5" aria-hidden />
-              </Link>
-            </div>
-          )}
-          <StatsRow location={location} />
-        </Section>
-      )}
+      <StatsRow location={location} />
 
-      {/* Warranty */}
       <WarrantyBand location={location} />
 
-      {/* 7 — Service areas */}
       <ServiceAreas location={location} />
 
-      {/* 8 — Final CTA */}
       <CTASection location={location} />
     </>
   )

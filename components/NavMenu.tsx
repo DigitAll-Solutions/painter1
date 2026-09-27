@@ -64,7 +64,7 @@ export default function NavMenu({ links, cta, phone, tel }: Props) {
                 <Link
                   href={cta.href}
                   onClick={close}
-                  className="rounded-lg bg-brand-orange px-6 py-4 text-center text-lg font-bold text-white hover:bg-brand-orange-dark lg:py-3"
+                  className="rounded-lg bg-cta px-6 py-4 text-center text-lg font-bold text-white hover:bg-cta-dark lg:py-3"
                 >
                   {cta.label}
                 </Link>

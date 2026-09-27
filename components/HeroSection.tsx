@@ -37,7 +37,7 @@ export default function HeroSection({ location, headline, subheadline, image, ho
   return (
     <section
       className={`relative isolate flex flex-col overflow-hidden bg-ink text-white ${
-        home ? '-mt-16 min-h-svh pt-16 md:-mt-20 md:min-h-215 md:pt-20' : ''
+        home ? '-mt-16 min-h-svh pt-16 md:-mt-20 md:min-h-190 md:pt-20' : ''
       }`}
     >
       {bg && !video && <SanityImage image={bg} fill preload quality={60} sizes="100vw" className="-z-10 object-cover" alt={bg.alt} />}
@@ -58,18 +58,18 @@ export default function HeroSection({ location, headline, subheadline, image, ho
       <div className="absolute inset-x-0 top-0 -z-10 h-40 bg-linear-to-b from-ink/70 to-transparent" aria-hidden />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-56 bg-linear-to-t from-ink/80 to-transparent" aria-hidden />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-4 py-14 text-center md:py-20">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-4 py-12 text-center md:py-16">
         <p className="text-sm font-bold uppercase tracking-[0.2em] text-orange-300">{location.name}</p>
         <h1
           className={`mt-4 font-extrabold tracking-tight text-balance uppercase [text-shadow:0_2px_24px_rgb(0_0_0/0.35)] ${
-            home ? 'text-4xl leading-[1.05] sm:text-6xl lg:text-7xl xl:text-8xl' : 'text-4xl sm:text-5xl lg:text-6xl'
+            home ? 'text-3xl leading-[1.08] sm:text-5xl lg:text-6xl xl:text-7xl' : 'text-4xl sm:text-5xl lg:text-6xl'
           }`}
         >
           {title}
         </h1>
-        {sub && <p className="mt-6 max-w-2xl text-lg text-white/90 md:text-xl">{sub}</p>}
+        {sub && <p className="mt-5 max-w-2xl text-lg text-white/90 md:text-xl">{sub}</p>}
 
-        <div className="mt-9 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
+        <div className="mt-8 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
           <CtaButton href={cta.href}>{cta.label}</CtaButton>
           {tel && (
             <a
@@ -82,7 +82,7 @@ export default function HeroSection({ location, headline, subheadline, image, ho
         </div>
 
         {home && (
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
+          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
             {location.ownerPhoto && location.ownerName && (
               <OwnerSeal photo={location.ownerPhoto} ownerName={location.ownerName} businessName={location.name} />
             )}

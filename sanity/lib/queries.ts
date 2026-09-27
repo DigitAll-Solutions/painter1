@@ -3,7 +3,9 @@ import { defineQuery } from 'next-sanity'
 const image = `alt, hotspot, crop, asset->{_id, metadata{lqip, dimensions{width, height, aspectRatio}}}`
 
 const service = `{
-  title, summary, description, highlights, process,
+  title, summary, description, cardBullets, highlights, process,
+  beforeImage{${image}},
+  afterImage{${image}},
   subServices[]{_key, title, description, image{${image}}},
   images[]{_key, ${image}}
 }`
@@ -12,6 +14,8 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
   ...,
   "slug": slug.current,
   ownerPhoto{${image}},
+  ownerActionPhoto{caption, ${image}},
+  teamMembers[]{_key, name, jobTitle, withOwnerSince, bio, namedInReviews, photo{${image}}},
   heroImage{${image}},
   heroVideo{asset->{url, mimeType}},
   warrantyImage{${image}},

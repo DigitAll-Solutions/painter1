@@ -23,6 +23,9 @@ export type ServiceDetail = {
   title: string
   summary?: string
   description?: string
+  cardBullets?: string[]
+  beforeImage?: SanityImage
+  afterImage?: SanityImage
   highlights?: string[]
   process?: { _key: string; title: string; description?: string; items?: string[] }[]
   subServices?: { _key: string; title: string; description?: string; image?: SanityImage }[]
@@ -37,6 +40,16 @@ export type Testimonial = {
   location?: string
   date?: string
   source?: string
+}
+
+export type TeamMember = {
+  _key: string
+  name: string
+  jobTitle: string
+  withOwnerSince?: string
+  bio?: string
+  photo?: SanityImage
+  namedInReviews?: boolean
 }
 
 export type Location = {
@@ -55,6 +68,18 @@ export type Location = {
   ownerName?: string
   ownerBio?: string
   ownerPhoto?: SanityImage
+  ownerPronoun?: 'he' | 'she' | 'they'
+  ownerSinceYear?: string
+  ownerBackground?: string
+  ownerPersonalLine?: string
+  ownerQuote?: string
+  ownerQuoteAttribution?: string
+  ownerActionPhoto?: SanityImage & { caption?: string }
+  franchiseStructure?: 'owner-led' | 'owner-with-team'
+  teamMembers?: TeamMember[]
+  projectsCount?: number
+  interiorProjectsCount?: number
+  exteriorProjectsCount?: number
   heroHeadline?: string
   heroSubheadline?: string
   intro?: string

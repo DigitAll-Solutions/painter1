@@ -2,9 +2,9 @@ import Link from 'next/link'
 import type { ComponentProps } from 'react'
 
 const variants = {
-  orange: 'bg-brand-orange text-white hover:bg-brand-orange-dark',
+  orange: 'bg-cta text-white hover:bg-cta-dark',
   blue: 'bg-brand-blue text-white hover:bg-brand-blue-dark',
-  white: 'bg-white text-brand-orange hover:bg-orange-50',
+  white: 'bg-white text-cta hover:bg-orange-50',
   outline: 'border-2 border-white text-white hover:bg-white/10',
 }
 

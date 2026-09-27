@@ -16,7 +16,7 @@ export default function CTASection({
 
   return (
     <section>
-      <div className="relative isolate overflow-hidden bg-brand-orange text-white">
+      <div className="relative isolate overflow-hidden bg-cta text-white">
         <svg className="absolute -top-24 -right-24 -z-10 size-96 text-white/10" viewBox="0 0 200 200" aria-hidden>
           <circle cx="100" cy="100" r="100" fill="currentColor" />
         </svg>

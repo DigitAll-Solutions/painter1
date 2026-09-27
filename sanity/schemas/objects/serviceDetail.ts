@@ -10,6 +10,16 @@ export const serviceDetail = defineType({
     defineField({name: 'summary', type: 'text', rows: 2, description: 'Short blurb for service cards.'}),
     defineField({name: 'description', type: 'text', rows: 4}),
     defineField({
+      name: 'cardBullets',
+      title: 'Homepage card bullets',
+      type: 'array',
+      description: 'Up to 4 specifics shown with orange checkmarks, e.g. "Sherwin-Williams Emerald", "Most rooms done in 1–2 days".',
+      of: [defineArrayMember({type: 'string'})],
+      validation: (rule) => rule.max(4),
+    }),
+    defineField({name: 'beforeImage', type: 'image', options: {hotspot: true}, fields: [altField]}),
+    defineField({name: 'afterImage', type: 'image', options: {hotspot: true}, fields: [altField]}),
+    defineField({
       name: 'highlights',
       title: "What's included",
       type: 'array',

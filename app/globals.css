@@ -3,10 +3,12 @@
 @theme inline {
   --color-brand-blue: #0088cc;
   --color-brand-blue-dark: #006ea6;
+  /* accent orange (logo color): icons, checkmarks, decorative details only */
   --color-brand-orange: #e86e00;
-  --color-brand-orange-dark: #c75e00;
-  /* darker shades for small text on light backgrounds (WCAG AA) */
-  --color-brand-orange-text: #b35400;
+  /* orange for buttons, text on orange and orange text: 4.91:1 with white (WCAG AA) */
+  --color-cta: #b9520a;
+  --color-cta-dark: #9a4508;
+  /* darker blue for small text on light backgrounds (WCAG AA) */
   --color-brand-blue-text: #0077b3;
   --color-ink: #0b1b33;
   --color-mist: #f1f3f6;
