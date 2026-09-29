@@ -1,3 +1,4 @@
+import { homepageReviews, reviewSchema } from './reviews'
 import { absoluteUrl } from './site'
 import { urlFor } from '@/sanity/lib/image'
 import type { Location } from '@/sanity/lib/types'
@@ -11,6 +12,7 @@ export const pageTitle = (service: string, location: Location) => `${service} in
 export function localBusinessSchema(location: Location) {
   const url = absoluteUrl(`/${location.slug}`)
   const social = Object.values(location.socialLinks ?? {}).filter(Boolean)
+  const reviews = homepageReviews(location)
 
   return {
     '@context': 'https://schema.org',
@@ -37,6 +39,7 @@ export function localBusinessSchema(location: Location) {
       location.rating && location.reviewsCount
         ? { '@type': 'AggregateRating', ratingValue: location.rating, reviewCount: location.reviewsCount, bestRating: 5 }
         : undefined,
+    review: reviews.length ? reviews.map(reviewSchema) : undefined,
     sameAs: social.length ? social : undefined,
   }
 }

@@ -185,7 +185,23 @@ export const location = defineType({
 
     // Page content
     defineField({name: 'heroHeadline', type: 'string', group: 'content'}),
-    defineField({name: 'heroSubheadline', type: 'text', rows: 2, group: 'content'}),
+    defineField({
+      name: 'heroSubtitleVariant',
+      title: 'Hero subtitle',
+      type: 'string',
+      group: 'content',
+      description:
+        'Auto shows "[City] homeowners have trusted us with [projects]+ projects since [year]" once both Projects count and Owner since are filled, otherwise "Locally owned by [owner]…". Established falls back to standard while that data is missing.',
+      options: {
+        list: [
+          {title: 'Auto', value: 'auto'},
+          {title: 'Established (projects + year)', value: 'established'},
+          {title: 'Standard (locally owned)', value: 'standard'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'auto',
+    }),
     {
       ...imageWithAlt('transformationBeforeImage', 'Transformation: before image'),
       group: 'content',
@@ -292,22 +308,39 @@ export const location = defineType({
 
     // Reviews
     defineField({
-      name: 'testimonials',
+      name: 'reviews',
       type: 'array',
       group: 'reviews',
+      description: 'Rendered as real HTML with Review schema (search engines and AI tools cannot read the Trustindex widget).',
       of: [
         defineArrayMember({
           type: 'object',
-          name: 'testimonial',
+          name: 'review',
           fields: [
-            defineField({name: 'name', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'text', type: 'text', rows: 4, validation: (rule) => rule.required()}),
-            defineField({name: 'rating', type: 'number', validation: (rule) => rule.min(1).max(5)}),
-            defineField({name: 'location', type: 'string'}),
-            defineField({name: 'date', type: 'date'}),
-            defineField({name: 'source', type: 'string', options: {list: ['Google', 'Facebook', 'Yelp', 'Other']}}),
+            defineField({name: 'reviewText', type: 'text', rows: 4, validation: (rule) => rule.required()}),
+            defineField({name: 'reviewerName', type: 'string', validation: (rule) => rule.required()}),
+            defineField({name: 'rating', type: 'number', initialValue: 5, validation: (rule) => rule.min(1).max(5).integer()}),
+            defineField({name: 'reviewDate', type: 'date'}),
+            defineField({name: 'source', type: 'string', initialValue: 'Google', options: {list: ['Google', 'Facebook', 'Yelp', 'Other']}}),
+            defineField({
+              name: 'serviceTag',
+              type: 'string',
+              description: 'Which service page this review appears on.',
+              initialValue: 'general',
+              options: {
+                list: [
+                  {title: 'Interior', value: 'interior'},
+                  {title: 'Exterior', value: 'exterior'},
+                  {title: 'Cabinet', value: 'cabinet'},
+                  {title: 'General', value: 'general'},
+                ],
+                layout: 'radio',
+              },
+            }),
+            defineField({name: 'neighborhoodTag', type: 'string', description: 'Optional, e.g. "Farragut" or "Sequoyah Hills".'}),
+            defineField({name: 'teamMemberMentioned', type: 'string', description: 'Names mentioned in the review, e.g. "Jarrod Davenport, Charlie".'}),
           ],
-          preview: {select: {title: 'name', subtitle: 'text'}},
+          preview: {select: {title: 'reviewerName', subtitle: 'reviewText'}},
         }),
       ],
     }),

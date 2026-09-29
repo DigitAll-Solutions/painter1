@@ -32,14 +32,18 @@ export type ServiceDetail = {
   images?: (SanityImage & { _key: string })[]
 }
 
-export type Testimonial = {
+export type ServiceTag = 'interior' | 'exterior' | 'cabinet' | 'general'
+
+export type Review = {
   _key: string
-  name: string
-  text: string
+  reviewText: string
+  reviewerName: string
   rating?: number
-  location?: string
-  date?: string
+  reviewDate?: string
   source?: string
+  serviceTag?: ServiceTag
+  neighborhoodTag?: string
+  teamMemberMentioned?: string
 }
 
 export type TeamMember = {
@@ -81,7 +85,7 @@ export type Location = {
   interiorProjectsCount?: number
   exteriorProjectsCount?: number
   heroHeadline?: string
-  heroSubheadline?: string
+  heroSubtitleVariant?: 'auto' | 'established' | 'standard'
   transformationBeforeImage?: SanityImage
   transformationAfterImage?: SanityImage
   transformationBody?: string
@@ -94,7 +98,7 @@ export type Location = {
   heroImage?: SanityImage
   heroVideo?: { asset?: { url: string; mimeType?: string } }
   galleryImages?: GalleryImage[]
-  testimonials?: Testimonial[]
+  reviews?: Review[]
   reviewsCount?: number
   rating?: number
   trustindexWidgetId?: string

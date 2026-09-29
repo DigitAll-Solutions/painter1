@@ -192,7 +192,7 @@ function TrustStrip({ location, city }: { location: Location; city: string }) {
       icon: Star,
       title: `${location.rating} ★ on Google`,
       sub: location.reviewsCount ? `${location.reviewsCount} verified reviews` : undefined,
-      href: full ? `${base}/reviews` : undefined,
+      href: '#reviews',
     })
   }
 

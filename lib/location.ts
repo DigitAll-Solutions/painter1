@@ -35,7 +35,6 @@ export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | '
     })),
     { label: 'Our Work', href: `${base}/our-work` },
     { label: 'About Us', href: `${base}/about-us` },
-    { label: 'Reviews', href: `${base}/reviews` },
     { label: 'Warranty', href: `${base}/warranty` },
   ]
 }
@@ -46,3 +45,16 @@ export const formatAddress = (address: Location['address']) =>
         (line): line is string => Boolean(line),
       )
     : []
+
+// Hero subtitle: the "established" line needs both a project count and an opening year;
+// until both exist (or when forced to standard) we fall back to the locally-owned line.
+export function heroSubtitle(location: Pick<Location, 'address' | 'name' | 'ownerName' | 'projectsCount' | 'ownerSinceYear' | 'heroSubtitleVariant'>) {
+  const variant = location.heroSubtitleVariant ?? 'auto'
+  const { projectsCount, ownerSinceYear } = location
+  if (variant !== 'standard' && projectsCount && ownerSinceYear) {
+    const city = location.address?.city ?? location.name
+    return `${city} homeowners have trusted us with ${projectsCount.toLocaleString('en-US')}+ projects since ${ownerSinceYear}.`
+  }
+  const owner = location.ownerName ? ` by ${location.ownerName}` : ''
+  return `Locally owned${owner}, with Sherwin-Williams paints and a 2-year workmanship warranty on every job.`
+}

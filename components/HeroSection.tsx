@@ -3,7 +3,7 @@ import { CalendarCheck, ClipboardCheck, Phone, ShieldCheck, Sparkles, Star, type
 import CtaButton from './CtaButton'
 import OwnerSeal from './OwnerSeal'
 import SanityImage from './SanityImage'
-import { getCta, telHref } from '@/lib/location'
+import { getCta, heroSubtitle, telHref } from '@/lib/location'
 import { urlFor } from '@/sanity/lib/image'
 import type { Location, SanityImage as SanityImageType } from '@/sanity/lib/types'
 
@@ -30,7 +30,7 @@ export default function HeroSection({ location, headline, subheadline, image, ho
   const bg = image ?? location.heroImage
   const video = home ? location.heroVideo?.asset?.url : undefined
   const title = headline ?? location.heroHeadline
-  const sub = subheadline ?? location.heroSubheadline
+  const sub = subheadline ?? (home ? heroSubtitle(location) : undefined)
 
   return (
     <section
