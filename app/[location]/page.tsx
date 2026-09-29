@@ -14,6 +14,7 @@ import ReviewsSection from '@/components/home/ReviewsSection'
 import ServiceAreas from '@/components/home/ServiceAreas'
 import ServicesGrid from '@/components/home/ServicesGrid'
 import StatsRow from '@/components/home/StatsRow'
+import TransformationSection from '@/components/home/TransformationSection'
 import WarrantyBand from '@/components/home/WarrantyBand'
 import { localBusinessSchema, pageTitle } from '@/lib/seo'
 import { urlFor } from '@/sanity/lib/image'
@@ -48,6 +49,9 @@ export default async function LocationHomePage({ params }: PageProps<'/[location
 
       {/* Hero with owner seal and trust bar */}
       <HeroSection location={location} home />
+
+      {/* Before/after slider — hidden unless both images are set */}
+      <TransformationSection location={location} />
 
       {/* Why [City] homeowners call [Owner] first — owner-led or owner-with-team variant */}
       <OwnerSection location={location} />

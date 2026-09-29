@@ -47,7 +47,9 @@ export default function ServicesGrid({ location }: { location: Location }) {
   const estimates = location.franchiseStructure === 'owner-led' ? 'owner-led' : 'local'
   const services = servicePages.flatMap(({ key, path }) => {
     const service = location.services?.[key]
-    return service ? [{ ...service, href: `/${location.slug}/${path}` }] : []
+    // Unfilled template values like "[1-2 days]" never reach the page
+    const bullets = service?.cardBullets?.filter((bullet) => !/\[[^\]]*\]/.test(bullet))
+    return service ? [{ ...service, cardBullets: bullets, href: `/${location.slug}/${path}` }] : []
   })
 
   return (

@@ -186,6 +186,19 @@ export const location = defineType({
     // Page content
     defineField({name: 'heroHeadline', type: 'string', group: 'content'}),
     defineField({name: 'heroSubheadline', type: 'text', rows: 2, group: 'content'}),
+    {
+      ...imageWithAlt('transformationBeforeImage', 'Transformation: before image'),
+      group: 'content',
+      description: 'Before/after slider under the hero. Use a pair shot from the same angle. The section hides if either image is missing.',
+    },
+    {...imageWithAlt('transformationAfterImage', 'Transformation: after image'), group: 'content'},
+    defineField({
+      name: 'transformationBody',
+      type: 'text',
+      rows: 5,
+      group: 'content',
+      description: 'Copy beside the slider. "[City]" is replaced with the location city.',
+    }),
     defineField({name: 'intro', title: 'Welcome text', type: 'text', rows: 6, group: 'content'}),
     defineField({name: 'yearsInBusiness', type: 'number', group: 'content'}),
     defineField({

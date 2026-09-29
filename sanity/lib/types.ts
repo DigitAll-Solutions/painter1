@@ -82,6 +82,9 @@ export type Location = {
   exteriorProjectsCount?: number
   heroHeadline?: string
   heroSubheadline?: string
+  transformationBeforeImage?: SanityImage
+  transformationAfterImage?: SanityImage
+  transformationBody?: string
   intro?: string
   yearsInBusiness?: number
   whyChooseUs?: string[]

@@ -1,4 +1,4 @@
-import { Award, ClipboardCheck, PaintBucket, Phone, ShieldCheck, Star, ThumbsUp, type LucideIcon } from 'lucide-react'
+import { CalendarCheck, ClipboardCheck, Phone, ShieldCheck, Sparkles, Star, type LucideIcon } from 'lucide-react'
 
 import CtaButton from './CtaButton'
 import OwnerSeal from './OwnerSeal'
@@ -16,15 +16,13 @@ type Props = {
   home?: boolean
 }
 
-export function trustItems(yearsInBusiness?: number): { icon: LucideIcon; label: string }[] {
-  return [
-    { icon: ShieldCheck, label: 'Licensed & Insured' },
-    { icon: ClipboardCheck, label: 'Free Estimates' },
-    { icon: PaintBucket, label: 'Sherwin-Williams Products' },
-    { icon: ThumbsUp, label: 'Satisfaction Guaranteed' },
-    ...(yearsInBusiness ? [{ icon: Award, label: `${yearsInBusiness}+ Years Experience` }] : []),
-  ]
-}
+// Shared by every franchise — only claims all 37 locations can make
+export const trustItems: { icon: LucideIcon; label: string }[] = [
+  { icon: ShieldCheck, label: 'Licensed & Insured' },
+  { icon: ClipboardCheck, label: 'Free On-Site Estimate' },
+  { icon: Sparkles, label: 'Zero-Mess Cleanup' },
+  { icon: CalendarCheck, label: '2-Year Warranty' },
+]
 
 export default function HeroSection({ location, headline, subheadline, image, home = false }: Props) {
   const cta = getCta(location)
@@ -112,9 +110,9 @@ export default function HeroSection({ location, headline, subheadline, image, ho
         <div className="border-b-4 border-brand-blue">
           <ul
             aria-label="Why homeowners trust us"
-            className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-4 px-4 pb-7 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-8 xl:gap-x-12"
+            className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-4 px-4 pb-7 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-10 xl:gap-x-16"
           >
-            {trustItems(location.yearsInBusiness).map(({ icon: Icon, label }) => (
+            {trustItems.map(({ icon: Icon, label }) => (
               <li key={label} className="flex items-center gap-2.5 text-xs font-extrabold uppercase tracking-wider sm:text-sm">
                 <Icon className="size-6 shrink-0" strokeWidth={1.75} aria-hidden />
                 {label}
