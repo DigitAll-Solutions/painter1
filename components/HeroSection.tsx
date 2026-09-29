@@ -21,7 +21,7 @@ export const trustItems: { icon: LucideIcon; label: string }[] = [
   { icon: ShieldCheck, label: 'Licensed & Insured' },
   { icon: ClipboardCheck, label: 'Free On-Site Estimate' },
   { icon: Sparkles, label: 'Zero-Mess Cleanup' },
-  { icon: CalendarCheck, label: '2-Year Warranty' },
+  { icon: CalendarCheck, label: '2-Yr Workmanship Warranty' },
 ]
 
 export default function HeroSection({ location, headline, subheadline, image, home = false }: Props) {
@@ -110,7 +110,7 @@ export default function HeroSection({ location, headline, subheadline, image, ho
         <div className="border-b-4 border-brand-blue">
           <ul
             aria-label="Why homeowners trust us"
-            className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-4 px-4 pb-7 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-10 xl:gap-x-16"
+            className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-4 px-4 pb-7 sm:w-fit sm:gap-x-14 xl:flex xl:w-auto xl:justify-center xl:gap-x-16"
           >
             {trustItems.map(({ icon: Icon, label }) => (
               <li key={label} className="flex items-center gap-2.5 text-xs font-extrabold uppercase tracking-wider sm:text-sm">

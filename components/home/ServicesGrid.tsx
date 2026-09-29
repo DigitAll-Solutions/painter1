@@ -74,7 +74,7 @@ export default function ServicesGrid({ location }: { location: Location }) {
               <h3 className="text-2xl font-extrabold tracking-tight">{service.title}</h3>
               {service.summary && <p className="mt-2 text-slate-600">{service.summary}</p>}
               {service.cardBullets?.length ? (
-                <ul className="mt-4 space-y-2">
+                <ul className="mt-5 space-y-2 border-t border-slate-200 pt-5">
                   {service.cardBullets.map((bullet) => (
                     <li key={bullet} className="flex gap-2.5 font-medium text-ink">
                       <Check className="mt-0.5 size-5 shrink-0 text-brand-orange" strokeWidth={3} aria-hidden />
