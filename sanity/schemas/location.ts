@@ -392,7 +392,14 @@ export const location = defineType({
       title: 'Homepage warranty: button label',
       type: 'string',
       group: 'legal',
-      description: `Leave blank for the default: "See What's Covered". Links to the warranty page.`,
+      description: `Leave blank for the default: "See What's Covered".`,
+    }),
+    defineField({
+      name: 'warrantyCtaHref',
+      title: 'Warranty button link',
+      type: 'string',
+      group: 'legal',
+      description: 'Leave empty to use the default estimate link',
     }),
     {
       ...imageWithAlt('warrantyGraphic', 'Homepage warranty: graphic'),

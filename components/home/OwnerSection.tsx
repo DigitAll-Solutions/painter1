@@ -3,7 +3,7 @@ import { ArrowRight, BadgeCheck, ClipboardList, HardHat, House, PaintRoller, Rul
 
 import CtaButton from '../CtaButton'
 import SanityImage from '../SanityImage'
-import { getCta } from '@/lib/location'
+import { getCta, getWarrantyHref } from '@/lib/location'
 import type { Location, TeamMember } from '@/sanity/lib/types'
 
 const pronouns = {
@@ -174,10 +174,9 @@ function TeamCard({ member, first }: { member: TeamMember; first: string }) {
 }
 
 function TrustStrip({ location, city }: { location: Location; city: string }) {
-  const base = `/${location.slug}`
   const full = location.locationType !== 'maintenance'
   const items: { icon: LucideIcon; title: string; sub?: string; href?: string }[] = [
-    { icon: ShieldCheck, title: '2-Year Workmanship Warranty', sub: "See what's covered", href: full ? `${base}/warranty` : undefined },
+    { icon: ShieldCheck, title: '2-Year Workmanship Warranty', sub: "See what's covered", href: full ? getWarrantyHref(location) : undefined },
     { icon: PaintRoller, title: 'Sherwin-Williams Paints' },
   ]
   if (location.projectsCount) {

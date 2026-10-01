@@ -1,5 +1,6 @@
 import CtaButton from '../CtaButton'
 import SanityImage from '../SanityImage'
+import { getWarrantyHref } from '@/lib/location'
 import type { Location } from '@/sanity/lib/types'
 
 // Defaults for every location; each can be overridden in Sanity (Warranty & privacy group)
@@ -29,7 +30,7 @@ export default function WarrantyBand({ location }: { location: Location }) {
             <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{heading}</h2>
             <p className="mt-6 text-lg leading-relaxed">{body}</p>
             <CtaButton
-              href={`/${location.slug}/warranty`}
+              href={getWarrantyHref(location)}
               size="md"
               className="mt-9 text-sm tracking-[0.15em] uppercase focus-visible:outline-white"
             >
