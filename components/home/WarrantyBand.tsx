@@ -1,48 +1,64 @@
-import Link from 'next/link'
-import type { PortableTextBlock } from 'next-sanity'
-
+import CtaButton from '../CtaButton'
 import SanityImage from '../SanityImage'
 import type { Location } from '@/sanity/lib/types'
 
-const blockText = (block?: PortableTextBlock) =>
-  (block?.children as { text?: string }[] | undefined)?.map((child) => child.text ?? '').join('') ?? ''
+// Defaults for every location; each can be overridden in Sanity (Warranty & privacy group)
+const DEFAULT_COPY = {
+  eyebrow: '2 Year Workmanship Warranty',
+  heading: 'Coverage You Get in Writing',
+  body: "If paint we applied peels, blisters, or flakes within two years, we'll come back and fix it, labor and materials included. Every residential and commercial job gets the same written warranty, backed by the local Painter1 owner who did your job.",
+  button: "See What's Covered",
+}
+const DEFAULT_GRAPHIC = '/warranty-graphic-B-fandeck.svg'
 
 export default function WarrantyBand({ location }: { location: Location }) {
-  const blocks = location.warranty ?? []
-  if (location.locationType === 'maintenance' || !blocks.length) return null
+  if (location.locationType === 'maintenance') return null
 
-  const heading = blockText(blocks.find((b) => b.style === 'h2'))
-  const summary = blockText(blocks.find((b) => b.style === 'normal' && !b.listItem))
+  const eyebrow = location.warrantyEyebrow || DEFAULT_COPY.eyebrow
+  const heading = location.warrantyHeading || DEFAULT_COPY.heading
+  const body = location.warrantyBody || DEFAULT_COPY.body
+  const button = location.warrantyButtonLabel || DEFAULT_COPY.button
 
   return (
-    <section className="relative isolate overflow-hidden bg-brand-blue text-white">
-      {/* flowing darker shape behind the copy */}
-      <svg className="absolute inset-y-0 left-0 -z-10 h-full w-[70%] text-brand-blue-dark" viewBox="0 0 700 600" preserveAspectRatio="none" aria-hidden>
-        <path fill="currentColor" d="M0 0h140c90 120 190 170 170 300S160 520 250 600H0z" />
-        <circle cx="210" cy="40" r="26" fill="currentColor" />
-      </svg>
-
-      <div className="grid lg:grid-cols-2">
-        <div className="mx-auto w-full max-w-xl px-4 py-16 md:py-24 lg:mr-0 lg:ml-auto lg:pr-16">
-          <h2 className="text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{heading}</h2>
-          {summary && <p className="mt-6 text-lg leading-relaxed text-white/90">{summary}</p>}
-          <Link
-            href={`/${location.slug}/warranty`}
-            className="mt-9 inline-flex items-center rounded-xl border-2 border-white px-7 py-3.5 text-sm font-extrabold tracking-[0.15em] uppercase transition-colors hover:bg-white hover:text-brand-blue-text"
-          >
-            View Warranty
-          </Link>
-        </div>
-
-        {location.warrantyImage && (
-          <div className="relative min-h-72 lg:min-h-full">
-            <SanityImage
-              image={location.warrantyImage}
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover lg:[clip-path:ellipse(95%_120%_at_100%_50%)]"
-            />
+    <section className="relative overflow-hidden bg-[#0587cf] text-white">
+      <div className="lg:grid lg:grid-cols-2">
+        {/* Copy comes first so it stays on top when stacked; the darker panel keeps white text at AA */}
+        <div className="relative z-10 bg-brand-blue-dark lg:col-start-2 lg:[clip-path:ellipse(95%_120%_at_100%_50%)]">
+          <div className="mx-auto w-full max-w-xl px-4 py-16 md:py-24 lg:mr-auto lg:ml-0 lg:pr-20 lg:pl-20">
+            <p className="text-sm font-bold tracking-[0.2em] uppercase">{eyebrow}</p>
+            <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{heading}</h2>
+            <p className="mt-6 text-lg leading-relaxed">{body}</p>
+            <CtaButton
+              href={`/${location.slug}/warranty`}
+              size="md"
+              className="mt-9 text-sm tracking-[0.15em] uppercase focus-visible:outline-white"
+            >
+              {button}
+            </CtaButton>
           </div>
+        </div>
+      </div>
+
+      {/* Fan-deck pivots from the bottom-left corner, so crop from there; on desktop it runs under the curve */}
+      <div className="relative aspect-2/1 lg:absolute lg:inset-y-0 lg:left-0 lg:aspect-auto lg:w-[60%]">
+        {location.warrantyGraphic ? (
+          <SanityImage
+            image={location.warrantyGraphic}
+            fill
+            sizes="(min-width: 1024px) 60vw, 100vw"
+            className="object-cover object-bottom-left"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- static SVG, nothing to optimize
+          <img
+            src={DEFAULT_GRAPHIC}
+            alt=""
+            width={800}
+            height={400}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 size-full object-cover object-bottom-left"
+          />
         )}
       </div>
     </section>
