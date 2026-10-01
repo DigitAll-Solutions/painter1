@@ -365,7 +365,40 @@ export const location = defineType({
 
     // Warranty & privacy
     defineField({name: 'warranty', type: 'blockContent', group: 'legal'}),
-    {...imageWithAlt('warrantyImage'), group: 'legal', description: 'Photo shown beside the warranty banner on the homepage.'},
+    defineField({
+      name: 'warrantyEyebrow',
+      title: 'Homepage warranty: eyebrow',
+      type: 'string',
+      group: 'legal',
+      description: 'Leave blank for the default: "2 Year Workmanship Warranty".',
+    }),
+    defineField({
+      name: 'warrantyHeading',
+      title: 'Homepage warranty: heading',
+      type: 'string',
+      group: 'legal',
+      description: 'Leave blank for the default: "Coverage You Get in Writing".',
+    }),
+    defineField({
+      name: 'warrantyBody',
+      title: 'Homepage warranty: body',
+      type: 'text',
+      rows: 4,
+      group: 'legal',
+      description: 'Leave blank for the default two-year peel/blister/flake coverage text.',
+    }),
+    defineField({
+      name: 'warrantyButtonLabel',
+      title: 'Homepage warranty: button label',
+      type: 'string',
+      group: 'legal',
+      description: `Leave blank for the default: "See What's Covered". Links to the warranty page.`,
+    }),
+    {
+      ...imageWithAlt('warrantyGraphic', 'Homepage warranty: graphic'),
+      group: 'legal',
+      description: 'Shown beside the warranty copy on the homepage. Leave blank for the default blue paint fan-deck illustration.',
+    },
     defineField({name: 'privacyPolicy', type: 'blockContent', group: 'legal'}),
 
     // SEO

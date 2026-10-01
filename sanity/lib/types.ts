@@ -105,7 +105,11 @@ export type Location = {
   hasScheduling?: boolean
   schedulingUrl?: string
   warranty?: PortableTextBlock[]
-  warrantyImage?: SanityImage
+  warrantyEyebrow?: string
+  warrantyHeading?: string
+  warrantyBody?: string
+  warrantyButtonLabel?: string
+  warrantyGraphic?: SanityImage
   privacyPolicy?: PortableTextBlock[]
   metaTitle?: string
   metaDescription?: string
