@@ -11,6 +11,13 @@ export function getCta(location: Pick<Location, 'slug' | 'hasScheduling'>) {
   }
 }
 
+// Anchor on the free-estimate section (CTASection) at the bottom of the location homepage
+export const ESTIMATE_ANCHOR = 'estimate'
+
+// Warranty "See What's Covered" link: the per-location Sanity override, else the estimate section
+export const getWarrantyHref = (location: Pick<Location, 'slug' | 'warrantyCtaHref'>) =>
+  location.warrantyCtaHref?.trim() || `/${location.slug}#${ESTIMATE_ANCHOR}`
+
 export const telHref = (phone?: string) => (phone ? `tel:${phone.replace(/[^\d+]/g, '')}` : undefined)
 
 export const servicePages = [
@@ -35,7 +42,6 @@ export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | '
     })),
     { label: 'Our Work', href: `${base}/our-work` },
     { label: 'About Us', href: `${base}/about-us` },
-    { label: 'Warranty', href: `${base}/warranty` },
   ]
 }
 

@@ -109,6 +109,7 @@ export type Location = {
   warrantyHeading?: string
   warrantyBody?: string
   warrantyButtonLabel?: string
+  warrantyCtaHref?: string
   warrantyGraphic?: SanityImage
   privacyPolicy?: PortableTextBlock[]
   metaTitle?: string

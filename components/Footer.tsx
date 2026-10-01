@@ -30,7 +30,6 @@ export default function Footer({ location }: { location: Location }) {
   ]
 
   const legalLinks = [
-    ...(maintenance ? [] : [{ label: 'Warranty', href: `${base}/warranty` }]),
     { label: 'Privacy Policy', href: `${base}/privacy-policy` },
     { label: 'Do Not Sell or Share My Personal Information', href: `${base}/privacy-policy#do-not-sell` },
   ]
