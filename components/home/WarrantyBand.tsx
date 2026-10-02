@@ -1,7 +1,7 @@
 import CtaButton from '../CtaButton'
 import SanityImage from '../SanityImage'
 import { getWarrantyHref } from '@/lib/location'
-import type { Location } from '@/sanity/lib/types'
+import type { Location, SanityImage as SanityImageType } from '@/sanity/lib/types'
 
 // Defaults for every location; each can be overridden in Sanity (Warranty & privacy group)
 const DEFAULT_COPY = {
@@ -12,6 +12,16 @@ const DEFAULT_COPY = {
 }
 const DEFAULT_GRAPHIC = '/warranty-graphic-B-fandeck.svg'
 
+// Keep the editor's hotspot in view when the photo is cropped by object-fit: cover.
+// Hotspot coordinates are relative to the original image, so map them into the cropped one.
+function hotspotPosition({ hotspot, crop }: SanityImageType) {
+  if (!hotspot) return undefined
+  const c = { top: 0, bottom: 0, left: 0, right: 0, ...crop }
+  const x = (hotspot.x - c.left) / (1 - c.left - c.right)
+  const y = (hotspot.y - c.top) / (1 - c.top - c.bottom)
+  return `${Math.round(x * 100)}% ${Math.round(y * 100)}%`
+}
+
 export default function WarrantyBand({ location }: { location: Location }) {
   if (location.locationType === 'maintenance') return null
 
@@ -19,48 +29,57 @@ export default function WarrantyBand({ location }: { location: Location }) {
   const heading = location.warrantyHeading || DEFAULT_COPY.heading
   const body = location.warrantyBody || DEFAULT_COPY.body
   const button = location.warrantyButtonLabel || DEFAULT_COPY.button
+  const photo = location.warrantyImage
 
+  // Background matches the fan-deck SVG so they blend; #047bc0 keeps white text at 4.57:1 (WCAG AA)
   return (
-    <section className="relative overflow-hidden bg-[#0587cf] text-white">
-      <div className="lg:grid lg:grid-cols-2">
-        {/* Copy comes first so it stays on top when stacked; the darker panel keeps white text at AA */}
-        <div className="relative z-10 bg-brand-blue-dark lg:col-start-2 lg:[clip-path:ellipse(95%_120%_at_100%_50%)]">
-          <div className="mx-auto w-full max-w-xl px-4 py-16 md:py-24 lg:mr-auto lg:ml-0 lg:pr-20 lg:pl-20">
-            <p className="text-sm font-bold tracking-[0.2em] uppercase">{eyebrow}</p>
-            <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{heading}</h2>
-            <p className="mt-6 text-lg leading-relaxed">{body}</p>
-            <CtaButton
-              href={getWarrantyHref(location)}
-              size="md"
-              className="mt-9 text-sm tracking-[0.15em] uppercase focus-visible:outline-white"
-            >
-              {button}
-            </CtaButton>
-          </div>
-        </div>
-      </div>
-
-      {/* Fan-deck pivots from the bottom-left corner, so crop from there; on desktop it runs under the curve */}
-      <div className="relative aspect-2/1 lg:absolute lg:inset-y-0 lg:left-0 lg:aspect-auto lg:w-[60%]">
-        {location.warrantyGraphic ? (
+    <section className="relative flex flex-col overflow-hidden bg-[#047bc0] text-white lg:block">
+      {/* Photo: on top with a curved bottom on mobile, a band with a curved top on tablet,
+          and on desktop the right-hand column masked by a large ellipse */}
+      {photo && (
+        <div className="relative aspect-4/3 [clip-path:ellipse(150%_100%_at_50%_0%)] md:order-last md:aspect-12/5 md:[clip-path:ellipse(150%_100%_at_50%_100%)] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[36%] lg:[clip-path:ellipse(95%_120%_at_100%_50%)] xl:w-[42%]">
           <SanityImage
-            image={location.warrantyGraphic}
+            image={photo}
             fill
-            sizes="(min-width: 1024px) 60vw, 100vw"
-            className="object-cover object-bottom-left"
+            // object-cover in a tall column draws a 3:2 photo at ~1.5x the section height (~600px), not the column width
+            sizes="(min-width: 2140px) 42vw, (min-width: 1024px) 900px, (min-width: 768px) 100vw, 113vw"
+            className="object-cover"
+            style={{ objectPosition: hotspotPosition(photo) }}
           />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element -- static SVG, nothing to optimize
-          <img
-            src={DEFAULT_GRAPHIC}
-            alt=""
-            width={800}
-            height={400}
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 size-full object-cover object-bottom-left"
-          />
-        )}
+        </div>
+      )}
+
+      <div className="relative isolate">
+        {/* Decorative fan-deck, pivoting from below the bottom-left corner and bleeding off the left edge.
+            Hidden on mobile, where it would run under the copy. */}
+        <div
+          className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden aspect-2/1 w-[59vw] -translate-x-[10%] md:block lg:w-[42vw] xl:w-[61vw]"
+          aria-hidden
+        >
+          {location.warrantyGraphic ? (
+            <SanityImage image={location.warrantyGraphic} alt="" fill sizes="61vw" className="object-cover" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element -- static SVG, nothing to optimize
+            <img src={DEFAULT_GRAPHIC} alt="" width={800} height={400} loading="lazy" decoding="async" className="absolute inset-0 size-full" />
+          )}
+        </div>
+
+        <div
+          className={`mx-auto w-full max-w-xl px-4 py-16 md:mr-0 md:ml-[32%] md:max-w-lg md:px-8 md:py-24 ${
+            photo ? 'lg:ml-[21%] lg:w-[42%] lg:max-w-none xl:ml-[30%] xl:w-[30%]' : 'lg:mx-auto lg:max-w-xl'
+          }`}
+        >
+          <p className="text-sm font-bold tracking-[0.2em] uppercase">{eyebrow}</p>
+          <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{heading}</h2>
+          <p className="mt-6 text-lg leading-relaxed">{body}</p>
+          <CtaButton
+            href={getWarrantyHref(location)}
+            size="md"
+            className="mt-9 text-sm tracking-[0.15em] uppercase focus-visible:outline-white"
+          >
+            {button}
+          </CtaButton>
+        </div>
       </div>
     </section>
   )
