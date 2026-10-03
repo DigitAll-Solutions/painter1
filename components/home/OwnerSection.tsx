@@ -198,17 +198,20 @@ function TrustStrip({ location, city }: { location: Location; city: string }) {
   return (
     <ul className={`mt-10 grid gap-6 rounded-3xl bg-ink p-8 text-white sm:grid-cols-2 md:p-10 ${items.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
       {items.map(({ icon: Icon, title, sub, href }) => (
-        <li key={title}>
-          <Icon className="size-7 text-brand-orange" aria-hidden />
-          <p className="mt-3 font-extrabold">{title}</p>
-          {sub &&
-            (href ? (
-              <Link href={href} className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-orange-300 underline-offset-4 hover:underline">
-                {sub} <ArrowRight className="size-3.5" aria-hidden />
-              </Link>
-            ) : (
-              <p className="mt-1 text-sm text-white/70">{sub}</p>
-            ))}
+        // Mobile: icon to the left of the text; from sm up the icon sits above it
+        <li key={title} className="flex items-center gap-4 sm:block">
+          <Icon className="size-7 shrink-0 text-brand-orange" aria-hidden />
+          <div>
+            <p className="font-extrabold sm:mt-3">{title}</p>
+            {sub &&
+              (href ? (
+                <Link href={href} className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-orange-300 underline-offset-4 hover:underline">
+                  {sub} <ArrowRight className="size-3.5" aria-hidden />
+                </Link>
+              ) : (
+                <p className="mt-1 text-sm text-white/70">{sub}</p>
+              ))}
+          </div>
         </li>
       ))}
     </ul>
