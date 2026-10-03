@@ -287,11 +287,21 @@ export const location = defineType({
           options: {hotspot: true},
           fields: [
             altField,
+            defineField({
+              name: 'services',
+              type: 'array',
+              description: 'Service pages this photo appears on (Recent Work).',
+              of: [defineArrayMember({type: 'reference', to: [{type: 'service'}]})],
+            }),
+            defineField({name: 'projectType', type: 'string', description: 'Caption, first part, e.g. "Exterior Repaint".'}),
+            defineField({name: 'area', type: 'string', description: 'Caption, second part, e.g. "Farragut". Shown as "Exterior Repaint, Farragut".'}),
             defineField({name: 'caption', type: 'string'}),
             defineField({
               name: 'serviceType',
               type: 'string',
-              description: 'Used to filter the Our Work gallery.',
+              hidden: true,
+              readOnly: true,
+              description: 'Legacy tag, replaced by Services.',
               options: {
                 list: [
                   {title: 'Interior', value: 'interior'},
@@ -323,10 +333,17 @@ export const location = defineType({
             defineField({name: 'reviewDate', type: 'date'}),
             defineField({name: 'source', type: 'string', initialValue: 'Google', options: {list: ['Google', 'Facebook', 'Yelp', 'Other']}}),
             defineField({
+              name: 'services',
+              type: 'array',
+              description: 'Service pages this review appears on. Leave empty for general reviews.',
+              of: [defineArrayMember({type: 'reference', to: [{type: 'service'}]})],
+            }),
+            defineField({
               name: 'serviceTag',
               type: 'string',
-              description: 'Which service page this review appears on.',
-              initialValue: 'general',
+              hidden: true,
+              readOnly: true,
+              description: 'Legacy tag, replaced by Services.',
               options: {
                 list: [
                   {title: 'Interior', value: 'interior'},

@@ -20,6 +20,13 @@ export const serviceDetail = defineType({
     defineField({name: 'beforeImage', type: 'image', options: {hotspot: true}, fields: [altField]}),
     defineField({name: 'afterImage', type: 'image', options: {hotspot: true}, fields: [altField]}),
     defineField({
+      name: 'transformationBody',
+      type: 'text',
+      rows: 5,
+      description:
+        'Optional. Replaces the service page’s default text beside the before/after slider for this location. Tokens: {city}, {state}, {owner} (owner first name).',
+    }),
+    defineField({
       name: 'highlights',
       title: "What's included",
       type: 'array',

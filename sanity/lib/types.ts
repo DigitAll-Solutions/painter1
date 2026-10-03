@@ -16,7 +16,10 @@ export type SanityImage = {
 export type GalleryImage = SanityImage & {
   _key: string
   caption?: string
-  serviceType?: 'interior' | 'exterior' | 'cabinet' | 'commercial'
+  projectType?: string
+  area?: string
+  /** _ids of the service documents this photo is tagged with */
+  services?: string[]
 }
 
 export type ServiceDetail = {
@@ -26,13 +29,12 @@ export type ServiceDetail = {
   cardBullets?: string[]
   beforeImage?: SanityImage
   afterImage?: SanityImage
+  transformationBody?: string
   highlights?: string[]
   process?: { _key: string; title: string; description?: string; items?: string[] }[]
   subServices?: { _key: string; title: string; description?: string; image?: SanityImage }[]
   images?: (SanityImage & { _key: string })[]
 }
-
-export type ServiceTag = 'interior' | 'exterior' | 'cabinet' | 'general'
 
 export type Review = {
   _key: string
@@ -41,7 +43,8 @@ export type Review = {
   rating?: number
   reviewDate?: string
   source?: string
-  serviceTag?: ServiceTag
+  /** _ids of the service documents this review is tagged with */
+  services?: string[]
   neighborhoodTag?: string
   teamMemberMentioned?: string
 }
@@ -115,4 +118,27 @@ export type Location = {
   privacyPolicy?: PortableTextBlock[]
   metaTitle?: string
   metaDescription?: string
+}
+
+export type ServiceLocationKey = 'interior' | 'exterior' | 'cabinet'
+
+export type Service = {
+  _id: string
+  title: string
+  slug: string
+  shortName: string
+  locationKey: ServiceLocationKey
+  showPageHeader?: boolean
+  metaDescription?: string
+  ownerCardVariant?: 'featured' | 'compact'
+  transformationHeading?: string
+  transformationBody?: string
+  processIntro?: string
+  prepIntro?: string
+  prepBullets?: string[]
+  materialsBody?: PortableTextBlock[]
+  materialsBlocks?: { _key: string; title: string; body?: PortableTextBlock[] }[]
+  warrantyBannerBody?: string
+  whatWePaint?: { _key: string; icon?: string; title: string; description?: string }[]
+  faqs?: { _key: string; question: string; answer: string }[]
 }
