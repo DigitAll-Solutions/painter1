@@ -12,7 +12,12 @@ export default function ReviewCards({ reviews }: { reviews: Review[] }) {
   const cols = reviews.length >= 4 ? 'md:grid-cols-2 xl:grid-cols-4' : 'md:grid-cols-3'
 
   return (
-    <ul className={`-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:gap-6 md:overflow-visible md:px-0 md:pb-0 ${cols}`}>
+    // Swipeable row on phones: focusable so keyboard users can scroll it too (WCAG scrollable-region-focusable)
+    <ul
+      tabIndex={0}
+      aria-label="Customer reviews"
+      className={`-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:gap-6 md:overflow-visible md:px-0 md:pb-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${cols}`}
+    >
       {reviews.map((review) => {
         const rating = review.rating ?? 5
         return (

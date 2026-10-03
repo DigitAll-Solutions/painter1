@@ -76,7 +76,9 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
   // Location override wins over the service default
   const transformationBody = fill(detail?.transformationBody || service.transformationBody || '')
 
-  const gallery = (location.galleryImages ?? []).filter((image) => image.services?.includes(service._id)).slice(0, MAX_GALLERY)
+  // Whole rows of 4 only (4 or 8), so the grid never ends with gaps
+  const taggedImages = (location.galleryImages ?? []).filter((image) => image.services?.includes(service._id))
+  const gallery = taggedImages.slice(0, Math.min(MAX_GALLERY, taggedImages.length - (taggedImages.length % MIN_GALLERY)))
 
   const { reviews, tagged } = serviceReviews(location, service._id)
   const reviewsTitle = tagged
