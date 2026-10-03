@@ -9,6 +9,7 @@ export const structure: StructureResolver = (S) =>
     .title('Content')
     .items([
       S.documentTypeListItem('location').title('Locations'),
+      S.documentTypeListItem('service').title('Services'),
       S.divider(),
       singleton(S, 'franchisePage', 'Corporate Homepage'),
       singleton(S, 'locationsPage', 'Locations Directory'),
