@@ -57,7 +57,7 @@ export const SERVICE_SEED = [
     showPageHeader: true,
     ownerCardVariant: 'compact',
     metaDescription:
-      'Interior painting in {city}, {state} by Painter1: walls, ceilings, trim, and doors with full furniture and floor protection and Sherwin-Williams paint. Free on-site estimate.',
+      'Interior painting in {city}, {state} by Painter1. Sherwin-Williams paints, full furniture and floor protection, and a 2-year warranty. Free estimate.',
     transformationHeading: 'Real Interiors, Real Results',
     transformationBody:
       "Every interior job starts with a free on-site estimate and a color consultation, then a scheduled crew that protects your floors and furniture, preps every surface, and cleans up like they were never there. No shortcuts on prep — that's what makes the finish last.",
@@ -89,7 +89,7 @@ export const SERVICE_SEED = [
     showPageHeader: true,
     ownerCardVariant: 'featured',
     metaDescription:
-      'Exterior painting in {city}, {state} by Painter1: siding, brick, stucco, trim, decks, and fences, with full prep and Sherwin-Williams exterior paint. Free on-site estimate.',
+      'Exterior painting in {city}, {state} by Painter1. Pressure washing, scraping, caulking and Sherwin-Williams paints, plus a 2-year warranty. Free estimate.',
     transformationHeading: 'Real Exteriors, Real Results',
     transformationBody:
       "Every exterior job starts with a free on-site estimate, then proper prep — pressure washing, scraping, and caulking — before a coat of paint ever goes on. That's what makes the finish hold up against {city}'s weather swings, not just look good on day one.",
@@ -216,7 +216,7 @@ function describeService(doc: (typeof SERVICE_SEED)[number], exists: boolean) {
   const text = (blocks: Block[]) => blocks.map((b) => b.children.map((c) => (c.marks.length ? `**${c.text}**` : c.text)).join('')).join(' ')
   const out = [`  ${exists ? 'UPDATE' : 'CREATE'} ${doc._id}  (/[location]/${doc.slug.current})`]
   out.push(`    title: ${doc.title} | shortName: ${doc.shortName} | locationKey: ${doc.locationKey} | ownerCard: ${doc.ownerCardVariant} | showPageHeader: ${doc.showPageHeader}`)
-  out.push(`    metaDescription (written for this seed, not in the brief): ${doc.metaDescription}`)
+  out.push(`    metaDescription: ${doc.metaDescription}`)
   out.push(`    transformationHeading: ${doc.transformationHeading}`)
   out.push(`    transformationBody: ${doc.transformationBody}`)
   if ('processIntro' in doc) out.push(`    processIntro: ${doc.processIntro}`)
