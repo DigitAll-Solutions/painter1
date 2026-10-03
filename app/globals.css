@@ -11,6 +11,8 @@
   /* darker blue for small text on light backgrounds (WCAG AA) */
   --color-brand-blue-text: #0077b3;
   --color-ink: #0b1b33;
+  /* service-page navy (warranty banner, icon tiles, secondary button); white text 14.2:1 */
+  --color-navy: #112a52;
   --color-mist: #f1f3f6;
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }

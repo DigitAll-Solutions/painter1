@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react'
 const variants = {
   orange: 'bg-cta text-white hover:bg-cta-dark',
   blue: 'bg-brand-blue text-white hover:bg-brand-blue-dark',
+  navy: 'bg-navy text-white hover:bg-ink',
   white: 'bg-white text-cta hover:bg-orange-50',
   outline: 'border-2 border-white text-white hover:bg-white/10',
 }
