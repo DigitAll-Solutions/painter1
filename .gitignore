@@ -40,3 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+
+# Live-site reference material (client content, not part of the app)
+/docs/reference/live-site/
+/docs/painter1-knoxville/
