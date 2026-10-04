@@ -8,6 +8,8 @@
  * Re-running is safe: service docs are created if missing, then only the fields below are set;
  * Knoxville patches only add missing service references and fix mojibake in alt text.
  */
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 import { createClient, type SanityClient } from '@sanity/client'
@@ -116,12 +118,12 @@ export const SERVICE_SEED = [
     ],
     warrantyBannerBody: warranty('exterior'),
     whatWePaint: items([
-      { icon: 'House', title: 'Siding', description: 'Our most common exterior job — full-surface prep and coating.' },
-      { icon: 'BrickWall', title: 'Brick', description: 'Painted brick and masonry, cleaned and primed for a lasting bond.' },
+      { icon: 'House', title: 'Siding', description: 'Wood, vinyl, and aluminum siding, prepped and fully coated.' },
+      { icon: 'BrickWall', title: 'Brick', description: "Sealed brick that's protected and easy to keep clean." },
       { icon: 'Layers', title: 'Stucco', description: 'Specialized coating for stucco exteriors.' },
       { icon: 'DoorClosed', title: 'Trim & Doors', description: 'Eaves, fascia, trim detail, and exterior doors and frames.' },
-      { icon: 'Rows3', title: 'Decks', description: 'Deck boards and railings, cleaned and coated for the outdoors.' },
-      { icon: 'Fence', title: 'Fences', description: 'Wood fences, prepped and coated to hold up season after season.' },
+      { icon: 'Rows3', title: 'Decks', description: 'Deck painting and staining with lasting weather protection.' },
+      { icon: 'Fence', title: 'Fences', description: 'Fence painting and staining, prepped to hold up season after season.' },
     ]),
     faqs: faqs([
       ['Do you paint stucco and siding?', 'Yes — siding is our most common exterior surface, and we also paint stucco homes with a specialized coating approach.'],
@@ -144,18 +146,126 @@ const TAG_TO_SERVICE: Record<string, string> = { interior: 'service-interior-pai
 const REQUIRED_INTERIOR_REVIEWERS = ['Stasia Porter', 'Jason Tallent']
 const MOJIBAKE: [string, string][] = [['â€“', '–']]
 
+// Knoxville project photos from the live-site download (docs/painter1-knoxville, gitignored).
+// Only the files listed here can be uploaded; the block-list is a second guard against
+// another location's or franchise stock images ever reaching Knoxville.
+const PHOTO_DIR = 'docs/painter1-knoxville/images'
+const NEVER_UPLOAD = /Inland-Northwest|b-city-g\d+|_print_no_phone|Painter1-Our-Painting-Services-|Painter1-Who-We-Are-Imagery-/i
+type Photo = { file: string; filename: string; alt: string }
+
+/** Interior before/after slider (services.interior), not added to the gallery */
+const INTERIOR_PAIR: { before: Photo; after: Photo } = {
+  before: {
+    file: '2025_09_Interior-Painting-Before-2.jpg',
+    filename: 'Interior-Painting-Before-2.jpg',
+    alt: 'Living room before painting: white board-and-batten accent wall behind a grey sectional sofa, with spots marked for patching.',
+  },
+  after: {
+    file: '2025_09_Interior-Painting-After-2.jpg',
+    filename: 'Interior-Painting-After-2.jpg',
+    alt: 'The same living room after painting: board-and-batten accent wall in dark charcoal, with blue-grey walls around it.',
+  },
+}
+
+/** New gallery photos. The fence page's Before-1/After-1 are pixel-identical copies of this deck pair, so it is added once. */
+const GALLERY_PHOTOS: (Photo & { _key: string; service: string; projectType: string })[] = [
+  {
+    _key: 'deck-screen-before',
+    file: '2025_09_Deck-Painting-Staining-Before-2.jpg',
+    filename: 'Deck-Painting-Staining-Before-2.jpg',
+    alt: 'Backyard deck before: weathered bare-wood deck boards and an unfinished natural-wood slatted privacy screen.',
+    service: 'service-exterior-painting',
+    projectType: 'Deck & Privacy Screen Staining',
+  },
+  {
+    _key: 'deck-screen-after',
+    file: '2025_09_Deck-Painting-Staining-After-2.jpg',
+    filename: 'Deck-Painting-Staining-After-2.jpg',
+    alt: 'The same deck after: boards painted light grey and the slatted privacy screen stained black.',
+    service: 'service-exterior-painting',
+    projectType: 'Deck & Privacy Screen Staining',
+  },
+]
+
 // ---------- run ----------
 
 type Ref = { _type: 'reference'; _ref: string; _key: string }
 type LocationDoc = {
   _id: string
   _rev: string
-  galleryImages?: { _key: string; alt?: string; serviceType?: string; services?: Ref[] }[]
+  galleryImages?: { _key: string; alt?: string; serviceType?: string; services?: Ref[]; assetRef?: string }[]
+  interiorBefore?: string
+  interiorAfter?: string
   reviews?: { _key: string; reviewerName?: string; serviceTag?: string; services?: Ref[] }[]
 }
 
 const ref = (id: string): Ref => ({ _type: 'reference', _ref: id, _key: id.replace(/^service-/, '') })
 const fixMojibake = (text: string) => MOJIBAKE.reduce((out, [bad, good]) => out.split(bad).join(good), text)
+
+type LocalAsset = Photo & { buffer: Buffer; bytes: number; width: number; height: number; assetId: string }
+
+/** Width and height from a JPEG's start-of-frame marker */
+function jpegSize(buf: Buffer) {
+  let i = 2
+  while (i < buf.length) {
+    if (buf[i] !== 0xff) throw new Error('Not a JPEG')
+    const marker = buf[i + 1]
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) return { height: buf.readUInt16BE(i + 5), width: buf.readUInt16BE(i + 7) }
+    i += 2 + buf.readUInt16BE(i + 2)
+  }
+  throw new Error('JPEG size not found')
+}
+
+/** Sanity names image assets image-<sha1>-<w>x<h>-<ext>, so the id is known before uploading */
+function localAsset(photo: Photo): LocalAsset {
+  if (NEVER_UPLOAD.test(photo.file) || NEVER_UPLOAD.test(photo.filename)) throw new Error(`Refusing to upload ${photo.filename}: on the never-upload list`)
+  const buffer = readFileSync(`${PHOTO_DIR}/${photo.file}`)
+  const { width, height } = jpegSize(buffer)
+  const sha1 = createHash('sha1').update(buffer).digest('hex')
+  return { ...photo, buffer, bytes: buffer.length, width, height, assetId: `image-${sha1}-${width}x${height}-jpg` }
+}
+
+const imageField = (asset: LocalAsset) => ({ _type: 'image', alt: asset.alt, asset: { _type: 'reference', _ref: asset.assetId } })
+
+/** Interior slider + new gallery photos for one location document */
+function planPhotos(doc: LocationDoc, assets: Map<string, LocalAsset>) {
+  const set: Record<string, unknown> = {}
+  const insert: Record<string, unknown>[] = []
+  const lines: string[] = ['  Interior before/after slider (services.interior):']
+  for (const side of ['before', 'after'] as const) {
+    const asset = assets.get(INTERIOR_PAIR[side].file)!
+    const current = side === 'before' ? doc.interiorBefore : doc.interiorAfter
+    if (current === asset.assetId) {
+      lines.push(`    ${side}Image: already ${asset.filename}, no change`)
+    } else {
+      set[`services.interior.${side}Image`] = imageField(asset)
+      lines.push(`    ${side}Image: ${current ?? '(empty)'} → ${asset.filename}\n        alt: ${asset.alt}`)
+    }
+  }
+  lines.push('  New gallery photos (inserted at the START of galleryImages, in this order):')
+  const inGallery = new Set((doc.galleryImages ?? []).map((image) => image.assetRef))
+  for (const photo of GALLERY_PHOTOS) {
+    const asset = assets.get(photo.file)!
+    if (inGallery.has(asset.assetId)) {
+      lines.push(`    [${photo._key}] ${asset.filename}: already in the gallery, no change`)
+      continue
+    }
+    insert.push({ ...imageField(asset), _key: photo._key, services: [ref(photo.service)], projectType: photo.projectType })
+    lines.push(`    [${photo._key}] + ${asset.filename}\n        services: ${photo.service} | projectType: "${photo.projectType}" | area: (blank)\n        alt: ${asset.alt}`)
+  }
+  // Resulting Recent Work order for each service touched: the page shows the first 8 tagged photos
+  const MAX_SHOWN = 8
+  const after = [
+    ...insert.map((item) => ({ alt: item.alt as string, services: (item.services as Ref[]).map((r) => r._ref) })),
+    ...(doc.galleryImages ?? []).map((image) => ({ alt: image.alt ?? '', services: (image.services ?? []).map((r) => r._ref) })),
+  ]
+  for (const service of new Set(GALLERY_PHOTOS.map((photo) => photo.service))) {
+    const tagged = after.filter((image) => image.services.includes(service))
+    lines.push(`  ${service} Recent Work after this (${tagged.length} tagged, first ${MAX_SHOWN} shown):`)
+    tagged.forEach((image, i) => lines.push(`    ${String(i + 1).padStart(2)}. ${i < MAX_SHOWN ? 'shown ' : 'hidden'} ${image.alt}`))
+  }
+  return { set, insert, lines }
+}
 
 function env(name: string) {
   const value = process.env[name]
@@ -249,8 +359,35 @@ async function main() {
   console.log('SERVICE DOCUMENTS')
   for (const doc of SERVICE_SEED) console.log(describeService(doc, existingIds.has(doc._id)) + '\n')
 
+  // "What We Paint" card text: what changes compared with Sanity now
+  const currentCards = await client.fetch<{ _id: string; whatWePaint?: { title: string; description?: string }[] }[]>(
+    `*[_id in $ids]{_id, whatWePaint[]{title, description}}`,
+    { ids: SERVICE_SEED.map((d) => d._id) },
+  )
+  console.log('CARD CHANGES')
+  let cardChanges = 0
+  for (const doc of SERVICE_SEED) {
+    const current = new Map((currentCards.find((c) => c._id === doc._id)?.whatWePaint ?? []).map((card) => [card.title, card.description]))
+    for (const card of doc.whatWePaint) {
+      if (current.get(card.title) === card.description) continue
+      cardChanges++
+      console.log(`  ${doc.title} / ${card.title}:\n    before: ${current.get(card.title) ?? '(none)'}\n    after:  ${card.description}`)
+    }
+  }
+  if (!cardChanges) console.log('  —')
+
+  // Photos: everything listed above, uploaded only if Sanity doesn't already have the exact file
+  const photos = [INTERIOR_PAIR.before, INTERIOR_PAIR.after, ...GALLERY_PHOTOS]
+  const assets = new Map(photos.map((photo) => [photo.file, localAsset(photo)]))
+  const uploaded = new Set(await client.fetch<string[]>(`*[_id in $ids]._id`, { ids: [...assets.values()].map((a) => a.assetId) }))
+  console.log('\nASSETS')
+  for (const asset of assets.values()) {
+    console.log(`  ${uploaded.has(asset.assetId) ? 'already in Sanity' : 'UPLOAD'}  ${asset.filename}  ${asset.width}x${asset.height}  ${(asset.bytes / 1024).toFixed(0)} KB  → ${asset.assetId}`)
+  }
+  console.log('')
+
   const docs = await client.fetch<LocationDoc[]>(
-    `*[_type == "location" && slug.current == $slug]{_id, _rev, galleryImages[]{_key, alt, serviceType, services}, reviews[]{_key, reviewerName, serviceTag, services}}`,
+    `*[_type == "location" && slug.current == $slug]{_id, _rev, "interiorBefore": services.interior.beforeImage.asset._ref, "interiorAfter": services.interior.afterImage.asset._ref, galleryImages[]{_key, alt, serviceType, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, serviceTag, services}}`,
     { slug: LOCATION_SLUG },
   )
   const published = docs.find((d) => !d._id.startsWith('drafts.'))
@@ -267,18 +404,41 @@ async function main() {
   let changes = 0
   for (const doc of targets) {
     const { set, lines, skipped } = planLocation(doc)
-    changes += Object.keys(set).length
+    const photoPlan = planPhotos(doc, assets)
+    Object.assign(set, photoPlan.set)
+    changes += Object.keys(set).length + photoPlan.insert.length
     console.log(`  ${doc._id}  (rev ${doc._rev})`)
+    console.log(photoPlan.lines.join('\n'))
     console.log(lines.join('\n'))
     console.log('  Not changed:')
     console.log(skipped.join('\n') || '    —')
-    if (Object.keys(set).length) tx.patch(doc._id, (p) => p.ifRevisionId(doc._rev).set(set))
+    if (Object.keys(set).length || photoPlan.insert.length) {
+      tx.patch(doc._id, (p) => {
+        let patch = p.ifRevisionId(doc._rev)
+        if (Object.keys(set).length) patch = patch.set(set)
+        // At the start, so a before/after pair is never split by the 8-photo limit
+        if (photoPlan.insert.length) {
+          patch = doc.galleryImages?.length
+            ? patch.insert('before', 'galleryImages[0]', photoPlan.insert)
+            : patch.set({ galleryImages: photoPlan.insert })
+        }
+        return patch
+      })
+    }
   }
   console.log(`\n  ${changes} field change(s) on the location${targets.length > 1 ? ' + draft' : ''}; ${SERVICE_SEED.length} service doc(s) created or updated.`)
 
   if (DRY_RUN) {
     console.log('\nDry run complete. No changes written.')
     return
+  }
+  // Uploads can't be part of a transaction: upload first (Sanity de-duplicates identical files)
+  // and check each lands on the id the patches already reference.
+  for (const asset of assets.values()) {
+    if (uploaded.has(asset.assetId)) continue
+    const doc = await client.assets.upload('image', asset.buffer, { filename: asset.filename })
+    if (doc._id !== asset.assetId) throw new Error(`Uploaded ${asset.filename} as ${doc._id}, expected ${asset.assetId}; nothing else written`)
+    console.log(`Uploaded ${asset.filename} → ${doc._id}`)
   }
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`\nCommitted transaction ${result.transactionId} (${result.results.length} mutations).`)
