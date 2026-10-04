@@ -5,17 +5,22 @@ const newestFirst = (a: Review, b: Review) => (b.reviewDate ?? '').localeCompare
 /** Most recent reviews for the homepage */
 export const homepageReviews = (location: Location, count = 4) => [...(location.reviews ?? [])].sort(newestFirst).slice(0, count)
 
+/** True when a review isn't tied to any specific service (no service refs, and no legacy tag other than "general") */
+const isGeneralReview = (review: Review) =>
+  !review.services?.length && (!review.serviceTag || review.serviceTag === 'general')
+
 /**
  * Reviews for a service page: the newest ones tagged with the service. When fewer than `count`
- * are tagged, the rest are filled with the location's latest reviews and `tagged` is false
- * (the page then uses a general heading instead of claiming they are all about this service).
+ * are tagged, the rest are filled only with general reviews, never with reviews about a different
+ * service, and `tagged` is false (the page then uses a general heading). Can return fewer than
+ * `count`, or none, in which case the section hides.
  */
 export function serviceReviews(location: Location, serviceId: string, count = 3) {
   const all = [...(location.reviews ?? [])].sort(newestFirst)
   const tagged = all.filter((review) => review.services?.includes(serviceId))
   if (tagged.length >= count) return { reviews: tagged.slice(0, count), tagged: true }
-  const rest = all.filter((review) => !tagged.includes(review))
-  return { reviews: [...tagged, ...rest].slice(0, count), tagged: false }
+  const general = all.filter(isGeneralReview)
+  return { reviews: [...tagged, ...general].slice(0, count), tagged: false }
 }
 
 /** schema.org Review for JSON-LD */

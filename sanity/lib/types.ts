@@ -45,6 +45,8 @@ export type Review = {
   source?: string
   /** _ids of the service documents this review is tagged with */
   services?: string[]
+  /** Legacy string tag from the WordPress import: interior | exterior | cabinet | general */
+  serviceTag?: string
   neighborhoodTag?: string
   teamMemberMentioned?: string
 }
