@@ -1,7 +1,8 @@
 import CtaButton from '../CtaButton'
 import SanityImage from '../SanityImage'
+import { hotspotPosition } from '@/lib/image'
 import { getWarrantyHref } from '@/lib/location'
-import type { Location, SanityImage as SanityImageType } from '@/sanity/lib/types'
+import type { Location } from '@/sanity/lib/types'
 
 // Defaults for every location; each can be overridden in Sanity (Warranty & privacy group)
 const DEFAULT_COPY = {
@@ -11,16 +12,6 @@ const DEFAULT_COPY = {
   button: "See What's Covered",
 }
 const DEFAULT_GRAPHIC = '/warranty-graphic-B-fandeck.svg'
-
-// Keep the editor's hotspot in view when the photo is cropped by object-fit: cover.
-// Hotspot coordinates are relative to the original image, so map them into the cropped one.
-function hotspotPosition({ hotspot, crop }: SanityImageType) {
-  if (!hotspot) return undefined
-  const c = { top: 0, bottom: 0, left: 0, right: 0, ...crop }
-  const x = (hotspot.x - c.left) / (1 - c.left - c.right)
-  const y = (hotspot.y - c.top) / (1 - c.top - c.bottom)
-  return `${Math.round(x * 100)}% ${Math.round(y * 100)}%`
-}
 
 export default function WarrantyBand({ location }: { location: Location }) {
   if (location.locationType === 'maintenance') return null

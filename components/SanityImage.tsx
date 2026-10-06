@@ -69,7 +69,8 @@ export default function SanityImage({
       height={fill ? undefined : (height ?? Math.round(intrinsicWidth / ratio))}
       loading={preload ? 'eager' : (loading ?? 'lazy')}
       fetchPriority={preload ? 'high' : undefined}
-      decoding="async"
+      // The preloaded (LCP) image decodes normally so its paint isn't deferred; everything else decodes off the main thread
+      decoding={preload ? undefined : 'async'}
       className={`${fill ? 'absolute inset-0 size-full' : ''} ${className}`}
       style={lqip && !preload ? { backgroundImage: `url(${lqip})`, backgroundSize: 'cover', ...style } : style}
     />

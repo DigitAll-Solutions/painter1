@@ -9,25 +9,20 @@ type Props = {
   before?: SanityImageType
   after?: SanityImageType
   heading: ReactNode
-  /** h1 when the page has no other H1 (service page with the page header hidden) */
-  headingLevel?: 'h1' | 'h2'
   body: string
   cta?: { href: string; label: ReactNode }
-  /** First image on the page: fetch the slider photos eagerly, preloading the one underneath */
-  priority?: boolean
 }
 
 // "See The Transformation": before/after slider beside the copy, or the copy alone when the
 // pair is missing, so there is never an empty slider.
-export default function TransformationBlock({ before, after, heading, headingLevel = 'h2', body, cta, priority }: Props) {
-  const Heading = headingLevel
+export default function TransformationBlock({ before, after, heading, body, cta }: Props) {
   const sizes = '(min-width: 1024px) 640px, 100vw'
   const slider = before && after
 
   const copy = (
     <div>
       <p className="text-sm font-bold tracking-[0.2em] text-cta uppercase">See The Transformation</p>
-      <Heading className="mt-2 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl md:text-5xl">{heading}</Heading>
+      <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl md:text-5xl">{heading}</h2>
       <span className="mt-5 block h-1.5 w-24 rounded-full bg-brand-orange" aria-hidden />
       <p className="mt-6 text-lg leading-relaxed text-slate-600">{body}</p>
       {cta && (
@@ -45,9 +40,9 @@ export default function TransformationBlock({ before, after, heading, headingLev
           <BeforeAfterSlider
             className="aspect-4/3"
             before={
-              <SanityImage image={before} fill sizes={sizes} loading={priority ? 'eager' : undefined} className="object-cover" draggable={false} />
+              <SanityImage image={before} fill sizes={sizes} className="object-cover" draggable={false} />
             }
-            after={<SanityImage image={after} fill sizes={sizes} preload={priority} className="object-cover" draggable={false} />}
+            after={<SanityImage image={after} fill sizes={sizes} className="object-cover" draggable={false} />}
           />
           {copy}
         </div>

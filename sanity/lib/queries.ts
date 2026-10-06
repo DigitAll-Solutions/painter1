@@ -4,6 +4,7 @@ const image = `alt, hotspot, crop, asset->{_id, metadata{lqip, dimensions{width,
 
 const service = `{
   title, summary, description, cardBullets, highlights, process, transformationBody,
+  heroImage{${image}},
   beforeImage{${image}},
   afterImage{${image}},
   subServices[]{_key, title, description, image{${image}}},
@@ -22,7 +23,7 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
   heroVideo{asset->{url, mimeType}},
   warrantyImage{${image}},
   warrantyGraphic{${image}},
-  galleryImages[]{_key, caption, projectType, area, "services": services[]._ref, ${image}},
+  galleryImages[]{_key, caption, title, projectType, area, "services": services[]._ref, ${image}},
   reviews[]{..., "services": services[]._ref},
   services{
     interior${service},
@@ -34,7 +35,8 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
 export const LOCATION_SLUGS_QUERY = defineQuery(`*[_type == "location" && defined(slug.current)].slug.current`)
 
 export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current == $slug][0]{
-  _id, title, "slug": slug.current, shortName, locationKey, showPageHeader, metaDescription, ownerCardVariant,
+  _id, title, "slug": slug.current, shortName, locationKey, metaDescription, ownerCardVariant,
+  heroSubtitle, heroImage{${image}},
   transformationHeading, transformationBody,
   processIntro, prepIntro, prepBullets, materialsBody, materialsBlocks[]{_key, title, body}, warrantyBannerBody,
   whatWePaint[]{_key, icon, title, description},
