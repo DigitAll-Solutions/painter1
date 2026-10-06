@@ -24,6 +24,7 @@ export const location = defineType({
     {name: 'media', title: 'Images'},
     {name: 'reviews', title: 'Reviews'},
     {name: 'scheduling', title: 'Scheduling'},
+    {name: 'leads', title: 'Leads'},
     {name: 'legal', title: 'Warranty & privacy'},
     {name: 'seo', title: 'SEO'},
   ],
@@ -384,6 +385,59 @@ export const location = defineType({
       type: 'url',
       group: 'scheduling',
       hidden: ({document}) => !document?.hasScheduling,
+    }),
+
+    // Leads (free-estimate survey). Recipients are NOT here: this dataset is public, so they live in
+    // the private "Lead recipients" document (Studio → Lead recipients).
+    defineField({
+      name: 'leadEmailSubject',
+      title: 'Lead email subject',
+      type: 'string',
+      group: 'leads',
+      description: 'Subject of the estimate-request email, e.g. "Painter1.com - Get Free Estimate - Form Submission".',
+    }),
+    defineField({
+      name: 'leadEmailTemplate',
+      title: 'Lead email template',
+      type: 'text',
+      rows: 18,
+      group: 'leads',
+      description:
+        "Plain-text body, copied exactly from this location's Fluent Forms notification. Placeholders: {submission.source_url}, {inputs.names.first_name}, {inputs.names.last_name}, {inputs.email}, {inputs.phone}, {inputs.input_text} (street), {inputs.input_text_1} (city), {inputs.input_text_2} (state), {inputs.input_text_3} (zip), {inputs.description} (survey answers + message), {inputs.utm_source}, {inputs.utm_medium}, {inputs.utm_campaign}, {inputs.gclid}, {inputs.channel}, {inputs.channeldrilldown1}–{inputs.channeldrilldown3}, {inputs.landingpage}, {inputs.landingpagegroup}. Client Tether parses this email: change it only on purpose.",
+    }),
+    defineField({
+      name: 'leadConfirmationMessage',
+      title: 'Confirmation message',
+      type: 'string',
+      group: 'leads',
+      description: 'Shown after a successful request, under "Thanks, {first name}!".',
+      initialValue: 'Thank you for your message. We will get in touch with you shortly',
+    }),
+    defineField({
+      name: 'consentBlocks',
+      title: 'Consent checkboxes',
+      type: 'array',
+      group: 'leads',
+      description: 'Each item is one required, unchecked checkbox on the last survey step. The name is stored with every lead as the consent record.',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'consentBlock',
+          fields: [
+            defineField({name: 'name', type: 'string', description: 'Stable key, e.g. "terms-n-condition".', validation: (rule) => rule.required()}),
+            defineField({name: 'body', type: 'consentText', validation: (rule) => rule.required()}),
+          ],
+          preview: {select: {title: 'name'}},
+        }),
+      ],
+    }),
+    defineField({
+      name: 'estimateSurvey',
+      title: 'Estimate survey',
+      type: 'reference',
+      to: [{type: 'estimateSurvey'}],
+      group: 'leads',
+      description: 'Leave empty to use the default survey.',
     }),
 
     // Warranty & privacy

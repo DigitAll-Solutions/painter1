@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -44,3 +45,7 @@ next-env.d.ts
 # Live-site reference material (client content, not part of the app)
 /docs/reference/live-site/
 /docs/painter1-knoxville/
+/docs/reference/fluentforms/
+# Client contract documents (pricing): never commit
+/docs/contract/
+/painter1-nextjs-project-brief.pdf

@@ -122,6 +122,11 @@ export type Location = {
   warrantyImage?: SanityImage
   warrantyGraphic?: SanityImage
   privacyPolicy?: PortableTextBlock[]
+  leadEmailSubject?: string
+  leadEmailTemplate?: string
+  leadConfirmationMessage?: string
+  consentBlocks?: ConsentBlock[]
+  estimateSurvey?: { _ref: string }
   metaTitle?: string
   metaDescription?: string
 }
@@ -149,3 +154,5 @@ export type Service = {
   whatWePaint?: { _key: string; icon?: string; title: string; description?: string }[]
   faqs?: { _key: string; question: string; answer: string }[]
 }
+
+export type ConsentBlock = { _key: string; name: string; body: PortableTextBlock[] }

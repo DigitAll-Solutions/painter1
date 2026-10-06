@@ -4,10 +4,11 @@ export type NavLink = { label: string; href: string }
 
 // Every CTA on a location site points at its free-estimate page, which embeds the
 // scheduler when the location has one and shows the contact form otherwise.
-export function getCta(location: Pick<Location, 'slug' | 'hasScheduling'>) {
+// `service` (interior | exterior | cabinet) preselects the survey's first question.
+export function getCta(location: Pick<Location, 'slug' | 'hasScheduling'>, service?: string) {
   return {
     label: location.hasScheduling ? 'Schedule Your FREE Estimate' : 'Get Your FREE Estimate',
-    href: `/${location.slug}/free-estimate`,
+    href: `/${location.slug}/free-estimate${service ? `?service=${encodeURIComponent(service)}` : ''}`,
   }
 }
 

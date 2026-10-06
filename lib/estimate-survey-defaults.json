@@ -1,0 +1,46 @@
+{
+  "serviceQuestion": "What type of painting do you need?",
+  "serviceOptions": {
+    "interior": "Interior Painting",
+    "exterior": "Exterior Painting",
+    "cabinet": "Cabinet Refinishing",
+    "notSure": "Not sure"
+  },
+  "areasQuestion": "Which areas are you looking to paint?",
+  "areasHelper": "Select everything you're considering — we handle it all.",
+  "areaOptions": {
+    "interior": ["Kitchen", "Bedrooms", "Living Room", "Dining Room", "Family Room", "Bathrooms", "Hallways & Stairs", "Ceilings"],
+    "exterior": ["Siding", "Brick", "Stucco", "Trim & Doors", "Decks", "Fences"],
+    "cabinet": ["Kitchen cabinets", "Bathroom vanities"]
+  },
+  "otherLabel": "Other",
+  "otherPlaceholder": "What else would you like painted?",
+  "timelineQuestion": "When are you hoping to get started?",
+  "timelineOptions": ["As soon as possible", "Within 30 days", "1–3 months", "Just exploring options"],
+  "messageLabel": "Anything else we should know?",
+  "addressQuestion": "Where is the project?",
+  "streetLabel": "Street",
+  "cityLabel": "City",
+  "zipLabel": "Zip Code",
+  "nameQuestion": "Who should we make the estimate out to?",
+  "nameHelper": "{owner} will use your name when reaching out to schedule your free on-site estimate.",
+  "firstNameLabel": "First Name",
+  "lastNameLabel": "Last Name",
+  "emailQuestion": "Where should we send your estimate confirmation?",
+  "emailLabel": "Email",
+  "nextStepsTitle": "What happens next",
+  "nextSteps": [
+    "{owner} or the team calls to schedule your free estimate",
+    "You get an email confirmation",
+    "We visit your home, free, no obligation"
+  ],
+  "phoneQuestion": "How should {owner} reach you?",
+  "phoneLabel": "Phone",
+  "ownerRole": "{ownerFull} — Owner",
+  "ownerCardLine": "Our team follows up on every estimate request. You'll hear from us directly, usually within a few hours.",
+  "submitLabel": "Request My Free Estimate",
+  "nextLabel": "Next",
+  "backLabel": "Back",
+  "progressLabel": "{percent}% complete",
+  "successHeading": "Thanks, {firstName}!"
+}
