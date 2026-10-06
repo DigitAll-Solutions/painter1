@@ -9,7 +9,7 @@
  * Knoxville patches only add missing service references and fix mojibake in alt text.
  */
 import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 import { createClient, type SanityClient } from '@sanity/client'
@@ -206,6 +206,9 @@ const ref = (id: string): Ref => ({ _type: 'reference', _ref: id, _key: id.repla
 const fixMojibake = (text: string) => MOJIBAKE.reduce((out, [bad, good]) => out.split(bad).join(good), text)
 
 type LocalAsset = Photo & { buffer: Buffer; bytes: number; width: number; height: number; assetId: string }
+type SanityAsset = { _id: string; originalFilename?: string; size?: number }
+/** What happens to one photo: reuse an asset already in Sanity, or upload the local file */
+type AssetPlan = Photo & { assetId: string; bytes?: number; upload?: LocalAsset; note: string }
 
 /** Width and height from a JPEG's start-of-frame marker */
 function jpegSize(buf: Buffer) {
@@ -228,10 +231,30 @@ function localAsset(photo: Photo): LocalAsset {
   return { ...photo, buffer, bytes: buffer.length, width, height, assetId: `image-${sha1}-${width}x${height}-jpg` }
 }
 
-const imageField = (asset: LocalAsset) => ({ _type: 'image', alt: asset.alt, asset: { _type: 'reference', _ref: asset.assetId } })
+/**
+ * Reuse an asset Sanity already has when its originalFilename and byte size match the local file,
+ * so re-runs never re-upload. If the local download is missing (another machine), fall back to a
+ * filename-only match and say so; with no match at all the photo can't be placed and the run stops.
+ */
+function planAsset(photo: Photo, existing: SanityAsset[]): AssetPlan {
+  if (NEVER_UPLOAD.test(photo.file) || NEVER_UPLOAD.test(photo.filename)) throw new Error(`Refusing to upload ${photo.filename}: on the never-upload list`)
+  const path = `${PHOTO_DIR}/${photo.file}`
+  const sameName = existing.filter((asset) => asset.originalFilename === photo.filename)
+  if (existsSync(path)) {
+    const bytes = statSync(path).size
+    const match = sameName.find((asset) => asset.size === bytes)
+    if (match) return { ...photo, assetId: match._id, bytes, note: 'already in Sanity (same filename + size), skip upload' }
+    const upload = localAsset(photo)
+    return { ...photo, assetId: upload.assetId, bytes, upload, note: `UPLOAD ${upload.width}x${upload.height}` }
+  }
+  if (sameName.length === 1) return { ...photo, assetId: sameName[0]._id, note: 'local file missing; reusing the Sanity asset with this filename (size not checked)' }
+  throw new Error(`${path} not found and Sanity has ${sameName.length} assets named ${photo.filename}; can't tell which to use`)
+}
+
+const imageField = (asset: AssetPlan) => ({ _type: 'image', alt: asset.alt, asset: { _type: 'reference', _ref: asset.assetId } })
 
 /** Interior slider + new gallery photos for one location document */
-function planPhotos(doc: LocationDoc, assets: Map<string, LocalAsset>) {
+function planPhotos(doc: LocationDoc, assets: Map<string, AssetPlan>) {
   const set: Record<string, unknown> = {}
   const insert: Record<string, unknown>[] = []
   const lines: string[] = ['  Interior before/after slider (services.interior):']
@@ -394,13 +417,16 @@ async function main() {
     }
   }
 
-  // Photos: everything listed above, uploaded only if Sanity doesn't already have the exact file
+  // Photos: everything listed above, uploaded only if Sanity doesn't already have the same filename + size
   const photos = [INTERIOR_PAIR.before, INTERIOR_PAIR.after, ...GALLERY_PHOTOS]
-  const assets = new Map(photos.map((photo) => [photo.file, localAsset(photo)]))
-  const uploaded = new Set(await client.fetch<string[]>(`*[_id in $ids]._id`, { ids: [...assets.values()].map((a) => a.assetId) }))
+  const existingAssets = await client.fetch<SanityAsset[]>(
+    `*[_type == "sanity.imageAsset" && originalFilename in $names]{_id, originalFilename, size}`,
+    { names: photos.map((photo) => photo.filename) },
+  )
+  const assets = new Map(photos.map((photo) => [photo.file, planAsset(photo, existingAssets)]))
   console.log('\nASSETS')
   for (const asset of assets.values()) {
-    console.log(`  ${uploaded.has(asset.assetId) ? 'already in Sanity' : 'UPLOAD'}  ${asset.filename}  ${asset.width}x${asset.height}  ${(asset.bytes / 1024).toFixed(0)} KB  → ${asset.assetId}`)
+    console.log(`  ${asset.note}  ${asset.filename}${asset.bytes ? `  ${(asset.bytes / 1024).toFixed(0)} KB` : ''}  → ${asset.assetId}`)
   }
   console.log('')
 
@@ -453,8 +479,8 @@ async function main() {
   // Uploads can't be part of a transaction: upload first (Sanity de-duplicates identical files)
   // and check each lands on the id the patches already reference.
   for (const asset of assets.values()) {
-    if (uploaded.has(asset.assetId)) continue
-    const doc = await client.assets.upload('image', asset.buffer, { filename: asset.filename })
+    if (!asset.upload) continue
+    const doc = await client.assets.upload('image', asset.upload.buffer, { filename: asset.filename })
     if (doc._id !== asset.assetId) throw new Error(`Uploaded ${asset.filename} as ${doc._id}, expected ${asset.assetId}; nothing else written`)
     console.log(`Uploaded ${asset.filename} → ${doc._id}`)
   }
