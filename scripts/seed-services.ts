@@ -56,7 +56,7 @@ export const SERVICE_SEED = [
     slug: { _type: 'slug', current: 'interior-painting' },
     shortName: 'Interior',
     locationKey: 'interior',
-    showPageHeader: true,
+    heroSubtitle: 'Clean lines, protected floors and furniture, and a finish that lasts.',
     ownerCardVariant: 'compact',
     metaDescription:
       'Interior painting in {city}, {state} by Painter1. Sherwin-Williams paints, full furniture and floor protection, and a 2-year warranty. Free estimate.',
@@ -88,7 +88,7 @@ export const SERVICE_SEED = [
     slug: { _type: 'slug', current: 'exterior-painting' },
     shortName: 'Exterior',
     locationKey: 'exterior',
-    showPageHeader: true,
+    heroSubtitle: "Proper prep and Sherwin-Williams paint that holds up to {city}'s weather.",
     ownerCardVariant: 'featured',
     metaDescription:
       'Exterior painting in {city}, {state} by Painter1. Pressure washing, scraping, caulking and Sherwin-Williams paints, plus a 2-year warranty. Free estimate.',
@@ -141,6 +141,9 @@ export const SERVICE_SEED = [
 ]
 
 // Legacy string tags → service document ids. Cabinet/commercial/general have no service doc yet.
+/** Fields removed from the service schema; the seed clears any stored value */
+const REMOVED_SERVICE_FIELDS = ['showPageHeader']
+
 const TAG_TO_SERVICE: Record<string, string> = { interior: 'service-interior-painting', exterior: 'service-exterior-painting' }
 // The brief names these two explicitly; the run fails if they would not end up on Interior Painting.
 const REQUIRED_INTERIOR_REVIEWERS = ['Stasia Porter', 'Jason Tallent']
@@ -325,7 +328,8 @@ function planLocation(doc: LocationDoc) {
 function describeService(doc: (typeof SERVICE_SEED)[number], exists: boolean) {
   const text = (blocks: Block[]) => blocks.map((b) => b.children.map((c) => (c.marks.length ? `**${c.text}**` : c.text)).join('')).join(' ')
   const out = [`  ${exists ? 'UPDATE' : 'CREATE'} ${doc._id}  (/[location]/${doc.slug.current})`]
-  out.push(`    title: ${doc.title} | shortName: ${doc.shortName} | locationKey: ${doc.locationKey} | ownerCard: ${doc.ownerCardVariant} | showPageHeader: ${doc.showPageHeader}`)
+  out.push(`    title: ${doc.title} | shortName: ${doc.shortName} | locationKey: ${doc.locationKey} | ownerCard: ${doc.ownerCardVariant}`)
+  out.push(`    heroSubtitle: ${doc.heroSubtitle}`)
   out.push(`    metaDescription: ${doc.metaDescription}`)
   out.push(`    transformationHeading: ${doc.transformationHeading}`)
   out.push(`    transformationBody: ${doc.transformationBody}`)
@@ -376,6 +380,20 @@ async function main() {
   }
   if (!cardChanges) console.log('  —')
 
+  const currentHero = await client.fetch<{ _id: string; heroSubtitle?: string; showPageHeader?: boolean }[]>(
+    `*[_id in $ids]{_id, heroSubtitle, showPageHeader}`,
+    { ids: SERVICE_SEED.map((d) => d._id) },
+  )
+  console.log('\nHERO SUBTITLE / REMOVED FIELDS')
+  for (const doc of SERVICE_SEED) {
+    const current = currentHero.find((c) => c._id === doc._id)
+    if (current?.heroSubtitle !== doc.heroSubtitle) console.log(`  ${doc.title} heroSubtitle:\n    before: ${current?.heroSubtitle ?? '(none)'}\n    after:  ${doc.heroSubtitle}`)
+    for (const field of REMOVED_SERVICE_FIELDS) {
+      const value = current?.[field as keyof typeof current]
+      if (value !== undefined) console.log(`  ${doc.title} ${field}: ${JSON.stringify(value)} → (unset)`)
+    }
+  }
+
   // Photos: everything listed above, uploaded only if Sanity doesn't already have the exact file
   const photos = [INTERIOR_PAIR.before, INTERIOR_PAIR.after, ...GALLERY_PHOTOS]
   const assets = new Map(photos.map((photo) => [photo.file, localAsset(photo)]))
@@ -397,7 +415,7 @@ async function main() {
   const tx = client.transaction()
   for (const { _id, _type, ...fields } of SERVICE_SEED) {
     tx.createIfNotExists({ _id, _type, title: fields.title })
-    tx.patch(_id, (p) => p.set(fields))
+    tx.patch(_id, (p) => p.set(fields).unset(REMOVED_SERVICE_FIELDS))
   }
 
   console.log(`LOCATION "${LOCATION_SLUG}" (only this document${targets.length > 1 ? ' and its draft' : ''} is patched)`)

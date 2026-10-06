@@ -17,6 +17,14 @@ export const serviceDetail = defineType({
       of: [defineArrayMember({type: 'string'})],
       validation: (rule) => rule.max(4),
     }),
+    defineField({
+      name: 'heroImage',
+      title: 'Hero image',
+      type: 'image',
+      options: {hotspot: true},
+      fields: [altField],
+      description: 'Crew at work for this service, landscape, at least 1920x1080. Overrides the service page hero for this location.',
+    }),
     defineField({name: 'beforeImage', type: 'image', options: {hotspot: true}, fields: [altField]}),
     defineField({name: 'afterImage', type: 'image', options: {hotspot: true}, fields: [altField]}),
     defineField({

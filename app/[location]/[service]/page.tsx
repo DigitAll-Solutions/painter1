@@ -1,18 +1,17 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import GalleryGrid from '@/components/GalleryGrid'
 import JsonLd from '@/components/JsonLd'
-import Section from '@/components/Section'
 import ServiceReviews from '@/components/ServiceReviews'
 import TransformationBlock from '@/components/TransformationBlock'
 import OwnerCard from '@/components/service/OwnerCard'
 import ServiceCta from '@/components/service/ServiceCta'
 import ServiceFaq from '@/components/service/ServiceFaq'
-import ServicePageHeader, { type Crumb } from '@/components/service/ServicePageHeader'
+import RecentWork from '@/components/service/RecentWork'
+import ServiceHero, { type Crumb } from '@/components/service/ServiceHero'
 import ServiceProcess from '@/components/service/ServiceProcess'
 import WhatWePaint from '@/components/service/WhatWePaint'
-import { getCta } from '@/lib/location'
+import { getCta, telHref } from '@/lib/location'
 import { serviceReviews } from '@/lib/reviews'
 import { breadcrumbSchema, cityName, faqSchema, serviceSchema } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
@@ -20,8 +19,9 @@ import { fillTokens, tokenValues } from '@/lib/tokens'
 import { urlFor } from '@/sanity/lib/image'
 import { getLocation, getService, getServiceSlugs } from '@/sanity/lib/fetch'
 
-const MAX_GALLERY = 8
-const MIN_GALLERY = 4
+// Recent Work slider: shown from 3 tagged photos, up to 12, in the order stored in Sanity
+const MIN_GALLERY = 3
+const MAX_GALLERY = 12
 
 // Every service document × the parent location. Service docs added later still work:
 // dynamicParams stays on and unknown or missing services 404 below.
@@ -65,7 +65,6 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
   const fill = (text: string) => fillTokens(text, location)
   const { city } = tokenValues(location)
   const detail = location.services?.[service.locationKey]
-  const showHeader = service.showPageHeader !== false
 
   const crumbs: Crumb[] = [
     { name: 'Home', href: absoluteUrl('/') },
@@ -76,9 +75,10 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
   // Location override wins over the service default
   const transformationBody = fill(detail?.transformationBody || service.transformationBody || '')
 
-  // Whole rows of 4 only (4 or 8), so the grid never ends with gaps
-  const taggedImages = (location.galleryImages ?? []).filter((image) => image.services?.includes(service._id))
-  const gallery = taggedImages.slice(0, Math.min(MAX_GALLERY, taggedImages.length - (taggedImages.length % MIN_GALLERY)))
+  const gallery = (location.galleryImages ?? []).filter((image) => image.services?.includes(service._id)).slice(0, MAX_GALLERY)
+
+  // Hero photo: this location's for this service → the service default → the location's homepage hero
+  const heroImage = detail?.heroImage ?? service.heroImage ?? location.heroImage
 
   const { reviews, tagged } = serviceReviews(location, service._id)
   const reviewsTitle = tagged
@@ -104,17 +104,23 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
       />
       {faqs.length > 0 && <JsonLd data={faqSchema(faqs)} />}
 
-      {/* Exactly one H1: the page header's, or the transformation heading when the header is hidden */}
-      {showHeader && <ServicePageHeader crumbs={crumbs} title={`${service.title} in ${cityName(location)}`} />}
+      {/* The hero's H1 is the page's only H1 */}
+      <ServiceHero
+        crumbs={crumbs}
+        title={`${service.title} in ${cityName(location)}`}
+        subtitle={service.heroSubtitle ? fill(service.heroSubtitle) : undefined}
+        image={heroImage}
+        estimateHref={getCta(location).href}
+        phone={location.phone}
+        tel={telHref(location.phone)}
+      />
 
       <TransformationBlock
         before={detail?.beforeImage}
         after={detail?.afterImage}
         heading={fill(service.transformationHeading || service.title)}
-        headingLevel={showHeader ? 'h2' : 'h1'}
         body={transformationBody}
         cta={{ href: getCta(location).href, label: 'Get My Free Estimate →' }}
-        priority
       />
 
       <OwnerCard location={location} variant={service.ownerCardVariant} />
@@ -124,9 +130,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
       <WhatWePaint service={service} />
 
       {gallery.length >= MIN_GALLERY && (
-        <Section eyebrow="Recent Work" title={`${service.shortName} Projects in ${city}`}>
-          <GalleryGrid images={gallery} columns={4} captions />
-        </Section>
+        <RecentWork images={gallery} title={`${service.shortName} Projects in ${city}`} label={`${service.shortName} projects in ${city}`} />
       )}
 
       <ServiceReviews reviews={reviews} title={reviewsTitle} />

@@ -293,6 +293,12 @@ export const location = defineType({
               description: 'Service pages this photo appears on (Recent Work).',
               of: [defineArrayMember({type: 'reference', to: [{type: 'service'}]})],
             }),
+            defineField({
+              name: 'title',
+              type: 'string',
+              description: 'Shown over the bottom of the photo, e.g. Exterior repaint in Farragut',
+              validation: (rule) => rule.max(60),
+            }),
             defineField({name: 'projectType', type: 'string', description: 'Caption, first part, e.g. "Exterior Repaint".'}),
             defineField({name: 'area', type: 'string', description: 'Caption, second part, e.g. "Farragut". Shown as "Exterior Repaint, Farragut".'}),
             defineField({name: 'caption', type: 'string'}),

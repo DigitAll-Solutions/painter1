@@ -16,6 +16,8 @@ export type SanityImage = {
 export type GalleryImage = SanityImage & {
   _key: string
   caption?: string
+  /** Overlay text on the Recent Work slider (max 60 chars) */
+  title?: string
   projectType?: string
   area?: string
   /** _ids of the service documents this photo is tagged with */
@@ -30,6 +32,8 @@ export type ServiceDetail = {
   beforeImage?: SanityImage
   afterImage?: SanityImage
   transformationBody?: string
+  /** Crew-at-work photo for this location's service page hero */
+  heroImage?: SanityImage
   highlights?: string[]
   process?: { _key: string; title: string; description?: string; items?: string[] }[]
   subServices?: { _key: string; title: string; description?: string; image?: SanityImage }[]
@@ -130,7 +134,8 @@ export type Service = {
   slug: string
   shortName: string
   locationKey: ServiceLocationKey
-  showPageHeader?: boolean
+  heroSubtitle?: string
+  heroImage?: SanityImage
   metaDescription?: string
   ownerCardVariant?: 'featured' | 'compact'
   transformationHeading?: string

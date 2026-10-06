@@ -2,6 +2,7 @@ import {defineArrayMember, defineField, defineType} from 'sanity'
 import {PaintRoller} from 'lucide-react'
 
 import {SERVICE_ICON_OPTIONS} from '../../lib/service-icons'
+import {altField} from './objects/altField'
 
 const TOKENS = 'Tokens: {city}, {state}, {owner} (owner first name) are replaced with the location’s values.'
 
@@ -48,12 +49,20 @@ export const service = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: 'showPageHeader',
-      title: 'Show page header',
-      type: 'boolean',
+      name: 'heroSubtitle',
+      title: 'Hero subtitle',
+      type: 'string',
       group: 'basics',
-      description: 'Breadcrumb and "{Service} in {City}, {State}" heading above the transformation. When off, the transformation heading becomes the page’s H1.',
-      initialValue: true,
+      description: `One line under the page heading. ${TOKENS}`,
+    }),
+    defineField({
+      name: 'heroImage',
+      title: 'Hero image',
+      type: 'image',
+      group: 'basics',
+      options: {hotspot: true},
+      fields: [altField],
+      description: 'Crew at work for this service, landscape, at least 1920x1080. Used when the location has no hero image of its own for this service.',
     }),
     defineField({name: 'metaDescription', type: 'text', rows: 3, group: 'basics', description: `Search result description. ${TOKENS}`}),
     defineField({
