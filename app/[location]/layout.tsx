@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation'
 
+import AttributionCapture from '@/components/AttributionCapture'
 import FloatingCta from '@/components/FloatingCta'
 import Footer from '@/components/Footer'
+import GoogleTagManager from '@/components/GoogleTagManager'
 import Header from '@/components/Header'
+import HideOnPath from '@/components/HideOnPath'
 import MobileCtaBar from '@/components/MobileCtaBar'
 import { getLocation, getLocationSlugs } from '@/sanity/lib/fetch'
 
@@ -26,8 +29,13 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
       <div className="pb-16 sm:pb-0">
         <Footer location={location} />
       </div>
-      <FloatingCta location={location} />
-      <MobileCtaBar location={location} />
+      {/* The estimate page links to itself, so it drops the floating CTAs */}
+      <HideOnPath suffix="/free-estimate">
+        <FloatingCta location={location} />
+        <MobileCtaBar location={location} />
+      </HideOnPath>
+      <AttributionCapture />
+      <GoogleTagManager />
     </>
   )
 }

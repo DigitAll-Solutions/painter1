@@ -110,7 +110,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
         title={`${service.title} in ${cityName(location)}`}
         subtitle={service.heroSubtitle ? fill(service.heroSubtitle) : undefined}
         image={heroImage}
-        estimateHref={getCta(location).href}
+        estimateHref={getCta(location, service.locationKey).href}
         phone={location.phone}
         tel={telHref(location.phone)}
       />
@@ -120,7 +120,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
         after={detail?.afterImage}
         heading={fill(service.transformationHeading || service.title)}
         body={transformationBody}
-        cta={{ href: getCta(location).href, label: 'Get My Free Estimate →' }}
+        cta={{ href: getCta(location, service.locationKey).href, label: 'Get My Free Estimate →' }}
       />
 
       <OwnerCard location={location} variant={service.ownerCardVariant} />
@@ -137,7 +137,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
 
       <ServiceFaq faqs={faqs} title={`${service.shortName} Painting FAQ`} />
 
-      <ServiceCta serviceTitle={service.title} phone={location.phone} estimateHref={getCta(location).href} />
+      <ServiceCta serviceTitle={service.title} phone={location.phone} estimateHref={getCta(location, service.locationKey).href} />
     </>
   )
 }

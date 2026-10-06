@@ -9,6 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [locations, services] = await Promise.all([getLocationPages(), getServiceSlugs()])
   return locations.flatMap(({ slug, locationType }) => [
     { url: absoluteUrl(`/${slug}`), changeFrequency: 'weekly' as const, priority: 0.9 },
+    { url: absoluteUrl(`/${slug}/free-estimate`), changeFrequency: 'monthly' as const, priority: 0.7 },
     // Service pages exist for every location except maintenance ones
     ...(locationType === 'maintenance'
       ? []
