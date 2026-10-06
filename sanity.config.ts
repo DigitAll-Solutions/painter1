@@ -10,7 +10,7 @@ import {structureTool} from 'sanity/structure'
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
 import {apiVersion, dataset, projectId} from './sanity/env'
-import {schema, singletonTypes} from './sanity/schemas'
+import {noCreateTypes, schema, singletonTypes} from './sanity/schemas'
 import {structure} from './sanity/structure'
 
 const singletonActions = new Set(['publish', 'discardChanges', 'restore'])
@@ -23,7 +23,7 @@ export default defineConfig({
   schema: {
     ...schema,
     // Singletons can't be created from the "new document" menu
-    templates: (templates) => templates.filter(({schemaType}) => !singletonTypes.has(schemaType)),
+    templates: (templates) => templates.filter(({schemaType}) => !singletonTypes.has(schemaType) && !noCreateTypes.has(schemaType)),
   },
   document: {
     // Singletons can only be published, not duplicated or deleted

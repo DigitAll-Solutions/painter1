@@ -46,3 +46,8 @@ export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current =
 export const SERVICE_SLUGS_QUERY = defineQuery(`*[_type == "service" && defined(slug.current)].slug.current`)
 
 export const LOCATION_PAGES_QUERY = defineQuery(`*[_type == "location" && defined(slug.current)]{"slug": slug.current, locationType}`)
+
+// The location's own survey, else the default one (copy only; merged with built-in defaults in code)
+export const ESTIMATE_SURVEY_QUERY = defineQuery(
+  `coalesce(*[_type == "location" && slug.current == $slug][0].estimateSurvey->, *[_id == "estimate-survey-default"][0])`,
+)
