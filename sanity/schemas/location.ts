@@ -1,6 +1,10 @@
-import {defineArrayMember, defineField, defineType} from 'sanity'
-import {altField} from './objects/altField'
+import {defineArrayMember, defineField, defineType, type Rule} from 'sanity'
 import {MapPin} from 'lucide-react'
+
+import {altField} from './objects/altField'
+import {LockedSlugInput} from '../components/LockedSlugInput'
+import {slugError, slugify, slugWarning} from '../lib/location-slugs'
+import {US_STATES} from '../lib/us-states'
 
 const imageWithAlt = (name: string, title?: string) =>
   defineField({
@@ -11,6 +15,11 @@ const imageWithAlt = (name: string, title?: string) =>
     fields: [altField],
   })
 
+const SERVICE_KEYS = ['interior', 'exterior', 'cabinet'] as const
+
+// One document per franchise location. Field order follows the pages from top to bottom; every field
+// says where it shows on the site and what happens when it's empty. Only fields that would break a
+// page block publishing; everything else is a warning (and an item in the Launch checklist view).
 export const location = defineType({
   name: 'location',
   title: 'Location',
@@ -18,31 +27,50 @@ export const location = defineType({
   icon: MapPin,
   groups: [
     {name: 'basics', title: 'Basics', default: true},
-    {name: 'owner', title: 'Owner'},
-    {name: 'content', title: 'Page content'},
+    {name: 'owner', title: 'Owner & team'},
+    {name: 'content', title: 'Homepage'},
     {name: 'services', title: 'Services'},
-    {name: 'media', title: 'Images'},
+    {name: 'media', title: 'Photos'},
     {name: 'reviews', title: 'Reviews'},
-    {name: 'scheduling', title: 'Scheduling'},
-    {name: 'leads', title: 'Leads'},
-    {name: 'legal', title: 'Warranty & privacy'},
+    {name: 'leads', title: 'Leads & consent'},
+    {name: 'legal', title: 'Warranty'},
     {name: 'seo', title: 'SEO'},
   ],
+  fieldsets: [
+    {name: 'contact', title: 'Contact', options: {columns: 2}},
+    {name: 'area', title: 'Service area'},
+    {name: 'stats', title: 'Project counts (homepage owner section and hero subtitle)', options: {columns: 3}},
+    {name: 'scheduling', title: 'Online scheduling', options: {collapsible: true, collapsed: true}},
+    {name: 'notOnSite', title: 'Not on the site yet (About and Warranty pages)', options: {collapsible: true, collapsed: true}},
+  ],
   fields: [
-    // Basics
-    defineField({name: 'name', type: 'string', group: 'basics', validation: (rule) => rule.required()}),
+    // ---------- Basics ----------
+    defineField({
+      name: 'name',
+      type: 'string',
+      group: 'basics',
+      description: 'Business name, shown in the header, footer, titles and consent text. Format: "Painter1 of {City}".',
+      validation: (rule) => rule.required(),
+    }),
     defineField({
       name: 'slug',
+      title: 'URL slug',
       type: 'slug',
       group: 'basics',
-      options: {source: 'name', maxLength: 96},
-      validation: (rule) => rule.required(),
+      description:
+        'The location URL: painter1.com/<slug>. Must match the live site (usually the city, e.g. "knoxville"). "Generate" uses the city. Locked after publishing.',
+      options: {source: (doc) => (doc as {address?: {city?: string}; name?: string}).address?.city || (doc as {name?: string}).name || '', slugify, maxLength: 64},
+      components: {input: LockedSlugInput},
+      validation: (rule) => [
+        rule.custom((value?: {current?: string}) => slugError(value?.current) ?? true),
+        rule.custom((value?: {current?: string}) => slugWarning(value?.current) ?? true).warning(),
+      ],
     }),
     defineField({
       name: 'locationType',
       type: 'string',
       group: 'basics',
-      description: 'Maintenance locations only show the homepage and About page in the navigation.',
+      description: 'Growth: all pages. Maintenance: only the homepage and About page (service pages and Our Work return 404).',
       options: {
         list: [
           {title: 'Growth', value: 'growth'},
@@ -53,51 +81,91 @@ export const location = defineType({
       initialValue: 'growth',
       validation: (rule) => rule.required(),
     }),
-    defineField({name: 'tagline', type: 'string', group: 'basics'}),
-    defineField({name: 'phone', type: 'string', group: 'basics'}),
-    defineField({name: 'email', type: 'string', group: 'basics', validation: (rule) => rule.email()}),
+    defineField({name: 'tagline', type: 'string', group: 'basics', description: 'Short line under the logo in the footer and the business slogan in search data. Optional.'}),
     defineField({
-      name: 'address',
-      type: 'object',
+      name: 'phone',
+      type: 'string',
       group: 'basics',
-      fields: [
-        defineField({name: 'street', type: 'string'}),
-        defineField({name: 'city', type: 'string'}),
-        defineField({name: 'state', type: 'string'}),
-        defineField({name: 'zip', type: 'string'}),
-      ],
+      fieldset: 'contact',
+      description: 'Shown in the header, every call button and the footer. Format: (865) 345-5800.',
+      validation: (rule) => rule.required().warning('Without a phone number the call buttons disappear.'),
     }),
-    defineField({name: 'serviceArea', type: 'string', group: 'basics', description: 'Short summary, e.g. "Knoxville & East Tennessee".'}),
     defineField({
-      name: 'serviceCities',
-      title: 'Service cities',
-      type: 'array',
+      name: 'email',
+      type: 'string',
       group: 'basics',
-      of: [defineArrayMember({type: 'string'})],
+      fieldset: 'contact',
+      description: 'Public contact email (footer, privacy page). Lead emails go to the private Lead recipients instead.',
+      validation: (rule) => [rule.email(), rule.required().warning('Shown in the footer and on the privacy page.')],
     }),
     defineField({
       name: 'businessHours',
       type: 'array',
       group: 'basics',
+      description: 'Footer, one line each, e.g. "Monday–Friday: 9:00 AM – 5:00 PM".',
       of: [defineArrayMember({type: 'string'})],
+    }),
+    defineField({
+      name: 'address',
+      type: 'object',
+      group: 'basics',
+      description: 'Office address (footer and search data). City and state are used in every page title, e.g. "Painters in Knoxville, TN".',
+      fields: [
+        defineField({name: 'street', type: 'string', description: 'E.g. "5227 N. Middlebrook Pike, Suite D".'}),
+        defineField({name: 'city', type: 'string', description: 'The main city, e.g. "Knoxville".', validation: (rule) => rule.required()}),
+        defineField({
+          name: 'state',
+          type: 'string',
+          description: 'Groups the location under its state in the Studio.',
+          options: {list: US_STATES.map(([value, name]) => ({value, title: `${value} — ${name}`}))},
+          validation: (rule) => rule.required(),
+        }),
+        defineField({name: 'zip', type: 'string', description: 'Five digits.', validation: (rule) => rule.regex(/^\d{5}(-\d{4})?$/, {name: 'ZIP code'})}),
+      ],
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'serviceArea',
+      type: 'string',
+      group: 'basics',
+      fieldset: 'area',
+      description: 'Heading line of the homepage "Service areas" section, e.g. "Knoxville & East Tennessee".',
+    }),
+    defineField({
+      name: 'serviceCities',
+      title: 'Service cities',
+      type: 'array',
+      group: 'basics',
+      fieldset: 'area',
+      description: 'Listed on the homepage and in search data ("areaServed"). One city per item, e.g. "Farragut, TN".',
+      of: [defineArrayMember({type: 'string'})],
+      validation: (rule) => rule.min(1).warning('Add at least one service city.'),
     }),
     defineField({
       name: 'socialLinks',
       type: 'object',
       group: 'basics',
-      fields: [
-        defineField({name: 'facebook', type: 'url'}),
-        defineField({name: 'google', type: 'url'}),
-        defineField({name: 'instagram', type: 'url'}),
-        defineField({name: 'yelp', type: 'url'}),
-        defineField({name: 'youtube', type: 'url'}),
-      ],
+      description: 'Footer icons and search data. Leave a network empty to hide its icon.',
+      options: {collapsible: true, collapsed: true},
+      fields: ['facebook', 'google', 'instagram', 'yelp', 'youtube'].map((name) =>
+        defineField({name, type: 'url', description: `Full ${name === 'google' ? 'Google Business Profile' : name} URL.`}),
+      ),
     }),
 
-    // Owner
-    defineField({name: 'ownerName', type: 'string', group: 'owner'}),
-    defineField({name: 'ownerBio', type: 'text', rows: 12, group: 'owner'}),
-    {...imageWithAlt('ownerPhoto'), group: 'owner'},
+    // ---------- Owner & team ----------
+    defineField({
+      name: 'ownerName',
+      type: 'string',
+      group: 'owner',
+      description: 'Full name. Shown in the hero seal, owner section, service pages and survey; the first name fills {owner}.',
+      validation: (rule) => rule.required().warning('Owner sections fall back to generic text without a name.'),
+    }),
+    {
+      ...imageWithAlt('ownerPhoto'),
+      group: 'owner',
+      description: 'Portrait for the homepage owner section, service pages and the survey card. Square-ish, face centered.',
+      validation: (rule: Rule) => rule.required().warning('Owner sections show without a photo.'),
+    },
     defineField({
       name: 'ownerPronoun',
       type: 'string',
@@ -113,7 +181,14 @@ export const location = defineType({
       },
       initialValue: 'he',
     }),
-    defineField({name: 'ownerSinceYear', title: 'Owner since (year)', type: 'string', group: 'owner', validation: (rule) => rule.regex(/^\d{4}$/, {name: 'year'})}),
+    defineField({
+      name: 'ownerSinceYear',
+      title: 'Owner since (year)',
+      type: 'string',
+      group: 'owner',
+      description: 'Year the owner opened this location, e.g. "2021". Used in the owner section and the "established" hero subtitle.',
+      validation: (rule) => rule.regex(/^\d{4}$/, {name: 'year'}),
+    }),
     defineField({
       name: 'ownerBackground',
       type: 'text',
@@ -127,7 +202,7 @@ export const location = defineType({
       type: 'text',
       rows: 3,
       group: 'owner',
-      description: "The owner's own words — recorded, not written for them.",
+      description: "The owner's own words, recorded, not written for them. Shown in the owner section and service pages.",
     }),
     defineField({name: 'ownerQuoteAttribution', type: 'string', group: 'owner', description: 'Defaults to "[Owner Full Name], Owner".'}),
     {
@@ -162,6 +237,7 @@ export const location = defineType({
       name: 'teamMembers',
       type: 'array',
       group: 'owner',
+      description: 'Up to two people shown beside the owner (only for "Owner with team").',
       hidden: ({document}) => document?.franchiseStructure !== 'owner-with-team',
       validation: (rule) => rule.max(2),
       of: [
@@ -169,23 +245,29 @@ export const location = defineType({
           type: 'object',
           name: 'teamMember',
           fields: [
-            defineField({name: 'name', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'jobTitle', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'withOwnerSince', title: 'With owner since (year)', type: 'string', validation: (rule) => rule.regex(/^\d{4}$/, {name: 'year'})}),
+            defineField({name: 'name', type: 'string', description: 'Full name.', validation: (rule) => rule.required()}),
+            defineField({name: 'jobTitle', type: 'string', description: 'E.g. "Estimator" or "Crew lead".', validation: (rule) => rule.required()}),
+            defineField({name: 'withOwnerSince', title: 'With owner since (year)', type: 'string', description: 'E.g. "2022".', validation: (rule) => rule.regex(/^\d{4}$/, {name: 'year'})}),
             defineField({name: 'bio', type: 'text', rows: 2, description: 'One or two lines: background, specialty.'}),
-            defineField({name: 'photo', type: 'image', options: {hotspot: true}, fields: [altField]}),
-            defineField({name: 'namedInReviews', title: 'Named in Google reviews', type: 'boolean', initialValue: false}),
+            defineField({name: 'photo', type: 'image', description: 'Portrait, face centered.', options: {hotspot: true}, fields: [altField]}),
+            defineField({name: 'namedInReviews', title: 'Named in Google reviews', type: 'boolean', description: 'Tick when customers mention this person by name.', initialValue: false}),
           ],
           preview: {select: {title: 'name', subtitle: 'jobTitle', media: 'photo'}},
         }),
       ],
     }),
-    defineField({name: 'projectsCount', type: 'number', group: 'owner'}),
-    defineField({name: 'interiorProjectsCount', type: 'number', group: 'owner'}),
-    defineField({name: 'exteriorProjectsCount', type: 'number', group: 'owner'}),
+    defineField({name: 'projectsCount', type: 'number', group: 'owner', fieldset: 'stats', description: 'Total projects completed.'}),
+    defineField({name: 'interiorProjectsCount', type: 'number', group: 'owner', fieldset: 'stats', description: 'Interior projects (optional).'}),
+    defineField({name: 'exteriorProjectsCount', type: 'number', group: 'owner', fieldset: 'stats', description: 'Exterior projects (optional).'}),
+    defineField({name: 'ownerBio', type: 'text', rows: 12, group: 'owner', fieldset: 'notOnSite', description: 'Long owner biography for the About page (not built yet).'}),
 
-    // Page content
-    defineField({name: 'heroHeadline', type: 'string', group: 'content'}),
+    // ---------- Homepage ----------
+    defineField({
+      name: 'heroHeadline',
+      type: 'string',
+      group: 'content',
+      description: 'Homepage H1. Leave empty for "Professional Painters in {City}, {ST}".',
+    }),
     defineField({
       name: 'heroSubtitleVariant',
       title: 'Hero subtitle',
@@ -208,7 +290,7 @@ export const location = defineType({
       group: 'content',
       description: 'Before/after slider under the hero. Use a pair shot from the same angle. The section hides if either image is missing.',
     },
-    {...imageWithAlt('transformationAfterImage', 'Transformation: after image'), group: 'content'},
+    {...imageWithAlt('transformationAfterImage', 'Transformation: after image'), group: 'content', description: 'The "after" photo of the same pair, same angle.'},
     defineField({
       name: 'transformationBody',
       type: 'text',
@@ -216,61 +298,75 @@ export const location = defineType({
       group: 'content',
       description: 'Copy beside the slider. "[City]" is replaced with the location city.',
     }),
-    defineField({name: 'intro', title: 'Welcome text', type: 'text', rows: 6, group: 'content'}),
-    defineField({name: 'yearsInBusiness', type: 'number', group: 'content'}),
-    defineField({
-      name: 'whyChooseUs',
-      type: 'array',
-      group: 'content',
-      of: [defineArrayMember({type: 'string'})],
-    }),
+    defineField({name: 'yearsInBusiness', type: 'number', group: 'content', description: 'Homepage stats row ("12+ Years Experience"). Leave empty to hide that stat.'}),
     defineField({
       name: 'processSteps',
       title: 'How it works',
       type: 'array',
       group: 'content',
+      description: 'Homepage "How It Works" steps. Leave empty for the standard four steps.',
       of: [
         defineArrayMember({
           type: 'object',
           name: 'step',
           fields: [
-            defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'description', type: 'text', rows: 2}),
+            defineField({name: 'title', type: 'string', description: 'Short step name, e.g. "Free estimate".', validation: (rule) => rule.required()}),
+            defineField({name: 'description', type: 'text', rows: 2, description: 'One or two sentences.'}),
           ],
         }),
       ],
+    }),
+    defineField({name: 'intro', title: 'Welcome text', type: 'text', rows: 6, group: 'content', fieldset: 'notOnSite', description: 'Imported welcome copy, for the About page (not built yet).'}),
+    defineField({
+      name: 'whyChooseUs',
+      type: 'array',
+      group: 'content',
+      fieldset: 'notOnSite',
+      description: 'Imported list, for the About page (not built yet).',
+      of: [defineArrayMember({type: 'string'})],
     }),
     defineField({
       name: 'aboutSections',
       title: 'About page sections',
       type: 'array',
       group: 'content',
+      fieldset: 'notOnSite',
+      description: 'Sections for the About page (not built yet).',
       of: [
         defineArrayMember({
           type: 'object',
           name: 'aboutSection',
           fields: [
-            defineField({name: 'heading', type: 'string'}),
-            defineField({name: 'body', type: 'text', rows: 6}),
+            defineField({name: 'heading', type: 'string', description: 'Section heading.'}),
+            defineField({name: 'body', type: 'text', rows: 6, description: 'Section text.'}),
           ],
         }),
       ],
     }),
 
-    // Services
+    // ---------- Services ----------
     defineField({
       name: 'services',
       type: 'object',
       group: 'services',
-      fields: [
-        defineField({name: 'interior', type: 'serviceDetail'}),
-        defineField({name: 'exterior', type: 'serviceDetail'}),
-        defineField({name: 'cabinet', type: 'serviceDetail'}),
-      ],
+      description:
+        'This location\'s version of each service: nav label, homepage card and service-page overrides. Shared copy lives in Shared → Services.',
+      fields: SERVICE_KEYS.map((name) => defineField({name, type: 'serviceDetail', description: `Overrides for /<slug>/${{interior: 'interior-painting', exterior: 'exterior-painting', cabinet: 'cabinet-refinishing'}[name]}.`})),
+      validation: (rule) =>
+        rule.custom((value: Partial<Record<(typeof SERVICE_KEYS)[number], {title?: string}>> | undefined, context) => {
+          if ((context.document as {locationType?: string} | undefined)?.locationType === 'maintenance') return true
+          const missing = SERVICE_KEYS.filter((key) => !value?.[key]?.title?.trim())
+          return missing.length ? `Add a title for ${missing.join(', ')}: it's the label in the header menu.` : true
+        }),
     }),
 
-    // Images
-    {...imageWithAlt('heroImage'), group: 'media'},
+    // ---------- Photos ----------
+    {
+      ...imageWithAlt('heroImage'),
+      group: 'media',
+      description: 'Homepage hero background (also the fallback hero for service pages and the share image). Landscape, at least 1920px wide.',
+      validation: (rule: Rule) => rule.required().warning('The homepage hero has no photo.'),
+    },
     defineField({
       name: 'heroVideo',
       type: 'file',
@@ -321,7 +417,7 @@ export const location = defineType({
             defineField({
               name: 'services',
               type: 'array',
-              description: 'Service pages this photo appears on (Recent Work).',
+              description: 'Service pages this photo appears on (Recent Work) and its Our Work filters.',
               of: [defineArrayMember({type: 'reference', to: [{type: 'service'}]})],
             }),
             defineField({
@@ -352,6 +448,7 @@ export const location = defineType({
               name: 'role',
               title: 'Before or after',
               type: 'string',
+              description: 'Which half of the pair this photo is.',
               options: {list: [{title: 'Before', value: 'before'}, {title: 'After', value: 'after'}], layout: 'radio', direction: 'horizontal'},
               hidden: ({parent}) => !parent?.projectId,
             }),
@@ -378,22 +475,23 @@ export const location = defineType({
       ],
     }),
 
-    // Reviews
+    // ---------- Reviews ----------
     defineField({
       name: 'reviews',
       type: 'array',
       group: 'reviews',
       description: 'Rendered as real HTML with Review schema (search engines and AI tools cannot read the Trustindex widget).',
+      validation: (rule) => rule.min(3).warning('The homepage and service pages show three reviews.'),
       of: [
         defineArrayMember({
           type: 'object',
           name: 'review',
           fields: [
-            defineField({name: 'reviewText', type: 'text', rows: 4, validation: (rule) => rule.required()}),
-            defineField({name: 'reviewerName', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'rating', type: 'number', initialValue: 5, validation: (rule) => rule.min(1).max(5).integer()}),
-            defineField({name: 'reviewDate', type: 'date'}),
-            defineField({name: 'source', type: 'string', initialValue: 'Google', options: {list: ['Google', 'Facebook', 'Yelp', 'Other']}}),
+            defineField({name: 'reviewText', type: 'text', rows: 4, description: 'Copied word for word from the review.', validation: (rule) => rule.required()}),
+            defineField({name: 'reviewerName', type: 'string', description: 'As shown on the review site, e.g. "Christian Melson".', validation: (rule) => rule.required()}),
+            defineField({name: 'rating', type: 'number', description: 'Stars, 1–5.', initialValue: 5, validation: (rule) => rule.min(1).max(5).integer()}),
+            defineField({name: 'reviewDate', type: 'date', description: 'Newest reviews show first.'}),
+            defineField({name: 'source', type: 'string', description: 'Where the review was posted.', initialValue: 'Google', options: {list: ['Google', 'Facebook', 'Yelp', 'Other']}}),
             defineField({
               name: 'services',
               type: 'array',
@@ -423,33 +521,37 @@ export const location = defineType({
         }),
       ],
     }),
-    defineField({name: 'reviewsCount', type: 'number', group: 'reviews'}),
-    defineField({name: 'rating', type: 'number', group: 'reviews', validation: (rule) => rule.min(0).max(5)}),
-    defineField({name: 'trustindexWidgetId', type: 'string', group: 'reviews'}),
-
-    // Scheduling
     defineField({
-      name: 'hasScheduling',
-      type: 'boolean',
-      group: 'scheduling',
-      description: 'When on, every CTA says "Schedule Estimate" and links to the scheduling URL.',
-      initialValue: false,
+      name: 'reviewsCount',
+      type: 'number',
+      group: 'reviews',
+      description: 'Total Google reviews ("242 reviews") for the hero, stats row and search rating. Update now and then.',
     }),
     defineField({
-      name: 'schedulingUrl',
-      type: 'url',
-      group: 'scheduling',
-      hidden: ({document}) => !document?.hasScheduling,
+      name: 'rating',
+      type: 'number',
+      group: 'reviews',
+      description: 'Average star rating, e.g. 4.9. Shown with the review count; both are needed for the search rating.',
+      validation: (rule) => rule.min(0).max(5),
+    }),
+    defineField({
+      name: 'trustindexWidgetId',
+      title: 'Trustindex widget ID',
+      type: 'string',
+      group: 'reviews',
+      description: 'The ID after "loader.js?" in the Trustindex embed code. Leave empty to hide the review carousel.',
     }),
 
-    // Leads (free-estimate survey). Recipients are NOT here: this dataset is public, so they live in
-    // the private "Lead recipients" document (Studio → Lead recipients).
+    // ---------- Leads & consent ----------
+    // Recipients are NOT here: this dataset is public, so they live in the private "Lead recipients"
+    // document (the location's folder → Lead recipients).
     defineField({
       name: 'leadEmailSubject',
       title: 'Lead email subject',
       type: 'string',
       group: 'leads',
       description: 'Subject of the estimate-request email, e.g. "Painter1.com - Get Free Estimate - Form Submission".',
+      validation: (rule) => rule.required().warning('Lead emails need a subject.'),
     }),
     defineField({
       name: 'leadEmailTemplate',
@@ -459,6 +561,7 @@ export const location = defineType({
       group: 'leads',
       description:
         "Plain-text body, copied exactly from this location's Fluent Forms notification. Placeholders: {submission.source_url}, {inputs.names.first_name}, {inputs.names.last_name}, {inputs.email}, {inputs.phone}, {inputs.input_text} (street), {inputs.input_text_1} (city), {inputs.input_text_2} (state), {inputs.input_text_3} (zip), {inputs.description} (survey answers + message), {inputs.utm_source}, {inputs.utm_medium}, {inputs.utm_campaign}, {inputs.gclid}, {inputs.channel}, {inputs.channeldrilldown1}–{inputs.channeldrilldown3}, {inputs.landingpage}, {inputs.landingpagegroup}. Client Tether parses this email: change it only on purpose.",
+      validation: (rule) => rule.required().warning('Without a template, leads are saved but no email is sent.'),
     }),
     defineField({
       name: 'leadConfirmationMessage',
@@ -473,14 +576,16 @@ export const location = defineType({
       title: 'Consent checkboxes',
       type: 'array',
       group: 'leads',
-      description: 'Each item is one required, unchecked checkbox on the last survey step. The name is stored with every lead as the consent record.',
+      description:
+        'Each item is one required, unchecked checkbox on the last survey step. Write the business name as {locationName}: it is filled with this location\'s name on the form and in every lead\'s consent record. Without consent checkboxes the form is replaced by "please call us".',
+      validation: (rule) => rule.min(1).warning('The free-estimate form only works with consent checkboxes.'),
       of: [
         defineArrayMember({
           type: 'object',
           name: 'consentBlock',
           fields: [
-            defineField({name: 'name', type: 'string', description: 'Stable key, e.g. "terms-n-condition".', validation: (rule) => rule.required()}),
-            defineField({name: 'body', type: 'consentText', validation: (rule) => rule.required()}),
+            defineField({name: 'name', type: 'string', description: 'Stable key stored with every lead, e.g. "terms-n-condition". Don\'t rename after launch.', validation: (rule) => rule.required()}),
+            defineField({name: 'body', type: 'consentText', description: 'The checkbox text. Use {locationName} for the business name.', validation: (rule) => rule.required()}),
           ],
           preview: {select: {title: 'name'}},
         }),
@@ -492,11 +597,26 @@ export const location = defineType({
       type: 'reference',
       to: [{type: 'estimateSurvey'}],
       group: 'leads',
-      description: 'Leave empty to use the default survey.',
+      description: 'Leave empty to use the default survey (Shared → Estimate survey).',
+    }),
+    defineField({
+      name: 'hasScheduling',
+      type: 'boolean',
+      group: 'leads',
+      fieldset: 'scheduling',
+      description: 'When on, every CTA says "Schedule Your FREE Estimate" instead of "Get Your FREE Estimate".',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'schedulingUrl',
+      type: 'url',
+      group: 'leads',
+      fieldset: 'scheduling',
+      description: 'Online scheduler link. Not used on the site yet (CTAs go to the free-estimate page).',
+      hidden: ({document}) => !document?.hasScheduling,
     }),
 
-    // Warranty & privacy
-    defineField({name: 'warranty', type: 'blockContent', group: 'legal'}),
+    // ---------- Warranty ----------
     {...imageWithAlt('warrantyImage'), group: 'legal', description: 'Photo shown beside the warranty banner on the homepage.'},
     defineField({
       name: 'warrantyEyebrow',
@@ -539,15 +659,16 @@ export const location = defineType({
       group: 'legal',
       description: 'Shown beside the warranty copy on the homepage. Leave blank for the default blue paint fan-deck illustration.',
     },
+    defineField({name: 'warranty', title: 'Warranty terms', type: 'blockContent', group: 'legal', fieldset: 'notOnSite', description: 'Full warranty text for the Warranty page (not built yet).'}),
     defineField({
       name: 'privacyPolicy',
       type: 'blockContent',
       group: 'legal',
       hidden: true,
-      description: 'Legacy import. The site uses the shared Privacy Policy document (Studio → Privacy Policy).',
+      description: 'Legacy import. The site uses the shared Privacy Policy document (Shared → Privacy Policy).',
     }),
 
-    // SEO
+    // ---------- SEO ----------
     defineField({name: 'metaTitle', type: 'string', group: 'seo', description: 'Homepage title. Leave empty for "Painters in {City}, {State} | Painter1".'}),
     defineField({
       name: 'metaDescription',
@@ -555,6 +676,7 @@ export const location = defineType({
       rows: 3,
       group: 'seo',
       description: 'Homepage description (max ~160 characters). Leave empty to generate it from the location name, city, owner and phone.',
+      validation: (rule) => rule.max(160).warning('Search results cut descriptions after about 160 characters.'),
     }),
     defineField({
       name: 'ourWorkPage',
@@ -571,6 +693,11 @@ export const location = defineType({
     }),
   ],
   preview: {
-    select: {title: 'name', subtitle: 'locationType', media: 'ownerPhoto'},
+    select: {title: 'name', city: 'address.city', state: 'address.state', type: 'locationType', media: 'ownerPhoto'},
+    prepare: ({title, city, state, type, media}) => ({
+      title,
+      subtitle: [[city, state].filter(Boolean).join(', ') || 'No city/state yet', type === 'maintenance' ? 'Maintenance' : 'Growth'].join(' · '),
+      media,
+    }),
   },
 })

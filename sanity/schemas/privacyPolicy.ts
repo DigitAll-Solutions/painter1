@@ -10,7 +10,7 @@ export const privacyPolicy = defineType({
   type: 'document',
   icon: ShieldCheck,
   fields: [
-    defineField({name: 'title', type: 'string', initialValue: 'Privacy Policy'}),
+    defineField({name: 'title', type: 'string', initialValue: 'Privacy Policy', description: 'Page heading.'}),
     defineField({
       name: 'body',
       type: 'array',

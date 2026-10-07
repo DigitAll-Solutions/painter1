@@ -2,8 +2,9 @@ import {defineArrayMember, defineField, defineType} from 'sanity'
 import {ListChecks} from 'lucide-react'
 
 const TOKENS = 'Tokens: {owner} (owner first name), {ownerFull} (owner full name), {city}.'
+// description: undefined → the token help; '' → a plain form label
 const text = (name: string, title: string, description?: string, group?: string) =>
-  defineField({name, title, type: 'string', group, description: description ?? TOKENS})
+  defineField({name, title, type: 'string', group, description: description === '' ? 'Text on the form. Leave empty for the default.' : (description ?? TOKENS)})
 const list = (name: string, title: string, description: string, group?: string) =>
   defineField({name, title, type: 'array', group, description, of: [defineArrayMember({type: 'string'})]})
 
@@ -30,10 +31,10 @@ export const estimateSurvey = defineType({
       group: 'project',
       description: 'Labels for the four fixed choices. These labels also appear in the email ("Service: …").',
       fields: [
-        defineField({name: 'interior', type: 'string'}),
-        defineField({name: 'exterior', type: 'string'}),
-        defineField({name: 'cabinet', type: 'string'}),
-        defineField({name: 'notSure', title: 'Not sure', type: 'string'}),
+        defineField({name: 'interior', type: 'string', description: 'Answer label, e.g. "Interior painting".'}),
+        defineField({name: 'exterior', type: 'string', description: 'Answer label, e.g. "Exterior painting".'}),
+        defineField({name: 'cabinet', type: 'string', description: 'Answer label, e.g. "Cabinet refinishing".'}),
+        defineField({name: 'notSure', title: 'Not sure', type: 'string', description: 'Answer label, e.g. "Not sure yet".'}),
       ],
     }),
     text('areasQuestion', 'Step 2: question', undefined, 'project'),

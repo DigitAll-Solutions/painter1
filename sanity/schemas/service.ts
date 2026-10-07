@@ -94,8 +94,8 @@ export const service = defineType({
     // Process
     defineField({name: 'processIntro', type: 'string', group: 'process', description: `Optional line under "Our {Service} Process". ${TOKENS}`}),
     defineField({name: 'prepIntro', title: 'Prep work: intro', type: 'text', rows: 2, group: 'process', description: TOKENS}),
-    defineField({name: 'prepBullets', title: 'Prep work: checklist', type: 'array', group: 'process', of: [defineArrayMember({type: 'string'})]}),
-    defineField({name: 'materialsBody', title: 'Paint & materials: body', type: 'boldText', group: 'process'}),
+    defineField({name: 'prepBullets', title: 'Prep work: checklist', type: 'array', group: 'process', description: 'Bullets under the prep intro on the service page.', of: [defineArrayMember({type: 'string'})]}),
+    defineField({name: 'materialsBody', title: 'Paint & materials: body', type: 'boldText', group: 'process', description: 'Paragraph beside the prep checklist. **Bold** for paint names.'}),
     defineField({
       name: 'materialsBlocks',
       title: 'Paint & materials: details',
@@ -107,8 +107,8 @@ export const service = defineType({
           type: 'object',
           name: 'materialsBlock',
           fields: [
-            defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'body', type: 'boldText'}),
+            defineField({name: 'title', type: 'string', description: 'Small heading, e.g. "Typical Timeline".', validation: (rule) => rule.required()}),
+            defineField({name: 'body', type: 'boldText', description: 'One short paragraph.'}),
           ],
           preview: {select: {title: 'title'}},
         }),
@@ -142,9 +142,9 @@ export const service = defineType({
           type: 'object',
           name: 'paintItem',
           fields: [
-            defineField({name: 'icon', type: 'string', options: {list: SERVICE_ICON_OPTIONS}, initialValue: 'PaintRoller'}),
-            defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'description', type: 'text', rows: 2}),
+            defineField({name: 'icon', type: 'string', description: 'Icon on the card.', options: {list: SERVICE_ICON_OPTIONS}, initialValue: 'PaintRoller'}),
+            defineField({name: 'title', type: 'string', description: 'Card heading, e.g. "Walls & ceilings".', validation: (rule) => rule.required()}),
+            defineField({name: 'description', type: 'text', rows: 2, description: 'One sentence.'}),
           ],
           preview: {select: {title: 'title', subtitle: 'description'}},
         }),
@@ -154,6 +154,7 @@ export const service = defineType({
     // FAQ
     defineField({
       name: 'faqs',
+      description: 'Questions and answers on every service page (also FAQ search data). Tokens: {city}, {state}, {owner}.',
       title: 'FAQ',
       type: 'array',
       group: 'faq',
@@ -162,7 +163,7 @@ export const service = defineType({
           type: 'object',
           name: 'faq',
           fields: [
-            defineField({name: 'question', type: 'string', validation: (rule) => rule.required()}),
+            defineField({name: 'question', type: 'string', description: 'As a homeowner would ask it.', validation: (rule) => rule.required()}),
             defineField({name: 'answer', type: 'text', rows: 3, description: TOKENS, validation: (rule) => rule.required()}),
           ],
           preview: {select: {title: 'question', subtitle: 'answer'}},
