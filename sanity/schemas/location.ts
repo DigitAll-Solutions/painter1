@@ -282,12 +282,42 @@ export const location = defineType({
       name: 'galleryImages',
       type: 'array',
       group: 'media',
+      description:
+        'Newest first: the top photo shows first on Our Work, the homepage and service pages. Drag new photos to the top.',
+      // A before/after pair needs exactly one "before" and one "after" with the same project ID
+      validation: (rule) =>
+        rule.custom((images?: {projectId?: string; role?: string}[]) => {
+          const roles = new Map<string, string[]>()
+          for (const image of images ?? []) {
+            const id = image.projectId?.trim()
+            if (id) roles.set(id, [...(roles.get(id) ?? []), image.role ?? 'none'])
+          }
+          const broken = [...roles].filter(([, r]) => r.length > 1 && (r.length !== 2 || !r.includes('before') || !r.includes('after')))
+          return broken.length
+            ? {message: `Project ID ${broken.map(([id]) => `"${id}"`).join(', ')}: a pair needs one Before and one After photo, so these show as separate photos.`, level: 'warning'}
+            : true
+        }),
       of: [
         defineArrayMember({
           type: 'image',
           options: {hotspot: true},
+          preview: {
+            select: {title: 'title', projectType: 'projectType', role: 'role', hidden: 'notLocalProject', commercial: 'commercial', media: 'asset'},
+            prepare: ({title, projectType, role, hidden, commercial, media}) => ({
+              title: title || projectType || 'Untitled photo',
+              subtitle: [hidden && 'HIDDEN: not a local project', commercial && 'Commercial', role && `${role[0].toUpperCase()}${role.slice(1)}`].filter(Boolean).join(' · '),
+              media,
+            }),
+          },
           fields: [
             altField,
+            defineField({
+              name: 'notLocalProject',
+              title: 'Hide: not a local project',
+              type: 'boolean',
+              initialValue: false,
+              description: "Hides the photo everywhere on the site (homepage, service pages, Our Work). For photos that aren't this location's own work.",
+            }),
             defineField({
               name: 'services',
               type: 'array',
@@ -302,7 +332,32 @@ export const location = defineType({
             }),
             defineField({name: 'projectType', type: 'string', description: 'Caption, first part, e.g. "Exterior Repaint".'}),
             defineField({name: 'area', type: 'string', description: 'Caption, second part, e.g. "Farragut". Shown as "Exterior Repaint, Farragut".'}),
-            defineField({name: 'caption', type: 'string'}),
+            defineField({name: 'caption', type: 'string', description: 'Longer description, shown in the Our Work lightbox.'}),
+            defineField({
+              name: 'commercial',
+              title: 'Commercial project',
+              type: 'boolean',
+              initialValue: false,
+              description: 'Shows under "Commercial" on Our Work.',
+            }),
+            defineField({
+              name: 'projectId',
+              title: 'Project ID',
+              type: 'string',
+              description:
+                'Give a before and an after photo the same ID (e.g. "brick-ranch") to show them as one before/after slider on Our Work.',
+              validation: (rule) => rule.regex(/^[a-z0-9-]+$/, {name: 'lowercase letters, numbers and dashes'}),
+            }),
+            defineField({
+              name: 'role',
+              title: 'Before or after',
+              type: 'string',
+              options: {list: [{title: 'Before', value: 'before'}, {title: 'After', value: 'after'}], layout: 'radio', direction: 'horizontal'},
+              hidden: ({parent}) => !parent?.projectId,
+            }),
+            // Map-ready: a project map can read these later without changing the page template
+            defineField({name: 'city', type: 'string', description: 'For the project map. Leave empty for the location\'s city.'}),
+            defineField({name: 'geo', title: 'Map position', type: 'geopoint', description: 'For the project map (optional).'}),
             defineField({
               name: 'serviceType',
               type: 'string',
@@ -500,6 +555,19 @@ export const location = defineType({
       rows: 3,
       group: 'seo',
       description: 'Homepage description (max ~160 characters). Leave empty to generate it from the location name, city, owner and phone.',
+    }),
+    defineField({
+      name: 'ourWorkPage',
+      title: 'Our Work page',
+      type: 'object',
+      group: 'seo',
+      description: 'All optional. Tokens: {city}, {state}, {owner}.',
+      options: {collapsible: true, collapsed: true},
+      fields: [
+        defineField({name: 'metaTitle', type: 'string', description: 'Leave empty for "Our Work in {City}, {ST} | Painter1 of {city}".'}),
+        defineField({name: 'metaDescription', type: 'text', rows: 3, description: 'Max ~160 characters. Leave empty for the default description.'}),
+        defineField({name: 'intro', type: 'text', rows: 3, description: 'Text under the page heading. Leave empty for the default.'}),
+      ],
     }),
   ],
   preview: {

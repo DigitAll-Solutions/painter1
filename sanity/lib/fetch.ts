@@ -1,7 +1,7 @@
 import { cache } from 'react'
 
 import { client } from './client'
-import { ESTIMATE_SURVEY_QUERY, LOCATION_PAGES_QUERY, PRIVACY_POLICY_QUERY, LOCATION_QUERY, LOCATION_SLUGS_QUERY, SERVICE_QUERY, SERVICE_SLUGS_QUERY } from './queries'
+import { ESTIMATE_SURVEY_QUERY, LOCATION_PAGES_QUERY, PRIVACY_POLICY_QUERY, LOCATION_QUERY, LOCATION_SLUGS_QUERY, SERVICE_KEYS_QUERY, SERVICE_QUERY, SERVICE_SLUGS_QUERY } from './queries'
 import type { Location, Service } from './types'
 import type { PortableTextBlock } from 'next-sanity'
 import defaults from '@/lib/estimate-survey-defaults.json'
@@ -26,6 +26,12 @@ export const getService = cache(async (slug: string) =>
 
 export const getServiceSlugs = () =>
   client.fetch<string[]>(SERVICE_SLUGS_QUERY, {}, { next: { revalidate, tags: ['service'] } })
+
+/** Service document _id → its locationKey (interior | exterior | cabinet) */
+export const getServiceKeys = cache(async () => {
+  const rows = await client.fetch<{ _id: string; locationKey: string }[]>(SERVICE_KEYS_QUERY, {}, { next: { revalidate, tags: ['service'] } })
+  return Object.fromEntries(rows.map((row) => [row._id, row.locationKey])) as Record<string, string>
+})
 
 /** Fill every empty field of a survey document from the built-in default copy */
 function mergeSurvey(doc: unknown, fallback: unknown): unknown {
