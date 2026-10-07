@@ -40,6 +40,6 @@ export default function TrustindexWidget({ widgetId }: { widgetId: string }) {
   }, [widgetId])
 
   return (
-    <div ref={ref} className="min-h-72" />
+    <div ref={ref} className="trustindex min-h-72" />
   )
 }
