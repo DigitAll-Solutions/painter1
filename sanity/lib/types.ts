@@ -22,6 +22,15 @@ export type GalleryImage = SanityImage & {
   area?: string
   /** _ids of the service documents this photo is tagged with */
   services?: string[]
+  /** "Hide: not a local project": never shown anywhere */
+  notLocalProject?: boolean
+  commercial?: boolean
+  /** A before and an after photo with the same projectId form one before/after card */
+  projectId?: string
+  role?: 'before' | 'after'
+  /** Map-ready: municipality (empty = the location's city) and position */
+  city?: string
+  geo?: { lat: number; lng: number }
 }
 
 export type ServiceDetail = {
@@ -131,6 +140,7 @@ export type Location = {
   estimateSurvey?: { _ref: string }
   metaTitle?: string
   metaDescription?: string
+  ourWorkPage?: { metaTitle?: string; metaDescription?: string; intro?: string }
 }
 
 export type ServiceLocationKey = 'interior' | 'exterior' | 'cabinet'

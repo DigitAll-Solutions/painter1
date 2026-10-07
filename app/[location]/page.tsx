@@ -16,6 +16,7 @@ import ServicesGrid from '@/components/home/ServicesGrid'
 import StatsRow from '@/components/home/StatsRow'
 import TransformationSection from '@/components/home/TransformationSection'
 import WarrantyBand from '@/components/home/WarrantyBand'
+import { localPhotos, sliderAssets } from '@/lib/gallery'
 import { autoHomeDescription, localBusinessSchema, pageTitle } from '@/lib/seo'
 import { urlFor } from '@/sanity/lib/image'
 import { getLocation } from '@/sanity/lib/fetch'
@@ -42,7 +43,16 @@ export default async function LocationHomePage({ params }: PageProps<'/[location
   const location = await getLocation((await params).location)
   if (!location) notFound()
 
-  const gallery = location.galleryImages?.slice(0, 6) ?? []
+  // Local photos only; pairs show their "after"; photos already on this page (the transformation
+  // slider and the service cards' before/after photos) aren't repeated
+  const inSlider = sliderAssets(
+    location.transformationBeforeImage,
+    location.transformationAfterImage,
+    ...Object.values(location.services ?? {}).flatMap((service) => [service?.beforeImage, service?.afterImage, ...(service?.images ?? [])]),
+  )
+  const gallery = localPhotos(location)
+    .filter((image) => image.role !== 'before' && !inSlider.has(image.asset._id))
+    .slice(0, 6)
 
   return (
     <>

@@ -23,7 +23,10 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
   heroVideo{asset->{url, mimeType}},
   warrantyImage{${image}},
   warrantyGraphic{${image}},
-  galleryImages[]{_key, caption, title, projectType, area, "services": services[]._ref, ${image}},
+  galleryImages[]{
+    _key, caption, title, projectType, area, city, "geo": geo{lat, lng}, "services": services[]._ref,
+    notLocalProject, commercial, projectId, role, ${image}
+  },
   reviews[]{..., "services": services[]._ref},
   services{
     interior${service},
@@ -44,6 +47,9 @@ export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current =
 }`)
 
 export const SERVICE_SLUGS_QUERY = defineQuery(`*[_type == "service" && defined(slug.current)].slug.current`)
+
+// Service _id → locationKey (interior | exterior | cabinet), for the Our Work filters
+export const SERVICE_KEYS_QUERY = defineQuery(`*[_type == "service" && defined(locationKey) && !(_id in path("drafts.**"))]{_id, locationKey}`)
 
 export const LOCATION_PAGES_QUERY = defineQuery(`*[_type == "location" && defined(slug.current)]{"slug": slug.current, locationType}`)
 

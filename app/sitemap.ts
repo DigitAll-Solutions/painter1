@@ -11,9 +11,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl(`/${slug}`), changeFrequency: 'weekly' as const, priority: 0.9 },
     { url: absoluteUrl(`/${slug}/free-estimate`), changeFrequency: 'monthly' as const, priority: 0.7 },
     { url: absoluteUrl(`/${slug}/privacy-policy`), changeFrequency: 'yearly' as const, priority: 0.2 },
-    // Service pages exist for every location except maintenance ones
+    // Service pages and Our Work exist for every location except maintenance ones (filter views aren't listed)
     ...(locationType === 'maintenance'
       ? []
-      : services.map((service) => ({ url: absoluteUrl(`/${slug}/${service}`), changeFrequency: 'monthly' as const, priority: 0.8 }))),
+      : [
+          ...services.map((service) => ({ url: absoluteUrl(`/${slug}/${service}`), changeFrequency: 'monthly' as const, priority: 0.8 })),
+          { url: absoluteUrl(`/${slug}/our-work`), changeFrequency: 'monthly' as const, priority: 0.7 },
+        ]),
   ])
 }
