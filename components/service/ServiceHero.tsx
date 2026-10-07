@@ -1,12 +1,12 @@
-import Link from 'next/link'
-import { ChevronRight, Phone } from 'lucide-react'
+import { Phone } from 'lucide-react'
 
+import Breadcrumbs, { type Crumb } from '../Breadcrumbs'
 import CtaButton from '../CtaButton'
 import SanityImage from '../SanityImage'
 import { hotspotPosition } from '@/lib/image'
 import type { SanityImage as SanityImageType } from '@/sanity/lib/types'
 
-export type Crumb = { name: string; href?: string }
+export type { Crumb }
 
 type Props = {
   crumbs: Crumb[]
@@ -37,24 +37,7 @@ export default function ServiceHero({ crumbs, title, subtitle, image, estimateHr
 
       <div className="mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-8 md:pb-12 lg:justify-center lg:pb-0">
         <div className="max-w-xl">
-          <nav aria-label="Breadcrumb">
-            <ol className="flex flex-wrap items-center gap-1.5 text-sm">
-              {crumbs.map((crumb, i) => (
-                <li key={crumb.name} className="flex items-center gap-1.5">
-                  {i > 0 && <ChevronRight className="size-3.5" aria-hidden />}
-                  {crumb.href ? (
-                    <Link href={crumb.href} className="underline-offset-4 hover:underline">
-                      {crumb.name}
-                    </Link>
-                  ) : (
-                    <span aria-current="page" className="font-semibold">
-                      {crumb.name}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </nav>
+          <Breadcrumbs crumbs={crumbs} />
           <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-balance md:text-4xl lg:text-5xl">{title}</h1>
           {subtitle && <p className="mt-3 text-lg leading-snug md:text-xl">{subtitle}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
