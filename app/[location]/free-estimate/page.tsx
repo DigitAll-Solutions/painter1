@@ -7,6 +7,7 @@ import CtaButton from '@/components/CtaButton'
 import JsonLd from '@/components/JsonLd'
 import SanityImage from '@/components/SanityImage'
 import EstimateSurvey from '@/components/estimate/EstimateSurvey'
+import { fillConsentBlocks } from '@/lib/consent'
 import { fillTokens } from '@/lib/estimate-survey'
 import { telHref } from '@/lib/location'
 import { breadcrumbSchema, cityName } from '@/lib/seo'
@@ -49,7 +50,11 @@ export default async function FreeEstimatePage({ params }: PageProps<'/[location
   const owner = location.ownerName?.split(' ')[0] ?? 'our team'
   const copy = fillTokens(survey, { owner, ownerFull, city })
   const tel = telHref(location.phone)
-  const consents = (location.consentBlocks ?? []).map((block) => ({ name: block.name, content: <PortableText value={block.body} components={consentText} /> }))
+  // {locationName} in consent text → this location's name (the server action stores the same filled text)
+  const consents = fillConsentBlocks(location.consentBlocks ?? [], location.name).map((block) => ({
+    name: block.name,
+    content: <PortableText value={block.body} components={consentText} />,
+  }))
   const photo = location.ownerPhoto ?? location.ownerActionPhoto
 
   const ownerCard = (

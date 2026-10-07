@@ -14,6 +14,7 @@ import {
   type ServiceKey,
   type StepKey,
 } from '@/lib/estimate-survey'
+import { consentPlainText, fillConsentBlocks } from '@/lib/consent'
 import { ATTRIBUTION_FIELDS, HONEYPOT_FIELD } from '@/lib/estimate-form'
 import { deliveryLabel, resolveDelivery, type Delivery } from '@/lib/lead-delivery'
 import { buildLeadEmail } from '@/lib/lead-email'
@@ -21,7 +22,6 @@ import { absoluteUrl, siteUrl } from '@/lib/site'
 import { verifyTurnstile } from '@/lib/turnstile'
 import { getEstimateSurvey, getLocation } from '@/sanity/lib/fetch'
 import { leadReadClient, leadWriteClient } from '@/sanity/lib/private-client'
-import type { ConsentBlock } from '@/sanity/lib/types'
 
 export type EstimateState =
   | { status: 'idle' }
@@ -30,13 +30,6 @@ export type EstimateState =
   | { status: 'success'; firstName: string }
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
-
-/** Consent text as the visitor read it: paragraphs separated by a blank line */
-const plainText = (blocks: ConsentBlock['body']) =>
-  blocks
-    .map((block) => ((block.children as { text?: string }[] | undefined) ?? []).map((child) => child.text ?? '').join('').trim())
-    .filter(Boolean)
-    .join('\n\n')
 
 /** The page the form was submitted from ({submission.source_url}); only accepted for this site */
 function sourceUrl(raw: string, slug: string, host: string | null) {
@@ -105,7 +98,8 @@ export async function submitEstimate(_previous: EstimateState, formData: FormDat
   if (!(await verifyTurnstile(field('cf-turnstile-response'), ip))) return { status: 'call-us' }
 
   const survey = await getEstimateSurvey(slug)
-  const consentBlocks = location.consentBlocks ?? []
+  // Filled exactly as on the page, so the stored consent record is the text the visitor read
+  const consentBlocks = fillConsentBlocks(location.consentBlocks ?? [], location.name)
   const consentNames = consentBlocks.map((block) => block.name)
   const service = field('service') as ServiceKey
 
@@ -166,7 +160,7 @@ export async function submitEstimate(_previous: EstimateState, formData: FormDat
     await writer.create({
       _id: leadId,
       _type: 'lead',
-      location: slug,
+      location: { _type: 'reference', _ref: location._id },
       submittedAt,
       pageUrl,
       testMode: delivery.kind === 'test',
@@ -182,7 +176,7 @@ export async function submitEstimate(_previous: EstimateState, formData: FormDat
       address: { street: answers.street, city: answers.city, state, zip: answers.zip },
       attribution,
       consents: consentBlocks.map((block) => {
-        const text = plainText(block.body)
+        const text = consentPlainText(block.body)
         return { _key: block._key || block.name, _type: 'consent', name: block.name, checked: true, text, textHash: sha256(text) }
       }),
       ip,
