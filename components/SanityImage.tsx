@@ -1,4 +1,4 @@
-import type { ImgHTMLAttributes } from 'react'
+import type { CSSProperties, ImgHTMLAttributes } from 'react'
 import { preload as preloadResource } from 'react-dom'
 
 import { urlFor } from '@/sanity/lib/image'
@@ -19,8 +19,19 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'alt' 
   height?: number
   /** Above-the-fold image: preload it and fetch with high priority */
   preload?: boolean
+  /**
+   * With `fill` only: render without src/srcset (kept in data-src/data-srcset) so a client
+   * IntersectionObserver decides when it loads; a <noscript> copy shows it without JavaScript.
+   */
+  deferred?: boolean
   quality?: number
 }
+
+const escapeAttr = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+const cssText = (style: CSSProperties = {}) =>
+  Object.entries(style)
+    .map(([key, value]) => `${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}:${value}`)
+    .join(';')
 
 export default function SanityImage({
   image,
@@ -30,6 +41,7 @@ export default function SanityImage({
   width,
   height,
   preload,
+  deferred,
   quality = 75,
   sizes = '100vw',
   className = '',
@@ -56,6 +68,29 @@ export default function SanityImage({
 
   const intrinsicWidth = width ?? sourceWidth
   const lqip = image.asset.metadata?.lqip
+  const altText = alt ?? image.alt ?? ''
+
+  if (deferred && fill && !preload) {
+    const classes = `absolute inset-0 size-full ${className}`
+    const fallback = `<img src="${escapeAttr(src)}" srcset="${escapeAttr(srcSet)}" sizes="${escapeAttr(sizes)}" alt="${escapeAttr(altText)}" class="${escapeAttr(classes)}" style="${escapeAttr(cssText(style))}" decoding="async">`
+    return (
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element -- srcset comes straight from the Sanity CDN */}
+        <img
+          {...props}
+          data-src={src}
+          data-srcset={srcSet}
+          sizes={sizes}
+          alt={altText}
+          decoding="async"
+          className={classes}
+          style={lqip ? { backgroundImage: `url(${lqip})`, backgroundSize: 'cover', ...style } : style}
+        />
+        {/* Same photo over the placeholder when JavaScript is off */}
+        <noscript dangerouslySetInnerHTML={{ __html: fallback }} />
+      </>
+    )
+  }
 
   return (
     // eslint-disable-next-line @next/next/no-img-element -- srcset comes straight from the Sanity CDN
@@ -64,7 +99,7 @@ export default function SanityImage({
       src={src}
       srcSet={srcSet}
       sizes={sizes}
-      alt={alt ?? image.alt ?? ''}
+      alt={altText}
       width={fill ? undefined : intrinsicWidth}
       height={fill ? undefined : (height ?? Math.round(intrinsicWidth / ratio))}
       loading={preload ? 'eager' : (loading ?? 'lazy')}

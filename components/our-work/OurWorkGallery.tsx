@@ -49,6 +49,7 @@ export default function OurWorkGallery({ items, chips, initialFilter, pageSize =
   const closeButton = useRef<HTMLButtonElement>(null)
   const trigger = useRef<HTMLElement | null>(null)
   const listItems = useRef(new Map<string, HTMLLIElement>())
+  const grid = useRef<HTMLUListElement>(null)
 
   const matches = items.filter((item) => !filter || item.filters.includes(filter))
   const shown = matches.slice(0, limit)
@@ -76,6 +77,36 @@ export default function OurWorkGallery({ items, chips, initialFilter, pageSize =
     revealFrom.current = null
     if (item) listItems.current.get(item.key)?.focus()
   }, [limit, matches])
+
+  // Deferred card photos (SanityImage `deferred`) get their src only when they come within 200px of
+  // the viewport, so nothing below the first screen downloads while the page is still painting.
+  // Cards hidden by a filter or Load more never intersect until they're shown.
+  useEffect(() => {
+    const images = grid.current?.querySelectorAll<HTMLImageElement>('img[data-src]')
+    if (!images?.length) return
+    const load = (img: HTMLImageElement) => {
+      if (img.dataset.srcset) img.srcset = img.dataset.srcset
+      if (img.dataset.src) img.src = img.dataset.src
+      delete img.dataset.srcset
+      delete img.dataset.src
+    }
+    if (!('IntersectionObserver' in window)) {
+      images.forEach(load)
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          load(entry.target as HTMLImageElement)
+          observer.unobserve(entry.target)
+        }
+      },
+      { rootMargin: '200px 0px' },
+    )
+    images.forEach((img) => observer.observe(img))
+    return () => observer.disconnect()
+  }, [])
 
   // Delegated click: any [data-lightbox] link in a card opens the lightbox instead of the image
   const onGridClick = (e: MouseEvent<HTMLUListElement>) => {
@@ -156,7 +187,7 @@ export default function OurWorkGallery({ items, chips, initialFilter, pageSize =
       {/* Every card is in the HTML. Other filters' cards get the hidden attribute; cards past the limit get
           the "hidden" class instead, which the <noscript> style can override (Tailwind's [hidden] rule is a
           layered !important that an unlayered style can't beat). */}
-      <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6" onClick={onGridClick}>
+      <ul ref={grid} className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6" onClick={onGridClick}>
         {items.map((item) => (
           <li
             key={item.key}
