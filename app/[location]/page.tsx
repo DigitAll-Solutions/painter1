@@ -16,7 +16,7 @@ import ServicesGrid from '@/components/home/ServicesGrid'
 import StatsRow from '@/components/home/StatsRow'
 import TransformationSection from '@/components/home/TransformationSection'
 import WarrantyBand from '@/components/home/WarrantyBand'
-import { localBusinessSchema, pageTitle } from '@/lib/seo'
+import { autoHomeDescription, localBusinessSchema, pageTitle } from '@/lib/seo'
 import { urlFor } from '@/sanity/lib/image'
 import { getLocation } from '@/sanity/lib/fetch'
 
@@ -24,13 +24,14 @@ export async function generateMetadata({ params }: PageProps<'/[location]'>): Pr
   const location = await getLocation((await params).location)
   if (!location) return {}
   const title = location.metaTitle ?? pageTitle('Painters', location)
+  const description = location.metaDescription?.trim() || autoHomeDescription(location)
   return {
     title,
-    description: location.metaDescription,
+    description,
     alternates: { canonical: `/${location.slug}` },
     openGraph: {
       title,
-      description: location.metaDescription,
+      description,
       url: `/${location.slug}`,
       images: location.heroImage ? [urlFor(location.heroImage).width(1200).height(630).fit('crop').url()] : undefined,
     },
