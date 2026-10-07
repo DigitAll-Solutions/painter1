@@ -49,3 +49,8 @@ next-env.d.ts
 # Client contract documents (pricing): never commit
 /docs/contract/
 /painter1-nextjs-project-brief.pdf
+# Agent instruction files (re-created by `next dev`) and local design mock-ups: never commit
+/AGENTS.md
+/CLAUDE.md
+/docs/reference/Paint1 -Exterior-moch-up .jpg
+/docs/reference/Paint1 -Interior-moch-up .jpg
