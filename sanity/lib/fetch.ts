@@ -1,8 +1,9 @@
 import { cache } from 'react'
 
 import { client } from './client'
-import { ESTIMATE_SURVEY_QUERY, LOCATION_PAGES_QUERY, LOCATION_QUERY, LOCATION_SLUGS_QUERY, SERVICE_QUERY, SERVICE_SLUGS_QUERY } from './queries'
+import { ESTIMATE_SURVEY_QUERY, LOCATION_PAGES_QUERY, PRIVACY_POLICY_QUERY, LOCATION_QUERY, LOCATION_SLUGS_QUERY, SERVICE_QUERY, SERVICE_SLUGS_QUERY } from './queries'
 import type { Location, Service } from './types'
+import type { PortableTextBlock } from 'next-sanity'
 import defaults from '@/lib/estimate-survey-defaults.json'
 import type { SurveyContent } from '@/lib/estimate-survey'
 
@@ -40,3 +41,7 @@ export const getEstimateSurvey = cache(async (slug: string) => {
   const doc = await client.fetch<Record<string, unknown> | null>(ESTIMATE_SURVEY_QUERY, { slug }, { next: { revalidate, tags: ['estimateSurvey', 'location'] } })
   return mergeSurvey(doc, defaults) as SurveyContent
 })
+
+export const getPrivacyPolicy = cache(async () =>
+  client.fetch<{ title?: string; body?: PortableTextBlock[] } | null>(PRIVACY_POLICY_QUERY, {}, { next: { revalidate, tags: ['privacyPolicy'] } }),
+)

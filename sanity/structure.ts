@@ -39,4 +39,5 @@ export const structure: StructureResolver = (S) =>
       singleton(S, 'franchisePage', 'Corporate Homepage'),
       singleton(S, 'locationsPage', 'Locations Directory'),
       singleton(S, 'franchiseOpportunities', 'Franchise Opportunities'),
+      S.listItem().title('Privacy Policy').id('privacy-policy').child(S.document().schemaType('privacyPolicy').documentId('privacy-policy').title('Privacy Policy')),
     ])

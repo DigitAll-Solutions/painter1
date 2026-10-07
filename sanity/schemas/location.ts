@@ -484,7 +484,13 @@ export const location = defineType({
       group: 'legal',
       description: 'Shown beside the warranty copy on the homepage. Leave blank for the default blue paint fan-deck illustration.',
     },
-    defineField({name: 'privacyPolicy', type: 'blockContent', group: 'legal'}),
+    defineField({
+      name: 'privacyPolicy',
+      type: 'blockContent',
+      group: 'legal',
+      hidden: true,
+      description: 'Legacy import. The site uses the shared Privacy Policy document (Studio → Privacy Policy).',
+    }),
 
     // SEO
     defineField({name: 'metaTitle', type: 'string', group: 'seo', description: 'Homepage title. Leave empty for "Painters in {City}, {State} | Painter1".'}),
