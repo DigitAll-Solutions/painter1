@@ -6,9 +6,9 @@ export const pageSection = defineType({
   title: 'Section',
   type: 'object',
   fields: [
-    defineField({name: 'heading', type: 'string'}),
-    defineField({name: 'body', type: 'blockContent'}),
-    defineField({name: 'image', type: 'image', options: {hotspot: true}, fields: [altField]}),
+    defineField({name: 'heading', type: 'string', description: 'Section heading.'}),
+    defineField({name: 'body', type: 'blockContent', description: 'Section text.'}),
+    defineField({name: 'image', type: 'image', options: {hotspot: true}, fields: [altField], description: 'Optional photo for the section.'}),
   ],
   preview: {select: {title: 'heading', media: 'image'}},
 })
