@@ -125,6 +125,13 @@ export const service = defineType({
 
     // What we paint
     defineField({
+      name: 'whatWePaintTitle',
+      title: 'What we paint: heading',
+      type: 'string',
+      group: 'paint',
+      description: 'Leave empty for "What We Paint" (e.g. "What We Refinish" for cabinets).',
+    }),
+    defineField({
       name: 'whatWePaint',
       title: 'What we paint',
       type: 'array',

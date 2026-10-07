@@ -3,11 +3,11 @@ import { defineQuery } from 'next-sanity'
 const image = `alt, hotspot, crop, asset->{_id, metadata{lqip, dimensions{width, height, aspectRatio}}}`
 
 const service = `{
-  title, summary, description, cardBullets, highlights, process, transformationBody,
+  title, summary, description, cardBullets, highlights, process, transformationBody, metaTitle, metaDescription,
   heroImage{${image}},
   beforeImage{${image}},
   afterImage{${image}},
-  subServices[]{_key, title, description, image{${image}}},
+  subServices[]{_key, title, anchor, description, image{${image}}},
   images[]{_key, ${image}}
 }`
 
@@ -39,7 +39,7 @@ export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current =
   heroSubtitle, heroImage{${image}},
   transformationHeading, transformationBody,
   processIntro, prepIntro, prepBullets, materialsBody, materialsBlocks[]{_key, title, body}, warrantyBannerBody,
-  whatWePaint[]{_key, icon, title, description},
+  whatWePaintTitle, whatWePaint[]{_key, icon, title, description},
   faqs[]{_key, question, answer}
 }`)
 
@@ -51,3 +51,6 @@ export const LOCATION_PAGES_QUERY = defineQuery(`*[_type == "location" && define
 export const ESTIMATE_SURVEY_QUERY = defineQuery(
   `coalesce(*[_type == "location" && slug.current == $slug][0].estimateSurvey->, *[_id == "estimate-survey-default"][0])`,
 )
+
+// The franchise-wide privacy notice (one document for every location)
+export const PRIVACY_POLICY_QUERY = defineQuery(`*[_id == "privacy-policy"][0]{title, body}`)

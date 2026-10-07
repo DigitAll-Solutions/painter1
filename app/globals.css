@@ -26,6 +26,15 @@ body {
   color: var(--color-ink);
 }
 
+/* Trustindex reviews widget (rendered into our DOM): its grey dates (#767676) and 50%-opacity
+   "Read more" fail WCAG AA on the #f4f4f4 cards. !important because the widget injects its own
+   high-specificity rules after ours. Same color as the dates on our review cards (6.9:1). */
+.trustindex .ti-widget .ti-date,
+.trustindex .ti-widget .ti-read-more span {
+  color: var(--color-slate-600) !important;
+  opacity: 1 !important;
+}
+
 /* Services: the first card is wide by default; on desktop the hovered card takes its place */
 @media (min-width: 64rem) {
   .service-cards > li {

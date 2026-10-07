@@ -6,6 +6,22 @@ import type { Location, Review } from '@/sanity/lib/types'
 export const cityName = (location: Location) =>
   [location.address?.city, location.address?.state].filter(Boolean).join(', ') || location.name
 
+const MAX_DESCRIPTION = 160
+
+/**
+ * Homepage meta description from location data, used when the location has no metaDescription.
+ * Drops the owner clause, then the phone, if needed to stay within 160 characters.
+ */
+export function autoHomeDescription(location: Location) {
+  const place = cityName(location)
+  const services = location.locationType === 'maintenance' ? 'residential painting' : 'interior, exterior and cabinet painting'
+  const owner = location.ownerName ? ` Locally owned by ${location.ownerName}.` : ''
+  const phone = location.phone ? ` Free estimate: ${location.phone}.` : ' Free estimates.'
+  const base = `${location.name}: ${services} in ${place}.`
+  const candidates = [`${base}${owner}${phone}`, `${base}${phone}`, base]
+  return candidates.find((text) => text.length <= MAX_DESCRIPTION) ?? base.slice(0, MAX_DESCRIPTION)
+}
+
 /** "[Service] in [City] | Painter1" */
 export const pageTitle = (service: string, location: Location) => `${service} in ${cityName(location)} | Painter1`
 

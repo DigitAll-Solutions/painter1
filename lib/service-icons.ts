@@ -1,5 +1,7 @@
 import {
+  Bath,
   BrickWall,
+  CookingPot,
   DoorClosed,
   DoorOpen,
   Droplets,
@@ -16,6 +18,7 @@ import {
   Sofa,
   Sun,
   Warehouse,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -39,6 +42,9 @@ export const SERVICE_ICONS = {
   Sofa,
   Sun,
   Droplets,
+  CookingPot,
+  Bath,
+  Wrench,
 } satisfies Record<string, LucideIcon>
 
 export type ServiceIconName = keyof typeof SERVICE_ICONS
@@ -64,4 +70,7 @@ export const SERVICE_ICON_OPTIONS: { title: string; value: ServiceIconName }[] =
   { title: 'Sofa (furniture protection)', value: 'Sofa' },
   { title: 'Sun (weather)', value: 'Sun' },
   { title: 'Droplets (moisture)', value: 'Droplets' },
+  { title: 'Cooking pot (kitchen)', value: 'CookingPot' },
+  { title: 'Bath (vanities)', value: 'Bath' },
+  { title: 'Wrench (hardware)', value: 'Wrench' },
 ]

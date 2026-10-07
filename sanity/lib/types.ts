@@ -32,11 +32,13 @@ export type ServiceDetail = {
   beforeImage?: SanityImage
   afterImage?: SanityImage
   transformationBody?: string
+  metaTitle?: string
+  metaDescription?: string
   /** Crew-at-work photo for this location's service page hero */
   heroImage?: SanityImage
   highlights?: string[]
   process?: { _key: string; title: string; description?: string; items?: string[] }[]
-  subServices?: { _key: string; title: string; description?: string; image?: SanityImage }[]
+  subServices?: { _key: string; title: string; anchor?: string; description?: string; image?: SanityImage }[]
   images?: (SanityImage & { _key: string })[]
 }
 
@@ -151,6 +153,7 @@ export type Service = {
   materialsBody?: PortableTextBlock[]
   materialsBlocks?: { _key: string; title: string; body?: PortableTextBlock[] }[]
   warrantyBannerBody?: string
+  whatWePaintTitle?: string
   whatWePaint?: { _key: string; icon?: string; title: string; description?: string }[]
   faqs?: { _key: string; question: string; answer: string }[]
 }

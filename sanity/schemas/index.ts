@@ -10,11 +10,12 @@ import { service } from './service'
 import { estimateSurvey } from './estimateSurvey'
 import { lead } from './lead'
 import { leadSettings } from './leadSettings'
+import { privacyPolicy } from './privacyPolicy'
 import { franchisePage } from './franchisePage'
 import { locationsPage } from './locationsPage'
 import { franchiseOpportunities } from './franchiseOpportunities'
 
-export const singletonTypes = new Set(['franchisePage', 'locationsPage', 'franchiseOpportunities'])
+export const singletonTypes = new Set(['franchisePage', 'locationsPage', 'franchiseOpportunities', 'privacyPolicy'])
 /** Created only with fixed private IDs (by Studio's structure or the server), never from the new-document menu */
 export const noCreateTypes = new Set(['leadSettings', 'lead'])
 
@@ -30,6 +31,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     estimateSurvey,
     leadSettings,
     lead,
+    privacyPolicy,
     franchisePage,
     locationsPage,
     franchiseOpportunities,

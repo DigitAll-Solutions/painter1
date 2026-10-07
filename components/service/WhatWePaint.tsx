@@ -11,7 +11,7 @@ export default function WhatWePaint({ service }: { service: Service }) {
   if (!items.length) return null
 
   return (
-    <Section eyebrow={`${service.shortName} Services`} eyebrowClassName="text-cta-dark" title="What We Paint" className="bg-mist">
+    <Section eyebrow={`${service.shortName} Services`} eyebrowClassName="text-cta-dark" title={service.whatWePaintTitle || 'What We Paint'} className="bg-mist">
       <ul className={`grid grid-cols-1 gap-5 sm:grid-cols-2 ${gridFor(items.length)}`}>
         {items.map((item) => {
           const Icon = serviceIcon(item.icon)

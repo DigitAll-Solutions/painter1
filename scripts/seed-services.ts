@@ -138,13 +138,107 @@ export const SERVICE_SEED = [
       ],
     ]),
   },
+  {
+    _id: 'service-cabinet-refinishing',
+    _type: 'service',
+    title: 'Cabinet Refinishing',
+    slug: { _type: 'slug', current: 'cabinet-refinishing' },
+    shortName: 'Cabinet',
+    locationKey: 'cabinet',
+    ownerCardVariant: 'featured',
+    heroSubtitle: 'A factory-smooth finish without the cost of new cabinets.',
+    metaDescription:
+      'Cabinet refinishing in {city}, {state} by Painter1: Sherwin-Williams cabinet enamel, most kitchens done in 3–5 days, and a 2-year warranty. Free estimate.',
+    transformationHeading: 'Real Kitchens, Real Results',
+    transformationBody:
+      'Cabinet painting is a cost-effective solution to breathe new life into your kitchen or bathroom without the need for a full remodel. This allows you to preserve the original cabinets while updating the appearance to match contemporary trends or your personal style preferences.',
+    processIntro: 'Your kitchen deserves more than just a paint job—it deserves a transformation.',
+    prepIntro: 'On day one of the project:',
+    prepBullets: [
+      'All cabinet doors and drawers are carefully removed',
+      'We mask and tape off counters, floors, and appliances',
+      'Everything is cleaned, degreased, sanded, and primed',
+      'We set up a ventilated spray area if needed, and apply protective plastic sheeting to control dust',
+    ],
+    materialsBody: boldText(
+      'We use professional-grade HVLP sprayers (or brushes if preferred) to apply **2 coats of primer** (shellac or water-based, depending on your cabinet material) and **2–3 topcoats of Sherwin-Williams cabinet enamel**.',
+    ),
+    materialsBlocks: [
+      {
+        _key: 'color-finish',
+        title: 'Color & Finish',
+        body: boldText(
+          'Choose from **hundreds of Sherwin-Williams shades** and the right finish for durability and looks (e.g., satin enamel for kitchens), with optional upgrades like soft-close hardware or glass door inserts.',
+        ),
+      },
+      { _key: 'typical-timeline', title: 'Typical Timeline', body: boldText('Most kitchens are done in **3–5 days**, instead of the weeks a full cabinet replacement takes.') },
+      {
+        _key: 'cost',
+        title: 'Cost',
+        body: boldText(
+          'Cabinet painting typically costs **60–80% less** than complete cabinet replacement: new custom cabinets range from $15,000–$40,000 or more, while professional refinishing generally costs $3,000–$8,000.',
+        ),
+      },
+    ],
+    warrantyBannerBody: warranty('cabinet'),
+    whatWePaintTitle: 'What We Refinish',
+    whatWePaint: items([
+      { icon: 'CookingPot', title: 'Kitchen cabinets', description: 'Doors, drawers and frames, sprayed with Sherwin-Williams cabinet enamel.' },
+      { icon: 'Bath', title: 'Bathroom vanities', description: 'Vanity doors, drawers and frames, prepped and finished the same way.' },
+      { icon: 'Wrench', title: 'Hardware & upgrades', description: 'Hardware reattached or upgraded, with optional soft-close hardware or glass door inserts.' },
+    ]),
+    faqs: faqs([
+      [
+        'How much does cabinet painting cost?',
+        'Cabinet painting typically costs 60–80% less than replacing your cabinets: new custom cabinets range from $15,000–$40,000 or more, while professional refinishing generally costs $3,000–$8,000. Your free in-home estimate gives you a written price with a detailed breakdown, with no hidden fees.',
+      ],
+      ['How long does cabinet refinishing take?', 'Most kitchens are done in 3–5 days.'],
+      [
+        'What do you use on cabinets?',
+        'Two coats of primer (shellac or water-based, depending on your cabinet material) and 2–3 topcoats of Sherwin-Williams cabinet enamel, applied with professional-grade HVLP sprayers, or brushes if you prefer.',
+      ],
+      [
+        'Do you take the doors off?',
+        'Yes. All cabinet doors and drawers are carefully removed, and counters, floors and appliances are masked and protected. Afterwards the doors and drawers are reinstalled and aligned, and any minor touch-ups are completed.',
+      ],
+    ]),
+  },
 ]
+
+/**
+ * Where each field's text comes from, shown in the dry run only (never written to Sanity).
+ * "drafted" = written for this seed and needs client approval before launch.
+ */
+const SOURCES: Record<string, Record<string, string>> = {
+  'service-cabinet-refinishing': {
+    heroSubtitle: 'imported services.cabinet.summary (first sentence)',
+    metaDescription: 'DRAFTED, needs client approval (facts from the live page)',
+    transformationHeading: 'DRAFTED, needs client approval (same pattern as Interior/Exterior)',
+    transformationBody: 'live cabinet-painting page intro ("solutions" typo fixed, as in the imported copy)',
+    processIntro: 'live page, first sentence of "From Estimate to Final Walkthrough"',
+    prepIntro: 'live page, step 3 "Prep & Protection"',
+    prepBullets: 'live page, step 3 bullets, verbatim',
+    materialsBody: 'adapted from live step 4 "Painting Process"',
+    'materialsBlocks.Color & Finish': 'adapted from live step 2 "Color & Finish Selection"',
+    'materialsBlocks.Typical Timeline': 'adapted from imported card bullet "Most kitchens done in 3-5 days" + live "weeks to just 3-5 days"',
+    'materialsBlocks.Cost': 'live "Why Paint Your Cabinets?" figures',
+    warrantyBannerBody: 'same approved wording as Interior/Exterior',
+    whatWePaintTitle: 'DRAFTED, needs client approval',
+    whatWePaint: 'DRAFTED, needs client approval (each card built from facts on the live page)',
+    faqs: 'DRAFTED, needs client approval (answers use only facts from the live page / imported content)',
+    ownerCardVariant: 'choice: featured (photo + "Why {city} Homeowners Call {owner} First"), like Exterior',
+  },
+}
 
 // Legacy string tags → service document ids. Cabinet/commercial/general have no service doc yet.
 /** Fields removed from the service schema; the seed clears any stored value */
 const REMOVED_SERVICE_FIELDS = ['showPageHeader']
 
-const TAG_TO_SERVICE: Record<string, string> = { interior: 'service-interior-painting', exterior: 'service-exterior-painting' }
+const TAG_TO_SERVICE: Record<string, string> = {
+  interior: 'service-interior-painting',
+  exterior: 'service-exterior-painting',
+  cabinet: 'service-cabinet-refinishing',
+}
 // The brief names these two explicitly; the run fails if they would not end up on Interior Painting.
 const REQUIRED_INTERIOR_REVIEWERS = ['Stasia Porter', 'Jason Tallent']
 const MOJIBAKE: [string, string][] = [['â€“', '–']]
@@ -193,12 +287,29 @@ const GALLERY_PHOTOS: (Photo & { _key: string; service: string; projectType: str
 // ---------- run ----------
 
 type Ref = { _type: 'reference'; _ref: string; _key: string }
+// Knoxville's Exterior sub-sections (rendered with anchors so old URLs can redirect to them)
+const SUB_SERVICES: Record<string, { anchor: string; description?: string; imageFile?: string; imageAlt?: string; note: string }> = {
+  'Home Siding Painting': {
+    anchor: 'siding',
+    imageFile: 'Siding-Painting-After-1.jpg',
+    imageAlt: 'Side of a house with freshly painted white horizontal siding and grey window trim, next to a stained wood privacy screen.',
+    note: 'text already matches the live page; photo: franchise stock → real Knoxville siding photo already in Sanity',
+  },
+  'Stucco Painting': {
+    anchor: 'stucco',
+    description:
+      'At Painter1, we understand the unique challenges and requirements of painting stucco surfaces. Our team of experts uses high-quality paints and materials designed specifically for stucco, ensuring a durable, long-lasting finish that resists fading, cracking, and peeling.',
+    note: 'text from the live stucco-painting page (its "Call Painter1 of Knoxville today…" line left out, as for Siding); no real stucco photo exists',
+  },
+}
+
 type LocationDoc = {
   _id: string
   _rev: string
   galleryImages?: { _key: string; alt?: string; serviceType?: string; services?: Ref[]; assetRef?: string }[]
   interiorBefore?: string
   interiorAfter?: string
+  exteriorSub?: { _key: string; title: string; anchor?: string; description?: string; imageRef?: string; imageAlt?: string }[]
   reviews?: { _key: string; reviewerName?: string; serviceTag?: string; services?: Ref[] }[]
 }
 
@@ -252,6 +363,38 @@ function planAsset(photo: Photo, existing: SanityAsset[]): AssetPlan {
 }
 
 const imageField = (asset: AssetPlan) => ({ _type: 'image', alt: asset.alt, asset: { _type: 'reference', _ref: asset.assetId } })
+
+/** Anchors, live stucco wording and the real siding photo for Knoxville's Exterior sub-sections */
+function planSubServices(doc: LocationDoc, assetIds: Record<string, string | undefined>) {
+  const set: Record<string, unknown> = {}
+  const lines: string[] = ['  Exterior sub-sections (services.exterior.subServices):']
+  for (const sub of doc.exteriorSub ?? []) {
+    const plan = SUB_SERVICES[sub.title]
+    if (!plan) {
+      lines.push(`    [${sub._key}] ${sub.title}: not in the plan, no change`)
+      continue
+    }
+    const path = `services.exterior.subServices[_key=="${sub._key}"]`
+    lines.push(`    [${sub._key}] ${sub.title}  (${plan.note})`)
+    if (sub.anchor !== plan.anchor) {
+      set[`${path}.anchor`] = plan.anchor
+      lines.push(`        anchor: ${sub.anchor ?? '(none)'} → "${plan.anchor}"  (#${plan.anchor})`)
+    }
+    if (plan.description && sub.description !== plan.description) {
+      set[`${path}.description`] = plan.description
+      lines.push(`        description:\n          before: ${sub.description ?? '(none)'}\n          after:  ${plan.description}`)
+    }
+    if (plan.imageFile) {
+      const assetId = assetIds[plan.imageFile]
+      if (!assetId) throw new Error(`${plan.imageFile} is not in Sanity`)
+      if (sub.imageRef !== assetId || sub.imageAlt !== plan.imageAlt) {
+        set[`${path}.image`] = { _type: 'image', alt: plan.imageAlt, asset: { _type: 'reference', _ref: assetId } }
+        lines.push(`        image: ${sub.imageRef ?? '(none)'} → ${plan.imageFile} (${assetId})\n        alt: ${plan.imageAlt}`)
+      }
+    }
+  }
+  return { set, lines }
+}
 
 /** Interior slider + new gallery photos for one location document */
 function planPhotos(doc: LocationDoc, assets: Map<string, AssetPlan>) {
@@ -348,23 +491,28 @@ function planLocation(doc: LocationDoc) {
   return { set, lines, skipped }
 }
 
-function describeService(doc: (typeof SERVICE_SEED)[number], exists: boolean) {
+function describeService(doc: (typeof SERVICE_SEED)[number], exists: boolean, brief = false) {
   const text = (blocks: Block[]) => blocks.map((b) => b.children.map((c) => (c.marks.length ? `**${c.text}**` : c.text)).join('')).join(' ')
+  const sources = SOURCES[doc._id] ?? {}
+  const src = (field: string) => (sources[field] ? `   ⟵ ${sources[field]}` : '')
   const out = [`  ${exists ? 'UPDATE' : 'CREATE'} ${doc._id}  (/[location]/${doc.slug.current})`]
-  out.push(`    title: ${doc.title} | shortName: ${doc.shortName} | locationKey: ${doc.locationKey} | ownerCard: ${doc.ownerCardVariant}`)
-  out.push(`    heroSubtitle: ${doc.heroSubtitle}`)
-  out.push(`    metaDescription: ${doc.metaDescription}`)
-  out.push(`    transformationHeading: ${doc.transformationHeading}`)
-  out.push(`    transformationBody: ${doc.transformationBody}`)
-  if ('processIntro' in doc) out.push(`    processIntro: ${doc.processIntro}`)
-  out.push(`    prepIntro: ${doc.prepIntro}`)
-  doc.prepBullets.forEach((b) => out.push(`      • ${b}`))
-  out.push(`    materialsBody: ${text(doc.materialsBody)}`)
-  doc.materialsBlocks.forEach((b) => out.push(`      ${b.title}: ${text(b.body)}`))
-  out.push(`    warrantyBannerBody: ${doc.warrantyBannerBody}`)
-  out.push(`    whatWePaint (${doc.whatWePaint.length}):`)
+  if (brief) return `${out[0]}  (content unchanged from the previous seed)`
+  out.push(`    title: ${doc.title} | shortName: ${doc.shortName} | locationKey: ${doc.locationKey} | ownerCard: ${doc.ownerCardVariant}${src('ownerCardVariant')}`)
+  out.push(`    heroSubtitle: ${doc.heroSubtitle}${src('heroSubtitle')}`)
+  const filled = doc.metaDescription.replaceAll('{city}', 'Knoxville').replaceAll('{state}', 'TN')
+  out.push(`    metaDescription (${filled.length} chars for Knoxville): ${doc.metaDescription}${src('metaDescription')}`)
+  out.push(`    transformationHeading: ${doc.transformationHeading}${src('transformationHeading')}`)
+  out.push(`    transformationBody: ${doc.transformationBody}${src('transformationBody')}`)
+  if ('processIntro' in doc) out.push(`    processIntro: ${doc.processIntro}${src('processIntro')}`)
+  out.push(`    prepIntro: ${doc.prepIntro}${src('prepIntro')}`)
+  doc.prepBullets.forEach((b, i) => out.push(`      • ${b}${i === 0 ? src('prepBullets') : ''}`))
+  out.push(`    materialsBody: ${text(doc.materialsBody)}${src('materialsBody')}`)
+  doc.materialsBlocks.forEach((b) => out.push(`      ${b.title}: ${text(b.body)}${src(`materialsBlocks.${b.title}`)}`))
+  out.push(`    warrantyBannerBody: ${doc.warrantyBannerBody}${src('warrantyBannerBody')}`)
+  if ('whatWePaintTitle' in doc) out.push(`    whatWePaintTitle: ${doc.whatWePaintTitle}${src('whatWePaintTitle')}`)
+  out.push(`    whatWePaint (${doc.whatWePaint.length}):${src('whatWePaint')}`)
   doc.whatWePaint.forEach((w) => out.push(`      [${w.icon}] ${w.title}: ${w.description}`))
-  out.push(`    faqs (${doc.faqs.length}):`)
+  out.push(`    faqs (${doc.faqs.length}):${src('faqs')}`)
   doc.faqs.forEach((f) => out.push(`      Q: ${f.question}\n      A: ${f.answer}`))
   return out.join('\n')
 }
@@ -384,7 +532,7 @@ async function main() {
 
   const existingIds = new Set(await client.fetch<string[]>(`*[_id in $ids]._id`, { ids: SERVICE_SEED.map((d) => d._id) }))
   console.log('SERVICE DOCUMENTS')
-  for (const doc of SERVICE_SEED) console.log(describeService(doc, existingIds.has(doc._id)) + '\n')
+  for (const doc of SERVICE_SEED) console.log(describeService(doc, existingIds.has(doc._id), existingIds.has(doc._id)) + '\n')
 
   // "What We Paint" card text: what changes compared with Sanity now
   const currentCards = await client.fetch<{ _id: string; whatWePaint?: { title: string; description?: string }[] }[]>(
@@ -431,9 +579,15 @@ async function main() {
   console.log('')
 
   const docs = await client.fetch<LocationDoc[]>(
-    `*[_type == "location" && slug.current == $slug]{_id, _rev, "interiorBefore": services.interior.beforeImage.asset._ref, "interiorAfter": services.interior.afterImage.asset._ref, galleryImages[]{_key, alt, serviceType, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, serviceTag, services}}`,
+    `*[_type == "location" && slug.current == $slug]{_id, _rev, "interiorBefore": services.interior.beforeImage.asset._ref, "interiorAfter": services.interior.afterImage.asset._ref, "exteriorSub": services.exterior.subServices[]{_key, title, anchor, description, "imageRef": image.asset._ref, "imageAlt": image.alt}, galleryImages[]{_key, alt, serviceType, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, serviceTag, services}}`,
     { slug: LOCATION_SLUG },
   )
+  const subFiles = Object.values(SUB_SERVICES).flatMap((plan) => (plan.imageFile ? [plan.imageFile] : []))
+  const subServiceAssets = Object.fromEntries(
+    await Promise.all(
+      subFiles.map(async (file) => [file, await client.fetch<string | null>(`*[_type == "sanity.imageAsset" && originalFilename == $file][0]._id`, { file })] as const),
+    ),
+  ) as Record<string, string | undefined>
   const published = docs.find((d) => !d._id.startsWith('drafts.'))
   if (!published) throw new Error(`Location "${LOCATION_SLUG}" not found`)
   const targets = [published, ...docs.filter((d) => d._id.startsWith('drafts.'))]
@@ -450,9 +604,12 @@ async function main() {
     const { set, lines, skipped } = planLocation(doc)
     const photoPlan = planPhotos(doc, assets)
     Object.assign(set, photoPlan.set)
+    const subPlan = planSubServices(doc, subServiceAssets)
+    Object.assign(set, subPlan.set)
     changes += Object.keys(set).length + photoPlan.insert.length
     console.log(`  ${doc._id}  (rev ${doc._rev})`)
     console.log(photoPlan.lines.join('\n'))
+    console.log(subPlan.lines.join('\n'))
     console.log(lines.join('\n'))
     console.log('  Not changed:')
     console.log(skipped.join('\n') || '    —')
