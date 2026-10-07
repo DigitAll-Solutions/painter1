@@ -10,6 +10,7 @@ import ServiceFaq from '@/components/service/ServiceFaq'
 import RecentWork from '@/components/service/RecentWork'
 import ServiceHero, { type Crumb } from '@/components/service/ServiceHero'
 import ServiceProcess from '@/components/service/ServiceProcess'
+import SubServices from '@/components/service/SubServices'
 import WhatWePaint from '@/components/service/WhatWePaint'
 import { getCta, telHref } from '@/lib/location'
 import { serviceReviews } from '@/lib/reviews'
@@ -43,9 +44,12 @@ async function loadPage(params: PageProps<'/[location]/[service]'>['params']) {
 export async function generateMetadata({ params }: PageProps<'/[location]/[service]'>): Promise<Metadata> {
   const { location, service, path } = await loadPage(params)
   const { city } = tokenValues(location)
-  const title = `${service.title} in ${cityName(location)} | Painter1 of ${city}`
-  const description = service.metaDescription ? fillTokens(service.metaDescription, location) : undefined
-  const ogImage = location.services?.[service.locationKey]?.afterImage ?? location.heroImage
+  const detail = location.services?.[service.locationKey]
+  // Per-location override first, then the automatic title / the service's tokenised description
+  const title = detail?.metaTitle?.trim() || `${service.title} in ${cityName(location)} | Painter1 of ${city}`
+  const metaDescription = detail?.metaDescription?.trim() || service.metaDescription
+  const description = metaDescription ? fillTokens(metaDescription, location) : undefined
+  const ogImage = detail?.afterImage ?? location.heroImage
 
   return {
     title,
@@ -128,6 +132,9 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
       <ServiceProcess location={location} service={service} />
 
       <WhatWePaint service={service} />
+
+      {/* e.g. Siding and Stucco on Exterior (#siding, #stucco) */}
+      <SubServices items={detail?.subServices} />
 
       {gallery.length >= MIN_GALLERY && (
         <RecentWork images={gallery} title={`${service.shortName} Projects in ${city}`} label={`${service.shortName} projects in ${city}`} />

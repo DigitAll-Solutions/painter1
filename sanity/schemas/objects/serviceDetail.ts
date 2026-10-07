@@ -8,6 +8,19 @@ export const serviceDetail = defineType({
   fields: [
     defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
     defineField({name: 'summary', type: 'text', rows: 2, description: 'Short blurb for service cards.'}),
+    defineField({
+      name: 'metaTitle',
+      title: 'Service page meta title',
+      type: 'string',
+      description: 'Overrides the automatic "{Service} in {City}, {State} | Painter1 of {City}" for this location only.',
+    }),
+    defineField({
+      name: 'metaDescription',
+      title: 'Service page meta description',
+      type: 'text',
+      rows: 3,
+      description: "Overrides the service's default description for this location only (max ~160 characters).",
+    }),
     defineField({name: 'description', type: 'text', rows: 4}),
     defineField({
       name: 'cardBullets',
@@ -67,6 +80,12 @@ export const serviceDetail = defineType({
           name: 'subService',
           fields: [
             defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
+            defineField({
+              name: 'anchor',
+              type: 'string',
+              description: 'Link target on the service page, e.g. "siding" → /knoxville/exterior-painting#siding. Lowercase letters, numbers and dashes.',
+              validation: (rule) => rule.regex(/^[a-z0-9-]+$/, {name: 'anchor'}),
+            }),
             defineField({name: 'description', type: 'text', rows: 4}),
             defineField({name: 'image', type: 'image', options: {hotspot: true}, fields: [altField]}),
           ],
