@@ -137,7 +137,8 @@ With only 10 cards, "Load more" (after 12) won't appear for Knoxville at launch.
   - no infinite scroll;
   - without JS, a `<noscript>` style shows every card and hides the button.
 - **Images and layout:**
-  - lazy-loaded except the first visible card (eager and preloaded): it is on a phone's first screen, and loading more eagerly made the other photos compete with the fonts and scripts on mobile;
+  - the first visible card is eager and preloaded (it's on a phone's first screen). Every other card's photos ship without `src`: the gallery's IntersectionObserver (200px margin) sets it as they approach, so nothing below the first screen downloads while the page paints. `<noscript>` copies show every photo without JavaScript;
+  - the lightbox's large images stay `loading="lazy"`: React adds a `<link rel="preload">` for every non-lazy `<img>` it renders, and these are rendered on the server for every card;
   - fixed aspect ratios plus server-rendered hidden states mean **CLS 0**. Filtering and Load more only change layout right after a click, which doesn't count as layout shift.
 - **Client JavaScript:** one small client component (filter state, load more, lightbox). Cards are server-rendered and passed in, the same pattern as `GallerySlider`.
 
