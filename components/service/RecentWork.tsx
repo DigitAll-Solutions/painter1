@@ -1,19 +1,13 @@
 import GallerySlider from '../GallerySlider'
 import SanityImage from '../SanityImage'
 import Section from '../Section'
+import { photoTitle, TITLE_BAND as BAND } from '@/lib/gallery'
 import { hotspotPosition } from '@/lib/image'
 import type { GalleryImage } from '@/sanity/lib/types'
 
-/** Overlay text: the photo's title, else "{projectType}, {area}" with whichever parts exist */
-export const slideTitle = (image: GalleryImage) => image.title?.trim() || [image.projectType, image.area].filter(Boolean).join(', ')
-
-// Band behind the overlay text: 80–90% ink where the text sits (white text 7:1+ even over a white
-// photo), fading out above it.
-const BAND = 'bg-[linear-gradient(to_top,rgb(11_27_51/0.9)_0%,rgb(11_27_51/0.8)_55%,transparent_100%)]'
-
 export default function RecentWork({ images, title, label }: { images: GalleryImage[]; title: string; label: string }) {
   const slides = images.map((image) => {
-    const text = slideTitle(image)
+    const text = photoTitle(image)
     return (
       <figure key={image._key} className="relative aspect-4/3 overflow-hidden rounded-2xl bg-mist shadow-sm md:rounded-3xl">
         <SanityImage

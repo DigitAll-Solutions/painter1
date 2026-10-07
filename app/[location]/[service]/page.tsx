@@ -12,6 +12,7 @@ import ServiceHero, { type Crumb } from '@/components/service/ServiceHero'
 import ServiceProcess from '@/components/service/ServiceProcess'
 import SubServices from '@/components/service/SubServices'
 import WhatWePaint from '@/components/service/WhatWePaint'
+import { localPhotos, sliderAssets } from '@/lib/gallery'
 import { getCta, telHref } from '@/lib/location'
 import { serviceReviews } from '@/lib/reviews'
 import { breadcrumbSchema, cityName, faqSchema, serviceSchema } from '@/lib/seo'
@@ -79,7 +80,11 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
   // Location override wins over the service default
   const transformationBody = fill(detail?.transformationBody || service.transformationBody || '')
 
-  const gallery = (location.galleryImages ?? []).filter((image) => image.services?.includes(service._id)).slice(0, MAX_GALLERY)
+  // Tagged local photos, minus the ones already in this page's before/after slider
+  const inSlider = sliderAssets(detail?.beforeImage, detail?.afterImage)
+  const gallery = localPhotos(location)
+    .filter((image) => image.services?.includes(service._id) && !inSlider.has(image.asset._id))
+    .slice(0, MAX_GALLERY)
 
   // Hero photo: this location's for this service → the service default → the location's homepage hero
   const heroImage = detail?.heroImage ?? service.heroImage ?? location.heroImage
