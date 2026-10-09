@@ -55,4 +55,7 @@ next-env.d.ts
 /docs/reference/Paint1 -Exterior-moch-up .jpg
 /docs/reference/Paint1 -Interior-moch-up .jpg
 # Client's location list (may hold private details); only its slugs are committed, via scripts/sync-location-slugs.ts
-/docs/reference/*locations*.csv
+/docs/reference/*.csv
+# Client design mockups and reference photos (corporate pages, stock): local references only
+/docs/reference/corp/
+/docs/reference/Painter1-Our-Painting-Services-*.jpg
