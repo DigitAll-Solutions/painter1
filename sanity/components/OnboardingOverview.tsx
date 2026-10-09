@@ -28,7 +28,7 @@ export function OnboardingOverview() {
 
   if (!locations || !data) return <Box padding={4}><Text muted>Loading…</Text></Box>
   const rows = locations.map((location) => {
-    const items = locationChecklist(location, data.recipients[location._id] ?? 0, data.serviceKeys)
+    const items = locationChecklist(location, data.recipients[location._id] ?? 0, data.serviceKeys, data.warranty[location._id] ?? 0)
     return {location, required: missing(items, 'required'), recommended: missing(items, 'recommended')}
   })
   const ready = rows.filter((r) => !r.required.length).length

@@ -9,7 +9,7 @@ import SanityImage from '@/components/SanityImage'
 import EstimateSurvey from '@/components/estimate/EstimateSurvey'
 import { fillConsentBlocks } from '@/lib/consent'
 import { fillTokens } from '@/lib/estimate-survey'
-import { telHref } from '@/lib/location'
+import { bookingUrl, telHref } from '@/lib/location'
 import { breadcrumbSchema, cityName } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
 import { tokenValues } from '@/lib/tokens'
@@ -93,6 +93,7 @@ export default async function FreeEstimatePage({ params }: PageProps<'/[location
               consents={consents}
               ownerCard={ownerCard}
               confirmationMessage={location.leadConfirmationMessage || 'Thank you for your message. We will get in touch with you shortly'}
+              bookingUrl={bookingUrl(location)}
               turnstileSiteKey={turnstileSiteKey()}
             />
           ) : (

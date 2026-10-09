@@ -70,9 +70,11 @@ export default function ServiceProcess({ location, service }: { location: Locati
           <h3 className="text-lg font-extrabold">Backed by Our 2-Year Workmanship Warranty</h3>
           <p className="mt-2 leading-relaxed text-slate-300">
             {fill(service.warrantyBannerBody || DEFAULT_WARRANTY_BODY)}{' '}
-            <Link href={getWarrantyHref(location)} className="font-bold whitespace-nowrap text-orange-300 underline-offset-4 hover:underline">
-              See full warranty details →
-            </Link>
+            {getWarrantyHref(location) && (
+              <Link href={getWarrantyHref(location)!} className="font-bold whitespace-nowrap text-orange-300 underline-offset-4 hover:underline">
+                See full warranty details →
+              </Link>
+            )}
           </p>
         </div>
       </div>

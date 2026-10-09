@@ -6,8 +6,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 type Props = {
   /** Accessible name, e.g. "Exterior projects in Knoxville" */
   label: string
-  /** Pre-rendered slides (server components), shown 1 / 2 / 3 per view on mobile / tablet / desktop */
+  /** Pre-rendered slides (server components), shown 1 / 2 / 3 (or 4) per view on mobile / tablet / desktop */
   slides: ReactNode[]
+  /** Slides per view on desktop */
+  perView?: 3 | 4
+  /** What a slide is, for screen readers: [singular, plural] */
+  noun?: [string, string]
 }
 
 type View = { first: number; last: number; canPrev: boolean; canNext: boolean }
@@ -17,7 +21,7 @@ const arrow =
 
 // Manual carousel: CSS scroll-snap track, prev/next arrows, no autoplay. Swipe and keyboard
 // scrolling work natively; the arrows move one view at a time.
-export default function GallerySlider({ label, slides }: Props) {
+export default function GallerySlider({ label, slides, perView = 3, noun = ['photo', 'photos'] }: Props) {
   const track = useRef<HTMLDivElement>(null)
   const prevButton = useRef<HTMLButtonElement>(null)
   const nextButton = useRef<HTMLButtonElement>(null)
@@ -51,9 +55,9 @@ export default function GallerySlider({ label, slides }: Props) {
     clearTimeout(settle.current)
     settle.current = setTimeout(() => {
       const v = measure()
-      if (v) setAnnounce(v.first === v.last ? `Showing photo ${v.first} of ${total}` : `Showing photos ${v.first}–${v.last} of ${total}`)
+      if (v) setAnnounce(v.first === v.last ? `Showing ${noun[0]} ${v.first} of ${total}` : `Showing ${noun[1]} ${v.first}–${v.last} of ${total}`)
     }, 150)
-  }, [measure, total])
+  }, [measure, total, noun])
 
   useEffect(() => {
     measure()
@@ -90,7 +94,7 @@ export default function GallerySlider({ label, slides }: Props) {
         onScroll={onScroll}
         tabIndex={0}
         role="group"
-        aria-label={`${label}, ${total} photos`}
+        aria-label={`${label}, ${total} ${total === 1 ? noun[0] : noun[1]}`}
         className="-mx-2 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-safe:scroll-smooth [&::-webkit-scrollbar]:hidden"
       >
         {slides.map((slide, i) => (
@@ -99,7 +103,7 @@ export default function GallerySlider({ label, slides }: Props) {
             role="group"
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${total}`}
-            className="shrink-0 basis-full snap-start px-2 md:basis-1/2 lg:basis-1/3"
+            className={`shrink-0 basis-full snap-start px-2 md:basis-1/2 ${perView === 4 ? 'lg:basis-1/4' : 'lg:basis-1/3'}`}
           >
             {slide}
           </div>
@@ -108,10 +112,10 @@ export default function GallerySlider({ label, slides }: Props) {
 
       {arrows && (
         <>
-          <button ref={prevButton} type="button" onClick={() => scroll(-1)} disabled={!view.canPrev} aria-label="Previous photos" className={`${arrow} left-2 md:-left-4`}>
+          <button ref={prevButton} type="button" onClick={() => scroll(-1)} disabled={!view.canPrev} aria-label={`Previous ${noun[1]}`} className={`${arrow} left-2 md:-left-4`}>
             <ChevronLeft className="size-6" aria-hidden />
           </button>
-          <button ref={nextButton} type="button" onClick={() => scroll(1)} disabled={!view.canNext} aria-label="Next photos" className={`${arrow} right-2 md:-right-4`}>
+          <button ref={nextButton} type="button" onClick={() => scroll(1)} disabled={!view.canNext} aria-label={`Next ${noun[1]}`} className={`${arrow} right-2 md:-right-4`}>
             <ChevronRight className="size-6" aria-hidden />
           </button>
         </>

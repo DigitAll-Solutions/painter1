@@ -45,13 +45,49 @@ export const serviceDetail = defineType({
       description: 'Crew at work for this service, landscape, at least 1920x1080. Overrides the service page hero for this location.',
     }),
     defineField({
+      name: 'transformations',
+      title: 'Before/after pairs',
+      type: 'array',
+      description:
+        'Service page "See The Transformation" (the first pair also shows on the homepage service card). One pair shows beside the text; two or more show as a row of sliders. Recent Work never repeats these photos.',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'transformation',
+          fields: [
+            defineField({name: 'before', type: 'image', options: {hotspot: true}, fields: [altField], description: 'Before photo.', validation: (rule) => rule.required()}),
+            defineField({name: 'after', type: 'image', options: {hotspot: true}, fields: [altField], description: 'After photo from the same angle.', validation: (rule) => rule.required()}),
+            defineField({name: 'title', type: 'string', description: 'Optional overlay text, e.g. "Kitchen cabinets, Farragut". Empty: "{project type}, {area}".', validation: (rule) => rule.max(60)}),
+            defineField({name: 'projectType', type: 'string', description: 'E.g. "Kitchen Cabinets".'}),
+            defineField({name: 'area', type: 'string', description: 'Neighborhood or town, e.g. "Farragut".'}),
+          ],
+          preview: {
+            select: {title: 'title', projectType: 'projectType', area: 'area', media: 'after'},
+            prepare: ({title, projectType, area, media}) => ({title: title || [projectType, area].filter(Boolean).join(', ') || 'Before/after pair', media}),
+          },
+        }),
+      ],
+    }),
+    // Legacy single pair: copied into "Before/after pairs" by scripts/seed-oct8.ts and kept until the
+    // previous site version is gone (it reads only these); removed with --remove-legacy. Hidden once empty.
+    defineField({
       name: 'beforeImage',
       type: 'image',
       options: {hotspot: true},
       fields: [altField],
-      description: 'Service page before/after slider and the homepage service card. Same angle as the after photo; the slider hides if either is missing.',
+      readOnly: true,
+      description: 'Old single pair, kept until launch and then removed. Edit "Before/after pairs" instead: once it has a pair, this one is ignored.',
+      hidden: ({value}) => !value,
     }),
-    defineField({name: 'afterImage', type: 'image', options: {hotspot: true}, fields: [altField], description: 'The "after" photo of the same pair.'}),
+    defineField({
+      name: 'afterImage',
+      type: 'image',
+      options: {hotspot: true},
+      fields: [altField],
+      readOnly: true,
+      description: 'Old single pair, kept until launch and then removed. Edit "Before/after pairs" instead: once it has a pair, this one is ignored.',
+      hidden: ({value}) => !value,
+    }),
     defineField({
       name: 'transformationBody',
       type: 'text',

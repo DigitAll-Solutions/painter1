@@ -174,9 +174,9 @@ function TeamCard({ member, first }: { member: TeamMember; first: string }) {
 }
 
 function TrustStrip({ location, city }: { location: Location; city: string }) {
-  const full = location.locationType !== 'maintenance'
+  const warrantyHref = getWarrantyHref(location)
   const items: { icon: LucideIcon; title: string; sub?: string; href?: string }[] = [
-    { icon: ShieldCheck, title: '2-Year Workmanship Warranty', sub: "See what's covered", href: full ? getWarrantyHref(location) : undefined },
+    { icon: ShieldCheck, title: '2-Year Workmanship Warranty', sub: warrantyHref ? "See what's covered" : undefined, href: warrantyHref },
     { icon: PaintRoller, title: 'Sherwin-Williams Paints' },
   ]
   if (location.projectsCount) {

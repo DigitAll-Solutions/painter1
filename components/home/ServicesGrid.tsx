@@ -3,6 +3,7 @@ import { ArrowRight, Check } from 'lucide-react'
 
 import Section, { Accent } from '../Section'
 import SanityImage from '../SanityImage'
+import { transformationPairs } from '@/lib/gallery'
 import { servicePages } from '@/lib/location'
 import type { Location, SanityImage as SanityImageType, ServiceDetail } from '@/sanity/lib/types'
 
@@ -68,7 +69,7 @@ export default function ServicesGrid({ location }: { location: Location }) {
             className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_16px_40px_-18px_rgb(11_27_51/0.3)] ring-1 ring-slate-200/70"
           >
             <div className="relative h-56 overflow-hidden bg-mist lg:h-64">
-              <CardMedia before={service.beforeImage} after={service.afterImage} fallback={bestImage(service.images)} />
+              <CardMedia before={transformationPairs(service)[0]?.before} after={transformationPairs(service)[0]?.after} fallback={bestImage(service.images)} />
             </div>
             <div className="flex flex-1 flex-col p-6 md:p-7">
               <h3 className="text-2xl font-extrabold tracking-tight">{service.title}</h3>

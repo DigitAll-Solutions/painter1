@@ -33,13 +33,25 @@ export type GalleryImage = SanityImage & {
   geo?: { lat: number; lng: number }
 }
 
+export type Transformation = {
+  _key: string
+  before?: SanityImage
+  after?: SanityImage
+  title?: string
+  projectType?: string
+  area?: string
+}
+
 export type ServiceDetail = {
   title: string
   summary?: string
   description?: string
   cardBullets?: string[]
+  /** Legacy single pair, read until the migration moves it into transformations[0] */
   beforeImage?: SanityImage
   afterImage?: SanityImage
+  /** "See The Transformation" before/after pairs, first one first */
+  transformations?: Transformation[]
   transformationBody?: string
   metaTitle?: string
   metaDescription?: string
@@ -124,12 +136,16 @@ export type Location = {
   trustindexWidgetId?: string
   hasScheduling?: boolean
   schedulingUrl?: string
+  /** Where Schedule CTAs go: the survey (default) or the booking page directly */
+  bookingTarget?: 'survey' | 'booking'
   warranty?: PortableTextBlock[]
   warrantyEyebrow?: string
   warrantyHeading?: string
   warrantyBody?: string
   warrantyButtonLabel?: string
   warrantyCtaHref?: string
+  warrantyPdf?: { asset?: { url?: string; originalFilename?: string } }
+  warrantyResponseTime?: string
   warrantyImage?: SanityImage
   warrantyGraphic?: SanityImage
   privacyPolicy?: PortableTextBlock[]
@@ -169,3 +185,31 @@ export type Service = {
 }
 
 export type ConsentBlock = { _key: string; name: string; body: PortableTextBlock[] }
+
+/** Shared network warranty terms (document "warranty-terms"). **x** = bold (accent color in headings). */
+export type WarrantyTerms = {
+  title?: string
+  heroIntro?: string
+  heroIntroNoOwner?: string
+  stats?: { _key: string; icon?: 'calendar' | 'shield' | 'wrench' | 'user'; title: string; body?: string }[]
+  coveredHeading?: string
+  covered?: string[]
+  requirementsHeading?: string
+  requirementsIntro?: string
+  requirements?: string[]
+  repairsEyebrow?: string
+  repairsHeading?: string
+  repairs?: string[]
+  exclusionsEyebrow?: string
+  exclusionsHeading?: string
+  exclusionsIntro?: string
+  exclusions?: { _key: string; text: string; editorNote?: string }[]
+  sameEverywhere?: string
+  requestEyebrow?: string
+  requestHeading?: string
+  requestIntro?: string
+  steps?: string[]
+  disclaimer?: string
+  contractNote?: string
+  contractNoteConfirmed?: boolean
+}

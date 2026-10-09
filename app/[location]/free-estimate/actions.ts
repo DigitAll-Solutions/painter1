@@ -17,7 +17,9 @@ import {
 import { consentPlainText, fillConsentBlocks } from '@/lib/consent'
 import { ATTRIBUTION_FIELDS, HONEYPOT_FIELD } from '@/lib/estimate-form'
 import { deliveryLabel, resolveDelivery, type Delivery } from '@/lib/lead-delivery'
+import { sendEmail, type EmailResult } from '@/lib/email-send'
 import { buildLeadEmail } from '@/lib/lead-email'
+import { tooManyRequests } from '@/lib/rate-limit'
 import { absoluteUrl, siteUrl } from '@/lib/site'
 import { verifyTurnstile } from '@/lib/turnstile'
 import { getEstimateSurvey, getLocation } from '@/sanity/lib/fetch'
@@ -42,11 +44,8 @@ function sourceUrl(raw: string, slug: string, host: string | null) {
   return absoluteUrl(`/${slug}/free-estimate`)
 }
 
-type EmailResult = { status: string; resendId?: string; error?: string; sentAt?: string }
-
 async function sendLeadEmail(delivery: Delivery, body: string, replyTo: string, locationId: string): Promise<EmailResult> {
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) return { status: 'skipped (no RESEND_API_KEY)' }
+  if (!process.env.RESEND_API_KEY) return { status: 'skipped (no RESEND_API_KEY)' }
   if (delivery.kind === 'refused') return { status: `skipped (${delivery.reason})` }
   if (!body) return { status: 'skipped (location has no lead email template)' }
 
@@ -60,20 +59,7 @@ async function sendLeadEmail(delivery: Delivery, body: string, replyTo: string, 
     to = (doc?.leadRecipients ?? []).filter(Boolean)
     if (!to.length) return { status: 'failed', error: `No recipients in leads.${locationId}` }
   }
-
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: delivery.from, to, subject: delivery.subject, text: body, reply_to: replyTo }),
-      cache: 'no-store',
-    })
-    const data = (await res.json().catch(() => ({}))) as { id?: string; message?: string }
-    if (!res.ok) return { status: 'failed', error: `Resend ${res.status}: ${data.message ?? 'unknown error'}` }
-    return { status: 'sent', resendId: data.id, sentAt: new Date().toISOString() }
-  } catch (error) {
-    return { status: 'failed', error: error instanceof Error ? error.message : String(error) }
-  }
+  return sendEmail({ from: delivery.from, to, subject: delivery.subject, text: body, replyTo })
 }
 
 /**
@@ -96,6 +82,8 @@ export async function submitEstimate(_previous: EstimateState, formData: FormDat
   const userAgent = requestHeaders.get('user-agent') ?? ''
 
   if (!(await verifyTurnstile(field('cf-turnstile-response'), ip))) return { status: 'call-us' }
+  // At most FORM_LIMIT requests per IP per hour
+  if (await tooManyRequests('lead', ip)) return { status: 'call-us' }
 
   const survey = await getEstimateSurvey(slug)
   // Filled exactly as on the page, so the stored consent record is the text the visitor read

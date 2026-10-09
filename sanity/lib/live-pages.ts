@@ -12,7 +12,7 @@ const SERVICE_ORDER = ['interior', 'exterior', 'cabinet']
 const servicesInOrder = (services: SiteService[]) =>
   [...services].filter((s) => s.slug).sort((a, b) => SERVICE_ORDER.indexOf(a.locationKey ?? '') - SERVICE_ORDER.indexOf(b.locationKey ?? ''))
 
-/** Every page of one location (growth: home, service pages, Our Work, free estimate, privacy) */
+/** Every page of one location (growth: home, service pages, Our Work, warranty, free estimate, privacy) */
 export function locationPages(location: SiteLocation, services: SiteService[]): LivePage[] {
   if (!location.slug) return []
   const base = `/${location.slug}`
@@ -20,7 +20,12 @@ export function locationPages(location: SiteLocation, services: SiteService[]): 
   return [
     { label: 'Home', path: base },
     ...(growth ? servicesInOrder(services).map((s) => ({ label: s.title ?? s.slug!, path: `${base}/${s.slug}` })) : []),
-    ...(growth ? [{ label: 'Our Work', path: `${base}/our-work` }] : []),
+    ...(growth
+      ? [
+          { label: 'Our Work', path: `${base}/our-work` },
+          { label: 'Warranty', path: `${base}/warranty` },
+        ]
+      : []),
     { label: 'Free estimate', path: `${base}/free-estimate` },
     { label: 'Privacy policy', path: `${base}/privacy-policy` },
   ]
@@ -42,6 +47,8 @@ export function pagesForDocument(
       return locationPages({ _id: id, slug: doc.slug?.current, locationType: doc.locationType }, services)
     case 'service':
       return doc.slug?.current ? growth.map((l) => ({ label: l.name ?? l.slug!, path: `/${l.slug}/${doc.slug!.current}` })) : []
+    case 'warrantyTerms':
+      return growth.map((l) => ({ label: l.name ?? l.slug!, path: `/${l.slug}/warranty` }))
     case 'privacyPolicy':
       return live.map((l) => ({ label: l.name ?? l.slug!, path: `/${l.slug}/privacy-policy` }))
     case 'estimateSurvey':

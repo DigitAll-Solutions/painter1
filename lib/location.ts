@@ -2,22 +2,33 @@ import type { Location } from '@/sanity/lib/types'
 
 export type NavLink = { label: string; href: string }
 
-// Every CTA on a location site points at its free-estimate page, which embeds the
-// scheduler when the location has one and shows the contact form otherwise.
+type CtaLocation = Pick<Location, 'slug' | 'hasScheduling' | 'schedulingUrl' | 'bookingTarget'>
+
+/** The location's online booking page, when scheduling is on and the URL is set (https only) */
+export const bookingUrl = (location: CtaLocation) =>
+  location.hasScheduling && location.schedulingUrl?.startsWith('https://') ? location.schedulingUrl : undefined
+
+// Every CTA on a location site points at its free-estimate survey, or straight at the booking page
+// when the location has scheduling, chose "Booking page directly" and the booking URL is set.
 // `service` (interior | exterior | cabinet) preselects the survey's first question.
-export function getCta(location: Pick<Location, 'slug' | 'hasScheduling'>, service?: string) {
+export function getCta(location: CtaLocation, service?: string) {
+  const booking = location.bookingTarget === 'booking' ? bookingUrl(location) : undefined
   return {
     label: location.hasScheduling ? 'Schedule Your FREE Estimate' : 'Get Your FREE Estimate',
-    href: `/${location.slug}/free-estimate${service ? `?service=${encodeURIComponent(service)}` : ''}`,
+    href: booking ?? `/${location.slug}/free-estimate${service ? `?service=${encodeURIComponent(service)}` : ''}`,
   }
 }
 
 // Anchor on the free-estimate section (CTASection) at the bottom of the location homepage
 export const ESTIMATE_ANCHOR = 'estimate'
 
-// Warranty "See What's Covered" link: the per-location Sanity override, else the estimate section
-export const getWarrantyHref = (location: Pick<Location, 'slug' | 'warrantyCtaHref'>) =>
-  location.warrantyCtaHref?.trim() || `/${location.slug}#${ESTIMATE_ANCHOR}`
+// Warranty "See What's Covered" link: the per-location Sanity override, else the warranty page.
+// Locations on the basic tier (locationType "maintenance": home + free estimate, per the client's list)
+// have no warranty page; everyone else links to /<slug>/warranty (or the per-location override)
+export const hasWarrantyPage = (location: Pick<Location, 'locationType'>) => location.locationType !== 'maintenance'
+
+export const getWarrantyHref = (location: Pick<Location, 'slug' | 'warrantyCtaHref' | 'locationType'>) =>
+  hasWarrantyPage(location) ? location.warrantyCtaHref?.trim() || `/${location.slug}/warranty` : undefined
 
 export const telHref = (phone?: string) => (phone ? `tel:${phone.replace(/[^\d+]/g, '')}` : undefined)
 
@@ -29,10 +40,11 @@ export const servicePages = [
 
 export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | 'services'>): NavLink[] {
   const base = `/${location.slug}`
+  // Basic tier (client's list): home and free estimate only
   if (location.locationType === 'maintenance') {
     return [
       { label: 'Home', href: base },
-      { label: 'About Us', href: `${base}/about-us` },
+      { label: 'Free Estimate', href: `${base}/free-estimate` },
     ]
   }
   return [
@@ -42,7 +54,8 @@ export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | '
       href: `${base}/${path}`,
     })),
     { label: 'Our Work', href: `${base}/our-work` },
-    { label: 'About Us', href: `${base}/about-us` },
+    { label: 'Warranty', href: `${base}/warranty` },
+    // About Us (full tier in the client's list) returns once /<slug>/about-us exists: it would 404 today
   ]
 }
 

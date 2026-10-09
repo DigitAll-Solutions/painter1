@@ -12,7 +12,7 @@ import ServiceHero, { type Crumb } from '@/components/service/ServiceHero'
 import ServiceProcess from '@/components/service/ServiceProcess'
 import SubServices from '@/components/service/SubServices'
 import WhatWePaint from '@/components/service/WhatWePaint'
-import { localPhotos, sliderAssets } from '@/lib/gallery'
+import { localPhotos, pairImages, sliderAssets, transformationPairs } from '@/lib/gallery'
 import { getCta, telHref } from '@/lib/location'
 import { serviceReviews } from '@/lib/reviews'
 import { breadcrumbSchema, cityName, faqSchema, serviceSchema } from '@/lib/seo'
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: PageProps<'/[location]/[servi
   const title = detail?.metaTitle?.trim() || `${service.title} in ${cityName(location)} | Painter1 of ${city}`
   const metaDescription = detail?.metaDescription?.trim() || service.metaDescription
   const description = metaDescription ? fillTokens(metaDescription, location) : undefined
-  const ogImage = detail?.afterImage ?? location.heroImage
+  const ogImage = transformationPairs(detail)[0]?.after ?? location.heroImage
 
   return {
     title,
@@ -80,8 +80,9 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
   // Location override wins over the service default
   const transformationBody = fill(detail?.transformationBody || service.transformationBody || '')
 
-  // Tagged local photos, minus the ones already in this page's before/after slider
-  const inSlider = sliderAssets(detail?.beforeImage, detail?.afterImage)
+  // "See The Transformation" pairs; Recent Work never repeats any of their photos
+  const pairs = transformationPairs(detail)
+  const inSlider = sliderAssets(...pairImages(pairs))
   const gallery = localPhotos(location)
     .filter((image) => image.services?.includes(service._id) && !inSlider.has(image.asset._id))
     .slice(0, MAX_GALLERY)
@@ -125,8 +126,9 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
       />
 
       <TransformationBlock
-        before={detail?.beforeImage}
-        after={detail?.afterImage}
+        pairs={pairs}
+        eagerFirst
+        rowLabel={`${service.shortName} before and after projects in ${city}`}
         heading={fill(service.transformationHeading || service.title)}
         body={transformationBody}
         cta={{ href: getCta(location, service.locationKey).href, label: 'Get My Free Estimate →' }}

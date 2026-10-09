@@ -18,7 +18,8 @@ export type CheckItem = {
 
 type Img = { asset?: { _ref?: string } } | undefined
 type Gallery = { asset?: { _ref?: string }; services?: { _ref?: string }[]; notLocalProject?: boolean }
-type Detail = { title?: string; beforeImage?: Img; afterImage?: Img } | undefined
+type Pair = { before?: Img; after?: Img }
+type Detail = { title?: string; beforeImage?: Img; afterImage?: Img; transformations?: Pair[] } | undefined
 type Block = { children?: { text?: string }[] }
 export type LocationDoc = {
   name?: string
@@ -46,6 +47,8 @@ export type LocationDoc = {
   trustindexWidgetId?: string
   leadEmailSubject?: string
   leadEmailTemplate?: string
+  hasScheduling?: boolean
+  schedulingUrl?: string
   consentBlocks?: { name?: string; body?: Block[] }[]
   metaTitle?: string
   metaDescription?: string
@@ -64,8 +67,9 @@ const consentText = (blocks?: Block[]) => (blocks ?? []).flatMap((b) => b.childr
 /**
  * @param recipients number of lead recipients in the private leads.<id> document (null = unknown)
  * @param serviceKeys service document _id → interior | exterior | cabinet
+ * @param warrantyRecipients number of warranty recipients in the same document (null = unknown)
  */
-export function locationChecklist(doc: LocationDoc, recipients: number | null, serviceKeys: Record<string, string>): CheckItem[] {
+export function locationChecklist(doc: LocationDoc, recipients: number | null, serviceKeys: Record<string, string>, warrantyRecipients: number | null = null): CheckItem[] {
   const items: CheckItem[] = []
   const add = (item: CheckItem) => items.push(item)
   const maintenance = doc.locationType === 'maintenance'
@@ -109,15 +113,19 @@ export function locationChecklist(doc: LocationDoc, recipients: number | null, s
     for (const key of SERVICE_KEYS) {
       const detail = doc.services?.[key]
       add({ id: `title-${key}`, area: 'Services', label: `${SERVICE_LABEL[key]}: menu title`, level: 'required', ok: has(detail?.title), path: `services.${key}.title` })
+      // Before/after pairs (the legacy single pair counts until it's migrated)
+      const pairs = (detail?.transformations ?? []).filter((p) => hasImage(p.before) && hasImage(p.after))
+      const allPairs = pairs.length ? pairs : hasImage(detail?.beforeImage) && hasImage(detail?.afterImage) ? [{ before: detail?.beforeImage, after: detail?.afterImage }] : []
       add({
         id: `pair-${key}`,
         area: 'Services',
         label: `${SERVICE_LABEL[key]}: before/after photos`,
         level: 'recommended',
-        ok: hasImage(detail?.beforeImage) && hasImage(detail?.afterImage),
-        path: `services.${key}.beforeImage`,
+        ok: allPairs.length > 0,
+        detail: allPairs.length ? `${allPairs.length} pair${allPairs.length === 1 ? '' : 's'}` : undefined,
+        path: `services.${key}.transformations`,
       })
-      const slider = new Set([detail?.beforeImage?.asset?._ref, detail?.afterImage?.asset?._ref].filter(Boolean))
+      const slider = new Set(allPairs.flatMap((p) => [p.before?.asset?._ref, p.after?.asset?._ref]).filter(Boolean))
       const tagged = local.filter((g) => g.services?.some((s) => s._ref && serviceKeys[s._ref] === key))
       const recent = tagged.filter((g) => !slider.has(g.asset?._ref)).length
       add({
@@ -146,8 +154,18 @@ export function locationChecklist(doc: LocationDoc, recipients: number | null, s
     label: 'Lead recipients',
     level: 'required',
     ok: (recipients ?? 0) > 0,
-    detail: recipients == null ? 'Not checked' : `${recipients} recipient${recipients === 1 ? '' : 's'} (in the private Lead recipients document)`,
+    detail: recipients == null ? 'Not checked' : `${recipients} recipient${recipients === 1 ? '' : 's'} (in the private Email recipients document)`,
   })
+  // Warranty requests never go to Client Tether, so they need their own list (growth locations have the page)
+  if (!maintenance)
+    add({
+      id: 'warrantyRecipients',
+      area: 'Leads & consent',
+      label: 'Warranty recipients',
+      level: 'required',
+      ok: (warrantyRecipients ?? 0) > 0,
+      detail: warrantyRecipients == null ? 'Not checked' : `${warrantyRecipients} recipient${warrantyRecipients === 1 ? '' : 's'} (in the private Email recipients document)`,
+    })
   const blocks = doc.consentBlocks ?? []
   add({ id: 'consent', area: 'Leads & consent', label: 'Consent checkboxes', level: 'required', ok: blocks.length > 0, detail: 'Without them the form says "please call us"', path: 'consentBlocks' })
   // Consent must name THIS business: the {locationName} placeholder, or the location's own name
@@ -167,6 +185,16 @@ export function locationChecklist(doc: LocationDoc, recipients: number | null, s
     })
   add({ id: 'subject', area: 'Leads & consent', label: 'Lead email subject', level: 'required', ok: has(doc.leadEmailSubject), path: 'leadEmailSubject' })
   add({ id: 'template', area: 'Leads & consent', label: 'Lead email template', level: 'required', ok: has(doc.leadEmailTemplate), path: 'leadEmailTemplate' })
+  if (doc.hasScheduling)
+    add({
+      id: 'booking',
+      area: 'Leads & consent',
+      label: 'Booking page (online scheduling is on)',
+      level: 'recommended',
+      ok: has(doc.schedulingUrl),
+      detail: doc.schedulingUrl ? undefined : 'Buttons go to the survey and "Pick a time now" is hidden until it is set',
+      path: 'schedulingUrl',
+    })
 
   // SEO (automatic values exist)
   add({ id: 'meta', area: 'SEO', label: 'Custom homepage title / description', level: 'optional', ok: has(doc.metaTitle) || has(doc.metaDescription), detail: 'Automatic values are used when empty', path: 'metaDescription' })
