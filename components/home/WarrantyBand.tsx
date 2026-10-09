@@ -23,6 +23,7 @@ export default function WarrantyBand({ location }: { location: Location }) {
   const photo = location.warrantyImage
 
   // Background matches the fan-deck SVG so they blend; #047bc0 keeps white text at 4.57:1 (WCAG AA)
+  const warrantyHref = getWarrantyHref(location)
   return (
     <section className="relative flex flex-col overflow-hidden bg-[#047bc0] text-white lg:block">
       {/* Photo: on top with a curved bottom on mobile, a band with a curved top on tablet,
@@ -63,13 +64,12 @@ export default function WarrantyBand({ location }: { location: Location }) {
           <p className="text-sm font-bold tracking-[0.2em] uppercase">{eyebrow}</p>
           <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{heading}</h2>
           <p className="mt-6 text-lg leading-relaxed">{body}</p>
-          <CtaButton
-            href={getWarrantyHref(location)}
-            size="md"
-            className="mt-9 text-sm tracking-[0.15em] uppercase focus-visible:outline-white"
-          >
-            {button}
-          </CtaButton>
+          {/* Basic-tier locations have no warranty page: no button */}
+          {warrantyHref && (
+            <CtaButton href={warrantyHref} size="md" className="mt-9 text-sm tracking-[0.15em] uppercase focus-visible:outline-white">
+              {button}
+            </CtaButton>
+          )}
         </div>
       </div>
     </section>
