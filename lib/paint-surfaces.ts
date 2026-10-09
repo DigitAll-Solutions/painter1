@@ -1,9 +1,9 @@
 // "What We Paint": one entry per surface, shown as a card at the top and as its own section (#slug)
-// below. Works with both data shapes:
-//   new: the service's surface item carries its section text (body) and photo
-//   old: a location's subServices (e.g. Knoxville's "Home Siding Painting", anchor "siding") supply
-//        the section text and photo for the card with the same link name, until the post-merge step
-//        removes them. Sub-services that match no card still get a section (no card).
+// below. Card, link name and section text come from the shared service; the photo only ever comes
+// from THIS location (its surfacePhotos, keyed to the surface's _key), never from another location.
+// Older data still renders: a location's subServices (e.g. Knoxville's "Home Siding Painting", anchor
+// "siding") fill the text and photo of the card with the same link name until the post-merge step
+// removes them; sub-services that match no card still get a section (no card).
 // Tested in paint-surfaces.test.ts.
 import type { PortableTextBlock } from 'next-sanity'
 
@@ -36,7 +36,7 @@ export const surfaceSlug = (text: string) =>
 const hasText = (blocks?: PortableTextBlock[]) =>
   (blocks ?? []).some((block) => ((block.children as { text?: string }[] | undefined) ?? []).some((child) => child.text?.trim()))
 
-export function paintSurfaces(items: PaintSurface[] | undefined, legacy?: ServiceDetail['subServices']): SurfaceSection[] {
+export function paintSurfaces(items: PaintSurface[] | undefined, legacy?: ServiceDetail['subServices'], photos?: ServiceDetail['surfacePhotos']): SurfaceSection[] {
   const used = new Set<string>()
   const unique = (base: string) => {
     let slug = base || 'surface'
@@ -53,6 +53,7 @@ export function paintSurfaces(items: PaintSurface[] | undefined, legacy?: Servic
       const old = older.get(base)
       older.delete(base)
       const body = hasText(item.body) ? item.body : undefined
+      const photo = photos?.find((p) => p.surface === item._key && p.image?.asset)?.image
       return {
         key: item._key,
         slug: unique(base),
@@ -61,7 +62,7 @@ export function paintSurfaces(items: PaintSurface[] | undefined, legacy?: Servic
         description: item.description?.trim() || undefined,
         body,
         text: body ? undefined : old?.description?.trim() || item.description?.trim() || undefined,
-        image: item.image?.asset ? item.image : old?.image?.asset ? old.image : undefined,
+        image: photo ?? (old?.image?.asset ? old.image : undefined),
         card: true,
       }
     })

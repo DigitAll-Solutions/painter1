@@ -9,6 +9,7 @@ const service = `{
   afterImage{${image}},
   transformations[]{_key, title, projectType, area, before{${image}}, after{${image}}},
   subServices[]{_key, title, anchor, description, image{${image}}},
+  surfacePhotos[defined(surface) && defined(image.asset)]{_key, surface, image{${image}}},
   images[]{_key, ${image}}
 }`
 
@@ -45,7 +46,7 @@ export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current i
   heroSubtitle, heroImage{${image}},
   transformationHeading, transformationBody,
   processIntro, prepIntro, prepBullets, materialsBody, materialsBlocks[]{_key, title, body}, warrantyBannerBody,
-  whatWePaintTitle, whatWePaint[]{_key, icon, title, description, "slug": slug.current, body, image{${image}}},
+  whatWePaintTitle, whatWePaint[]{_key, icon, title, description, "slug": slug.current, body},
   faqs[]{_key, question, answer}
 }`)
 

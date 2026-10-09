@@ -68,14 +68,14 @@ The **Location details** document has these tabs: Basics · Owner & team · Home
 
 Each service page has one **What We Paint** section: a card per surface at the top, then a section per surface further down (Siding, Brick, Stucco…). A card's **See details ↓** jumps to its section.
 
-- **Where:** Shared → **Services** → the service → **What we paint** tab → **What we paint (surfaces)**. Every location's page shows the same surfaces.
-- **Each surface, edited in one place:**
+- **Surfaces and their text:** Shared → **Services** → the service → **What we paint** tab → **What we paint (surfaces)**. Every location's page shows the same surfaces and text.
+- **Photos are per location:** Location details → **Services** → the service → **What We Paint photos**. Add a photo, pick its surface from the list, and write alt text that describes the job (what was painted, the colors), not "Painter1 painter". A photo only appears on that location's page; surfaces without one show text only.
+- **Each surface (shared, in Services):**
   - **Surface name:** the card title and the section heading. Just the name ("Siding", "Trim & Doors").
   - **Link name:** the end of the link to the section, e.g. `siding` → `/knoxville/exterior-painting#siding`. Click **Generate**. Don't change it after launch.
   - **Icon** and **Card text** (one sentence on the card).
   - **Section text:** the text in the surface's section. Paragraphs and bullet lists; use bold for short labels. `{city}`, `{state}` and `{owner}` are filled in per location. Empty: the card text is shown there.
-  - **Section photo** (optional): shown beside the text **on every location's page**, so pick one that suits them all. Without a photo the text is shown on its own.
-- **Order:** drag the surfaces; cards and sections follow the same order.
+- **Order:** drag the surfaces; cards and sections follow the same order. Renaming a surface keeps each location's photo attached.
 - **Old "Sub-services (old)"** on a location (Knoxville's Siding and Stucco) are read-only and are removed after launch; their text is already in the surfaces.
 
 ## Online booking

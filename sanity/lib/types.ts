@@ -60,6 +60,8 @@ export type ServiceDetail = {
   highlights?: string[]
   process?: { _key: string; title: string; description?: string; items?: string[] }[]
   subServices?: { _key: string; title: string; anchor?: string; description?: string; image?: SanityImage }[]
+  /** This location's own photo per What We Paint surface, keyed to the surface's _key */
+  surfacePhotos?: { _key: string; surface: string; image: SanityImage }[]
   images?: (SanityImage & { _key: string })[]
 }
 
@@ -167,9 +169,8 @@ export type PaintSurface = {
   description?: string
   /** Anchor id; derived from the title when missing (older data) */
   slug?: string
-  /** Section text (Portable Text) */
+  /** Section text (Portable Text). Photos are per location: ServiceDetail.surfacePhotos */
   body?: PortableTextBlock[]
-  image?: SanityImage
 }
 
 export type ServiceLocationKey = 'interior' | 'exterior' | 'cabinet'

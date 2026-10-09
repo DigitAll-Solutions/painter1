@@ -39,17 +39,36 @@ test('old data: the location section with the same link name fills the card’s 
   )
 })
 
-test('new data: the surface’s own text and photo win; an empty text falls back', () => {
+test('new data: the surface’s own text wins; an empty text falls back; photo from this location only', () => {
   const sections = paintSurfaces(
     [
-      { ...cards[0], slug: 'siding', body: [block('New siding copy')] as never, image: img('new') },
+      { ...cards[0], slug: 'siding', body: [block('New siding copy')] as never },
       { ...cards[2], slug: 'decks', body: [block('  ')] as never },
     ],
     knoxville,
+    [{ _key: 'p1', surface: 'a', image: img('knox-siding-photo') }],
   )
   assert.equal(sections[0].body?.length, 1)
   assert.equal(sections[0].text, undefined)
-  assert.equal(sections[0].image?.asset._id, 'image-new')
+  assert.equal(sections[0].image?.asset._id, 'image-knox-siding-photo')
   assert.equal(sections[1].body, undefined)
   assert.equal(sections[1].text, 'Deck staining.')
+  assert.equal(sections[1].image, undefined)
+})
+
+test('photos are per location, matched by the surface key (not the title); a shared photo is never used', () => {
+  // A leftover photo on the shared service item (older data) must not appear anywhere
+  const shared = [{ ...cards[0], image: img('shared') } as PaintSurface, cards[2]]
+  const knox = paintSurfaces(shared, undefined, [
+    { _key: 'k1', surface: 'a', image: img('knox-siding') },
+    { _key: 'k2', surface: 'c', image: img('knox-deck') },
+  ])
+  const maryville = paintSurfaces(shared, undefined, [{ _key: 'm1', surface: 'c', image: img('maryville-deck') }])
+  const other = paintSurfaces(shared)
+  assert.deepEqual(knox.map((s) => s.image?.asset._id), ['image-knox-siding', 'image-knox-deck'])
+  assert.deepEqual(maryville.map((s) => s.image?.asset._id), [undefined, 'image-maryville-deck'])
+  assert.deepEqual(other.map((s) => s.image?.asset._id), [undefined, undefined])
+  // Renaming a surface keeps its photo: the key matches, the title doesn't matter
+  const renamed = paintSurfaces([{ ...cards[0], title: 'House Siding' }], undefined, [{ _key: 'k1', surface: 'a', image: img('knox-siding') }])
+  assert.equal(renamed[0].image?.asset._id, 'image-knox-siding')
 })

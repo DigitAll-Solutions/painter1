@@ -19,7 +19,7 @@ export type CheckItem = {
 type Img = { asset?: { _ref?: string } } | undefined
 type Gallery = { asset?: { _ref?: string }; services?: { _ref?: string }[]; notLocalProject?: boolean }
 type Pair = { before?: Img; after?: Img }
-type Detail = { title?: string; beforeImage?: Img; afterImage?: Img; transformations?: Pair[] } | undefined
+type Detail = { title?: string; beforeImage?: Img; afterImage?: Img; transformations?: Pair[]; surfacePhotos?: { image?: Img }[] } | undefined
 type Block = { children?: { text?: string }[] }
 export type LocationDoc = {
   name?: string
@@ -125,7 +125,8 @@ export function locationChecklist(doc: LocationDoc, recipients: number | null, s
         detail: allPairs.length ? `${allPairs.length} pair${allPairs.length === 1 ? '' : 's'}` : undefined,
         path: `services.${key}.transformations`,
       })
-      const slider = new Set(allPairs.flatMap((p) => [p.before?.asset?._ref, p.after?.asset?._ref]).filter(Boolean))
+      // Recent Work skips the pair photos and this location's What We Paint photos (shown elsewhere on the page)
+      const slider = new Set([...allPairs.flatMap((p) => [p.before?.asset?._ref, p.after?.asset?._ref]), ...(detail?.surfacePhotos ?? []).map((p) => p.image?.asset?._ref)].filter(Boolean))
       const tagged = local.filter((g) => g.services?.some((s) => s._ref && serviceKeys[s._ref] === key))
       const recent = tagged.filter((g) => !slider.has(g.asset?._ref)).length
       add({
