@@ -4,6 +4,7 @@ import { ArrowRight, BadgeCheck, ClipboardList, HardHat, House, PaintRoller, Rul
 import CtaButton from '../CtaButton'
 import SanityImage from '../SanityImage'
 import { getCta, getWarrantyHref } from '@/lib/location'
+import { ownerHeading } from '@/lib/owner-heading'
 import type { Location, TeamMember } from '@/sanity/lib/types'
 
 const pronouns = {
@@ -21,11 +22,11 @@ const initials = (name: string) =>
     .toUpperCase()
 
 export default function OwnerSection({ location }: { location: Location }) {
-  const fullName = location.ownerName
-  if (!fullName) return null
+  const heading = ownerHeading(location)
+  if (!heading) return null
 
-  const first = fullName.split(' ')[0]
-  const city = location.address?.city ?? location.name
+  const fullName = location.ownerName!.trim()
+  const { first, city } = heading
   const p = pronouns[location.ownerPronoun ?? 'he']
   const withTeam = location.franchiseStructure === 'owner-with-team'
   const cta = getCta(location)

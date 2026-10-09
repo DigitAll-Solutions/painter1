@@ -137,7 +137,7 @@ export const service = defineType({
       type: 'array',
       group: 'paint',
       description:
-        'One item per surface. Each shows as a card at the top of "What We Paint" (4 items: one row of 4; 6 items: two rows of 3) and as its own section below the cards, where the card’s "See details" link jumps to. Every location’s page shows the same surfaces.',
+        'One item per surface. Each shows as a card at the top of "What We Paint" (4 items: one row of 4; 6 items: two rows of 3) and as its own section below the cards, where the card’s "See details" link jumps to. Every location’s page shows the same surfaces and text; photos are per location (Location → Services → What We Paint photos).',
       validation: (rule) =>
         rule.custom((items: {slug?: {current?: string}}[] | undefined) => {
           const slugs = (items ?? []).map((item) => item.slug?.current).filter(Boolean)
@@ -178,16 +178,20 @@ export const service = defineType({
                 }),
               ],
             }),
+            // Old shared photo: photos are per location now (location → Services → What We Paint photos).
+            // Never shown on the site; hidden once empty, removed post-merge (seed-oct9 --remove-shared-photos).
             defineField({
               name: 'image',
-              title: 'Section photo',
+              title: 'Old shared photo (not shown)',
               type: 'image',
               options: {hotspot: true},
               fields: [altField],
-              description: 'Optional photo beside the section text. Shown on this service page for EVERY location, so use a photo that suits them all. Without one, the text is shown on its own.',
+              readOnly: true,
+              hidden: ({value}) => !value,
+              description: 'No longer used: each location adds its own photo under Location → Services → What We Paint photos. Being removed.',
             }),
           ],
-          preview: {select: {title: 'title', subtitle: 'slug.current', media: 'image'}, prepare: ({title, subtitle, media}) => ({title, subtitle: subtitle ? `#${subtitle}` : 'No link name yet', media})},
+          preview: {select: {title: 'title', subtitle: 'slug.current'}, prepare: ({title, subtitle}) => ({title, subtitle: subtitle ? `#${subtitle}` : 'No link name yet'})},
         }),
       ],
     }),

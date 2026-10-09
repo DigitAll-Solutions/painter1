@@ -1,19 +1,25 @@
 /**
  * Oct 9 feedback data changes.
  *
- * Default (additive, safe before merge: the site on main reads only {icon, title, description} of each
- * What We Paint item): every service's surfaces get a link name (slug), section text (body) and, for
- * Siding, the photo from Knoxville's old "Home Siding Painting" section. Only empty fields are filled.
+ * Default (additive: the deployed site doesn't read these fields): every service's surfaces get a link
+ * name (slug) and section text (body), and Knoxville gets its own What We Paint photos (Siding from its
+ * old section; Brick, Decks and Fences from the live site's pages), in Knoxville's location document,
+ * keyed to the surface's _key. Photos are per location: nothing is written to the shared service photo.
+ * Only empty fields are filled.
  *   node --env-file=.env.local scripts/seed-oct9.ts --dry-run
  *   node --env-file=.env.local scripts/seed-oct9.ts
  *
- * Post-merge, in this order (each changes what production shows on the old code, so never before):
- *   --cabinet-slug        service "Cabinet" slug cabinet-refinishing → cabinet-painting
- *   --remove-subservices  remove locations' old service sub-sections whose surface now has its own text
- *   (combine with --dry-run first)
+ * Post-merge, in this order (each changes what production shows today, so never before):
+ *   --cabinet-slug          service "Cabinet" slug cabinet-refinishing → cabinet-painting
+ *   --remove-shared-photos  remove the old shared surface photo (Siding) from the service documents
+ *   --remove-subservices    remove locations' old service sub-sections once each surface has its own text
+ *                           and this location's photo
+ *   (each with --dry-run first)
  *
  * Re-running is a no-op.
  */
+import { createReadStream, existsSync } from 'node:fs'
+import { basename } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
@@ -22,8 +28,9 @@ import { surfaceSlug } from '../lib/paint-surfaces.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const CABINET_SLUG = process.argv.includes('--cabinet-slug')
+const REMOVE_SHARED_PHOTOS = process.argv.includes('--remove-shared-photos')
 const REMOVE_SUBSERVICES = process.argv.includes('--remove-subservices')
-const ADDITIVE = !CABINET_SLUG && !REMOVE_SUBSERVICES
+const ADDITIVE = !CABINET_SLUG && !REMOVE_SHARED_PHOTOS && !REMOVE_SUBSERVICES
 
 function env(name: string) {
   const value = process.env[name]
@@ -80,11 +87,24 @@ const COPY: Record<string, Record<string, Copy>> = {
   },
 }
 
+// Knoxville's own job photos for its exterior surfaces (by the surface's link name; stored by its _key).
+// Brick and Decks are already in Sanity; the Fences photo is uploaded from the saved live site
+// (docs/painter1-knoxville, gitignored). Decks and Fences show the same job (deck + privacy screen),
+// as on the live site's two pages.
+type KnoxPhoto = { slug: string; source: string; alt: string; asset?: string; file?: string; fromOldSection?: boolean }
+const KNOXVILLE_PHOTOS: KnoxPhoto[] = [
+  { slug: 'siding', source: 'Knoxville old section "Home Siding Painting" (Siding-Painting-After-1)', alt: '', fromOldSection: true },
+  { slug: 'brick', source: 'live brick-painting (Painter1-of-Knoxville-Brick-Painting-Before-After-Work-After1)', asset: 'image-7d5c193a7f135ef84eab1c4d5e2cd996e78b5ff0-1000x750-jpg', alt: 'Two-story brick house painted white, with black shutters, window frames, trim and front door.' },
+  { slug: 'decks', source: 'live deck-painting-and-staining (Deck-Painting-Staining-After-2)', asset: 'image-7cbe13edfbada8c4f29c08bc57c5d6346afed4bb-800x600-jpg', alt: 'Backyard deck with boards painted light grey, outdoor seating and a black-stained slatted privacy screen.' },
+  { slug: 'fences', source: 'live fence-painting-and-staining (Fence-Painting-Staining-After-1)', file: 'docs/painter1-knoxville/images/2025_09_Fence-Painting-Staining-After-1.jpg', alt: 'Horizontal-slat privacy fence stained black, enclosing a deck painted light grey.' },
+]
+
 type Img = { _type?: string; asset?: { _ref?: string }; alt?: string; hotspot?: unknown; crop?: unknown }
 type Item = { _key: string; title?: string; slug?: { current?: string }; body?: unknown[]; image?: Img }
 type ServiceDoc = { _id: string; _rev: string; title: string; slug?: string; locationKey: string; whatWePaint?: Item[] }
 type Sub = { _key: string; title: string; anchor?: string; description?: string; image?: Img }
-type LocationDoc = { _id: string; _rev: string; slug?: string; services?: Record<string, { subServices?: Sub[] } | undefined> }
+type SurfacePhoto = { _key: string; surface?: string; image?: Img }
+type LocationDoc = { _id: string; _rev: string; slug?: string; services?: Record<string, { subServices?: Sub[]; surfacePhotos?: SurfacePhoto[] } | undefined> }
 
 async function main() {
   const token = env('SANITY_API_WRITE_TOKEN')
@@ -99,11 +119,9 @@ async function main() {
   const tx = client.transaction()
   let changes = 0
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")`)
-  console.log(`Mode: ${ADDITIVE ? 'surfaces (additive, safe before merge)' : [CABINET_SLUG && 'cabinet slug (post-merge)', REMOVE_SUBSERVICES && 'remove old sub-sections (post-merge)'].filter(Boolean).join(' + ')}\n`)
+  console.log(`Mode: ${ADDITIVE ? 'surfaces + Knoxville photos (additive)' : [CABINET_SLUG && 'cabinet slug (post-merge)', REMOVE_SHARED_PHOTOS && 'remove shared surface photos (post-merge)', REMOVE_SUBSERVICES && 'remove old sub-sections (post-merge)'].filter(Boolean).join(' + ')}\n`)
 
   if (ADDITIVE) {
-    // Knoxville's old exterior sections hold the Siding photo
-    const knoxSubs = locations.find((l) => l.slug === 'knoxville')?.services?.exterior?.subServices ?? []
     for (const service of services) {
       const copy = COPY[service.locationKey] ?? {}
       const set: Record<string, unknown> = {}
@@ -122,13 +140,6 @@ async function main() {
           set[`${path}.body`] = blocks(entry.text)
           lines.push(`section text ← ${entry.source}\n        "${entry.text.replace(/\n/g, ' / ')}"`)
         } else lines.push('section text: none found (card text shows)')
-        const old = knoxSubs.find((sub) => (sub.anchor || surfaceSlug(sub.title)) === slug)
-        if (item.image?.asset?._ref) lines.push(`photo kept: ${item.image.asset._ref}`)
-        else if (old?.image?.asset?._ref) {
-          const { _type, asset, alt, hotspot, crop } = old.image
-          set[`${path}.image`] = { _type: _type ?? 'image', asset, ...(alt ? { alt } : {}), ...(hotspot ? { hotspot } : {}), ...(crop ? { crop } : {}) }
-          lines.push(`photo ← Knoxville "${old.title}" section: ${asset._ref} (alt: "${alt}")`)
-        } else lines.push('photo: none')
         console.log(`  ${item.title} (#${slug})\n    - ${lines.join('\n    - ')}`)
       }
       if (Object.keys(set).length) {
@@ -137,6 +148,65 @@ async function main() {
       }
       console.log()
     }
+
+    // Knoxville's own photos, in its location document, keyed to the exterior surfaces' _key
+    const knoxville = locations.find((l) => l.slug === 'knoxville')
+    const exterior = services.find((s) => s.locationKey === 'exterior')
+    if (!knoxville || !exterior) throw new Error('Knoxville or the exterior service is missing')
+    const existing = knoxville.services?.exterior?.surfacePhotos ?? []
+    const add: SurfacePhoto[] = []
+    console.log(`KNOXVILLE ${knoxville._id} (rev ${knoxville._rev}): services.exterior.surfacePhotos (${existing.length} now)`)
+    for (const photo of KNOXVILLE_PHOTOS) {
+      const item = exterior.whatWePaint?.find((i) => (i.slug?.current || surfaceSlug(i.title ?? '')) === photo.slug)
+      if (!item) {
+        console.log(`  #${photo.slug}: no such surface on ${exterior._id}; skipped`)
+        continue
+      }
+      if (existing.some((p) => p.surface === item._key)) {
+        console.log(`  ${item.title} (key "${item._key}"): already has a photo; kept`)
+        continue
+      }
+      let image: Img | undefined
+      if (photo.fromOldSection) {
+        const old = (knoxville.services?.exterior?.subServices ?? []).find((sub) => (sub.anchor || surfaceSlug(sub.title)) === photo.slug)
+        if (old?.image?.asset?._ref) {
+          const { asset, alt, hotspot, crop } = old.image
+          image = { _type: 'image', asset, alt, ...(hotspot ? { hotspot } : {}), ...(crop ? { crop } : {}) }
+        }
+      } else if (photo.asset) image = { _type: 'image', asset: { _ref: photo.asset }, alt: photo.alt }
+      else if (photo.file) {
+        if (!existsSync(photo.file)) {
+          console.log(`  ${item.title}: ${photo.file} not found on this machine; skipped`)
+          continue
+        }
+        // Sanity keeps one asset per file content, so re-running doesn't duplicate it
+        const ref = DRY_RUN ? '(uploaded on apply)' : (await client.assets.upload('image', createReadStream(photo.file), { filename: basename(photo.file).replace(/^\d{4}_\d{2}_/, '') }))._id
+        image = { _type: 'image', asset: { _ref: ref }, alt: photo.alt }
+      }
+      if (!image?.asset?._ref) {
+        console.log(`  ${item.title}: photo not found; skipped`)
+        continue
+      }
+      add.push({ _key: `photo-${item._key}`, surface: item._key, image: { ...image, asset: { _type: 'reference', _ref: image.asset._ref } } as Img })
+      console.log(`  ${item.title} (key "${item._key}") ← ${photo.source}\n      ${image.asset._ref}\n      alt: "${image.alt}"`)
+    }
+    if (add.length) {
+      changes++
+      tx.patch(knoxville._id, (p) => p.ifRevisionId(knoxville._rev).setIfMissing({ 'services.exterior.surfacePhotos': [] }).append('services.exterior.surfacePhotos', add.map((photo) => ({ _type: 'surfacePhoto', ...photo }))))
+    }
+    console.log()
+  }
+
+  if (REMOVE_SHARED_PHOTOS) {
+    // The site stopped reading these: each location has its own photos now
+    for (const service of services) {
+      const withPhoto = (service.whatWePaint ?? []).filter((item) => item.image)
+      if (!withPhoto.length) continue
+      changes++
+      tx.patch(service._id, (p) => p.ifRevisionId(service._rev).unset(withPhoto.map((item) => `whatWePaint[_key=="${item._key}"].image`)))
+      for (const item of withPhoto) console.log(`SERVICE ${service._id} "${item.title}": remove shared photo ${item.image?.asset?._ref}`)
+    }
+    console.log()
   }
 
   if (CABINET_SLUG) {
@@ -152,7 +222,7 @@ async function main() {
   }
 
   if (REMOVE_SUBSERVICES) {
-    // Only when every old section's surface now has its own text (otherwise its words would be lost)
+    // Only when every old section's surface has its own text and this location's photo (nothing is lost)
     for (const location of locations) {
       const unset: string[] = []
       for (const [key, detail] of Object.entries(location.services ?? {})) {
@@ -162,9 +232,10 @@ async function main() {
         const covered = subs.map((sub) => {
           const slug = sub.anchor || surfaceSlug(sub.title)
           const item = service?.whatWePaint?.find((i) => (i.slug?.current || surfaceSlug(i.title ?? '')) === slug)
-          return { sub, slug, ok: Boolean(item?.body?.length) && (!sub.image?.asset?._ref || item?.image?.asset?._ref === sub.image.asset._ref) }
+          const photo = detail?.surfacePhotos?.find((p) => p.surface === item?._key)
+          return { sub, slug, ok: Boolean(item?.body?.length) && (!sub.image?.asset?._ref || photo?.image?.asset?._ref === sub.image.asset._ref) }
         })
-        for (const c of covered) console.log(`${location.slug} ${key} "${c.sub.title}" (#${c.slug}): ${c.ok ? 'surface has its own text (and the same photo)' : 'NOT covered: kept'}`)
+        for (const c of covered) console.log(`${location.slug} ${key} "${c.sub.title}" (#${c.slug}): ${c.ok ? 'surface has its own text (and this location’s photo where the old section had one)' : 'NOT covered: kept'}`)
         if (covered.every((c) => c.ok)) unset.push(`services.${key}.subServices`)
       }
       if (unset.length) {

@@ -3,10 +3,10 @@ import { PortableText, type PortableTextComponents } from 'next-sanity'
 
 import SanityImage from '../SanityImage'
 import { hotspotPosition } from '@/lib/image'
-import { paintSurfaces, type SurfaceSection } from '@/lib/paint-surfaces'
+import type { SurfaceSection } from '@/lib/paint-surfaces'
 import { serviceIcon } from '@/lib/service-icons'
 import { fillTokenBlocks, fillTokens } from '@/lib/tokens'
-import type { Location, Service, ServiceDetail } from '@/sanity/lib/types'
+import type { Location, Service } from '@/sanity/lib/types'
 
 // 4 items → one row of 4, 6 → two rows of 3, anything else fills the row; 2 columns on tablet, 1 on small phones.
 const gridFor = (count: number) =>
@@ -24,8 +24,7 @@ const sectionText: PortableTextComponents = {
  * One section: H2 "What We Paint", the surface cards as a clickable overview, then one block per
  * surface with an H3 that is just its name (#siding, #trim-doors…). No other H2 in between.
  */
-export default function WhatWePaint({ service, location, subServices }: { service: Service; location: Location; subServices?: ServiceDetail['subServices'] }) {
-  const surfaces = paintSurfaces(service.whatWePaint, subServices)
+export default function WhatWePaint({ service, location, surfaces }: { service: Service; location: Location; surfaces: SurfaceSection[] }) {
   if (!surfaces.length) return null
   const cards = surfaces.filter((surface) => surface.card)
 

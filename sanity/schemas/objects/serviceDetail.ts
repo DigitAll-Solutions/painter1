@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {SurfaceSelectInput} from '../../components/SurfaceSelectInput'
 import {altField} from './altField'
 
 export const serviceDetail = defineType({
@@ -118,6 +119,41 @@ export const serviceDetail = defineType({
             defineField({name: 'description', type: 'text', rows: 3}),
             defineField({name: 'items', type: 'array', of: [defineArrayMember({type: 'string'})]}),
           ],
+        }),
+      ],
+    }),
+    // This location's own photos for the shared "What we paint" surfaces, keyed to the surface's _key
+    defineField({
+      name: 'surfacePhotos',
+      title: 'What We Paint photos',
+      description:
+        'This location’s own job photo for a surface section on this service page (e.g. a Siding job you did). Only shown on this location’s page. Surfaces without a photo show text only. The surfaces and their text are in Shared → Services.',
+      type: 'array',
+      validation: (rule) =>
+        rule.custom((items: {surface?: string}[] | undefined) => {
+          const keys = (items ?? []).map((item) => item.surface).filter(Boolean)
+          return keys.some((key, i) => keys.indexOf(key) !== i) ? 'One photo per surface: a surface is listed twice.' : true
+        }),
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'surfacePhoto',
+          title: 'Surface photo',
+          fields: [
+            defineField({name: 'surface', type: 'string', description: 'Which surface this photo shows.', components: {input: SurfaceSelectInput}, validation: (rule) => rule.required()}),
+            defineField({
+              name: 'image',
+              type: 'image',
+              options: {hotspot: true},
+              fields: [altField],
+              description: 'A real job by this location. Alt text: describe the job (what was painted, colors), not "Painter1 painter".',
+              validation: (rule) => rule.required(),
+            }),
+          ],
+          preview: {
+            select: {surface: 'surface', alt: 'image.alt', media: 'image'},
+            prepare: ({surface, alt, media}) => ({title: surface ? `#${surface}` : 'Choose a surface', subtitle: alt, media}),
+          },
         }),
       ],
     }),

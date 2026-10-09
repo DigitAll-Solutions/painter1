@@ -40,6 +40,9 @@ test('before/after pairs: every pair counts, and all of their photos leave Recen
   const items = locationChecklist(doc, 1, KEYS)
   assert.equal(byId(items, 'pair-exterior').detail, '2 pairs')
   assert.equal(byId(items, 'photos-exterior').detail, '7 tagged, 3 for Recent Work (shows from 3)')
+  // What We Paint photos are on the page too, so they leave Recent Work as well
+  const withSurface = locationChecklist({ ...doc, services: { exterior: { ...doc.services!.exterior, surfacePhotos: [{ image: img('1') }] } } }, 1, KEYS)
+  assert.equal(byId(withSurface, 'photos-exterior').detail, '7 tagged, 2 for Recent Work (shows from 3)')
   // Not migrated yet: the legacy pair still counts
   const legacy = locationChecklist({ services: { interior: { beforeImage: img('b'), afterImage: img('a') } } }, 1, KEYS)
   assert.equal(byId(legacy, 'pair-interior').detail, '1 pair')
