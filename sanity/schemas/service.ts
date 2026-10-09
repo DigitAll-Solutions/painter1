@@ -123,7 +123,7 @@ export const service = defineType({
       description: `Text in the navy "Backed by Our 2-Year Workmanship Warranty" banner. Keep it consistent with the homepage warranty. ${TOKENS}`,
     }),
 
-    // What we paint
+    // What we paint: one item per surface = its card at the top AND its section further down the page
     defineField({
       name: 'whatWePaintTitle',
       title: 'What we paint: heading',
@@ -133,20 +133,61 @@ export const service = defineType({
     }),
     defineField({
       name: 'whatWePaint',
-      title: 'What we paint',
+      title: 'What we paint (surfaces)',
       type: 'array',
       group: 'paint',
-      description: '4 items show in one row of 4, 6 items in two rows of 3.',
+      description:
+        'One item per surface. Each shows as a card at the top of "What We Paint" (4 items: one row of 4; 6 items: two rows of 3) and as its own section below the cards, where the card’s "See details" link jumps to. Every location’s page shows the same surfaces.',
+      validation: (rule) =>
+        rule.custom((items: {slug?: {current?: string}}[] | undefined) => {
+          const slugs = (items ?? []).map((item) => item.slug?.current).filter(Boolean)
+          const repeated = slugs.find((slug, i) => slugs.indexOf(slug) !== i)
+          return repeated ? `Two surfaces use the link name "${repeated}": each needs its own.` : true
+        }),
       of: [
         defineArrayMember({
           type: 'object',
           name: 'paintItem',
+          title: 'Surface',
           fields: [
+            defineField({name: 'title', title: 'Surface name', type: 'string', description: 'Card title and the heading of its section, e.g. "Siding" or "Trim & Doors". Just the name.', validation: (rule) => rule.required().max(40)}),
+            defineField({
+              name: 'slug',
+              title: 'Link name',
+              type: 'slug',
+              description: 'The end of the link to this section, e.g. "siding" → /knoxville/exterior-painting#siding. Click Generate. Don’t change it after launch: other pages and old URLs may link to it.',
+              options: {source: (_doc, {parent}) => (parent as {title?: string} | undefined)?.title ?? '', maxLength: 40},
+              validation: (rule) =>
+                rule.required().custom((value?: {current?: string}) =>
+                  !value?.current || /^[a-z0-9]+(-[a-z0-9]+)*$/.test(value.current) ? true : 'Lowercase letters, numbers and single dashes only, e.g. "trim-doors".',
+                ),
+            }),
             defineField({name: 'icon', type: 'string', description: 'Icon on the card.', options: {list: SERVICE_ICON_OPTIONS}, initialValue: 'PaintRoller'}),
-            defineField({name: 'title', type: 'string', description: 'Card heading, e.g. "Walls & ceilings".', validation: (rule) => rule.required()}),
-            defineField({name: 'description', type: 'text', rows: 2, description: 'One sentence.'}),
+            defineField({name: 'description', title: 'Card text', type: 'text', rows: 2, description: 'One sentence on the card.'}),
+            defineField({
+              name: 'body',
+              title: 'Section text',
+              type: 'array',
+              description: `The text in this surface's section below the cards. Paragraphs and bullet lists; bold for short labels. Empty: the card text is shown there instead. ${TOKENS}`,
+              of: [
+                defineArrayMember({
+                  type: 'block',
+                  styles: [{title: 'Paragraph', value: 'normal'}],
+                  lists: [{title: 'Bullets', value: 'bullet'}],
+                  marks: {decorators: [{title: 'Bold', value: 'strong'}, {title: 'Italic', value: 'em'}], annotations: []},
+                }),
+              ],
+            }),
+            defineField({
+              name: 'image',
+              title: 'Section photo',
+              type: 'image',
+              options: {hotspot: true},
+              fields: [altField],
+              description: 'Optional photo beside the section text. Shown on this service page for EVERY location, so use a photo that suits them all. Without one, the text is shown on its own.',
+            }),
           ],
-          preview: {select: {title: 'title', subtitle: 'description'}},
+          preview: {select: {title: 'title', subtitle: 'slug.current', media: 'image'}, prepare: ({title, subtitle, media}) => ({title, subtitle: subtitle ? `#${subtitle}` : 'No link name yet', media})},
         }),
       ],
     }),

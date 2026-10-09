@@ -123,8 +123,11 @@ export const serviceDetail = defineType({
     }),
     defineField({
       name: 'subServices',
-      title: 'Sub-services',
-      description: 'Shown as sections on the service page, e.g. Home Siding and Stucco under Exterior.',
+      title: 'Sub-services (old)',
+      description:
+        'Replaced by the surfaces in Shared → Services → What we paint, where each surface has its card, section text and photo. Being removed after launch; edit the surfaces instead.',
+      hidden: ({value}) => !(value as unknown[] | undefined)?.length,
+      readOnly: true,
       type: 'array',
       of: [
         defineArrayMember({

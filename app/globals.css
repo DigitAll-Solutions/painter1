@@ -17,8 +17,12 @@
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
-html {
-  scroll-behavior: smooth;
+/* In-page links (What We Paint cards, #estimate…) scroll smoothly unless the visitor asked for reduced
+   motion; data-scroll-behavior on <html> keeps route changes instant (Next 16) */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {

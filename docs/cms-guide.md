@@ -64,6 +64,20 @@ The **Location details** document has these tabs: Basics · Owner & team · Home
 - **Photos that aren't this location's own work:** tick **Hide: not a local project**. They disappear everywhere, and you can untick it any time.
 - **"See The Transformation" on a service page:** Location details → Services → the service → **Before/after pairs**. Add a before photo, an after photo and a short title for each pair; the first pair is shown first. One pair shows as a large slider; two or more show as a row of sliders. Photos used in a pair are left out of that page's Recent Work.
 
+## What We Paint (service pages)
+
+Each service page has one **What We Paint** section: a card per surface at the top, then a section per surface further down (Siding, Brick, Stucco…). A card's **See details ↓** jumps to its section.
+
+- **Where:** Shared → **Services** → the service → **What we paint** tab → **What we paint (surfaces)**. Every location's page shows the same surfaces.
+- **Each surface, edited in one place:**
+  - **Surface name:** the card title and the section heading. Just the name ("Siding", "Trim & Doors").
+  - **Link name:** the end of the link to the section, e.g. `siding` → `/knoxville/exterior-painting#siding`. Click **Generate**. Don't change it after launch.
+  - **Icon** and **Card text** (one sentence on the card).
+  - **Section text:** the text in the surface's section. Paragraphs and bullet lists; use bold for short labels. `{city}`, `{state}` and `{owner}` are filled in per location. Empty: the card text is shown there.
+  - **Section photo** (optional): shown beside the text **on every location's page**, so pick one that suits them all. Without a photo the text is shown on its own.
+- **Order:** drag the surfaces; cards and sections follow the same order.
+- **Old "Sub-services (old)"** on a location (Knoxville's Siding and Stucco) are read-only and are removed after launch; their text is already in the surfaces.
+
 ## Online booking
 
 - **Online scheduling** (Leads & consent tab) turns the estimate buttons into "Schedule Your FREE Estimate".
