@@ -70,7 +70,7 @@ export const location = defineType({
       name: 'locationType',
       type: 'string',
       group: 'basics',
-      description: 'Growth: all pages. Maintenance: only the homepage and About page (service pages and Our Work return 404).',
+      description: 'Growth: every page. Maintenance (the client list’s basic tier): only the homepage, free estimate and privacy pages (service pages, Our Work and Warranty return 404).',
       options: {
         list: [
           {title: 'Growth', value: 'growth'},
@@ -95,7 +95,7 @@ export const location = defineType({
       type: 'string',
       group: 'basics',
       fieldset: 'contact',
-      description: 'Public contact email (footer, privacy page). Lead emails go to the private Lead recipients instead.',
+      description: 'Public contact email (footer, privacy page). Lead emails go to the private Email recipients instead.',
       validation: (rule) => [rule.email(), rule.required().warning('Shown in the footer and on the privacy page.')],
     }),
     defineField({
@@ -543,8 +543,8 @@ export const location = defineType({
     }),
 
     // ---------- Leads & consent ----------
-    // Recipients are NOT here: this dataset is public, so they live in the private "Lead recipients"
-    // document (the location's folder → Lead recipients).
+    // Recipients are NOT here: this dataset is public, so they live in the private "Email recipients"
+    // document (the location's folder → Email recipients).
     defineField({
       name: 'leadEmailSubject',
       title: 'Lead email subject',
@@ -609,10 +609,30 @@ export const location = defineType({
     }),
     defineField({
       name: 'schedulingUrl',
+      title: 'Booking page',
       type: 'url',
       group: 'leads',
       fieldset: 'scheduling',
-      description: 'Online scheduler link. Not used on the site yet (CTAs go to the free-estimate page).',
+      description:
+        'Booking page on appointment.painter1.com, e.g. https://appointment.painter1.com/knoxville. Shown as "Pick a time now" after a survey request, and used by the setting below. Leave empty until the page is live.',
+      hidden: ({document}) => !document?.hasScheduling,
+      validation: (rule) => rule.uri({scheme: ['https']}),
+    }),
+    defineField({
+      name: 'bookingTarget',
+      title: 'Schedule button goes to',
+      type: 'string',
+      group: 'leads',
+      fieldset: 'scheduling',
+      description: 'Where every "Schedule Your FREE Estimate" button links. "Booking page directly" only applies once the booking page above is set; until then buttons go to the survey.',
+      options: {
+        list: [
+          {title: 'Estimate survey (booking offered at the end)', value: 'survey'},
+          {title: 'Booking page directly', value: 'booking'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'survey',
       hidden: ({document}) => !document?.hasScheduling,
     }),
 
@@ -652,7 +672,22 @@ export const location = defineType({
       title: 'Warranty button link',
       type: 'string',
       group: 'legal',
-      description: 'Leave empty to use the default estimate link',
+      description: 'Leave empty to link to this location’s warranty page (/<slug>/warranty).',
+    }),
+    defineField({
+      name: 'warrantyPdf',
+      title: 'Warranty sheet (PDF)',
+      type: 'file',
+      group: 'legal',
+      options: {accept: 'application/pdf'},
+      description: 'Optional. Shows a "Download Warranty Sheet (PDF)" button on the warranty page.',
+    }),
+    defineField({
+      name: 'warrantyResponseTime',
+      title: 'Warranty response time',
+      type: 'string',
+      group: 'legal',
+      description: 'Optional line after "We repair covered areas at no labor charge." on the warranty page, e.g. "We usually reply within two business days." Leave empty to hide.',
     }),
     {
       ...imageWithAlt('warrantyGraphic', 'Homepage warranty: graphic'),

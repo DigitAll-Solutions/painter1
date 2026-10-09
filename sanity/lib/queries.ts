@@ -7,6 +7,7 @@ const service = `{
   heroImage{${image}},
   beforeImage{${image}},
   afterImage{${image}},
+  transformations[]{_key, title, projectType, area, before{${image}}, after{${image}}},
   subServices[]{_key, title, anchor, description, image{${image}}},
   images[]{_key, ${image}}
 }`
@@ -22,6 +23,7 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
   transformationAfterImage{${image}},
   heroVideo{asset->{url, mimeType}},
   warrantyImage{${image}},
+  warrantyPdf{asset->{url, originalFilename}},
   warrantyGraphic{${image}},
   galleryImages[]{
     _key, caption, title, projectType, area, city, "geo": geo{lat, lng}, "services": services[]._ref,
@@ -57,6 +59,9 @@ export const LOCATION_PAGES_QUERY = defineQuery(`*[_type == "location" && define
 export const ESTIMATE_SURVEY_QUERY = defineQuery(
   `coalesce(*[_type == "location" && slug.current == $slug][0].estimateSurvey->, *[_id == "estimate-survey-default"][0])`,
 )
+
+// The network warranty terms (one document for every location's /warranty page)
+export const WARRANTY_TERMS_QUERY = defineQuery(`*[_id == "warranty-terms"][0]`)
 
 // The franchise-wide privacy notice (one document for every location)
 export const PRIVACY_POLICY_QUERY = defineQuery(`*[_id == "privacy-policy"][0]{title, body}`)
