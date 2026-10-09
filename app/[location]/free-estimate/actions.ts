@@ -45,7 +45,7 @@ function sourceUrl(raw: string, slug: string, host: string | null) {
 }
 
 async function sendLeadEmail(delivery: Delivery, body: string, replyTo: string, locationId: string): Promise<EmailResult> {
-  if (!process.env.RESEND_API_KEY) return { status: 'skipped (no RESEND_API_KEY)' }
+  if (!process.env.BREVO_API_KEY) return { status: 'skipped (no BREVO_API_KEY)' }
   if (delivery.kind === 'refused') return { status: `skipped (${delivery.reason})` }
   if (!body) return { status: 'skipped (location has no lead email template)' }
 

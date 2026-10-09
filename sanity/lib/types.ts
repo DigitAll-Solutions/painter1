@@ -159,6 +159,19 @@ export type Location = {
   ourWorkPage?: { metaTitle?: string; metaDescription?: string; intro?: string }
 }
 
+export type PaintSurface = {
+  _key: string
+  icon?: string
+  title: string
+  /** Card text */
+  description?: string
+  /** Anchor id; derived from the title when missing (older data) */
+  slug?: string
+  /** Section text (Portable Text) */
+  body?: PortableTextBlock[]
+  image?: SanityImage
+}
+
 export type ServiceLocationKey = 'interior' | 'exterior' | 'cabinet'
 
 export type Service = {
@@ -180,7 +193,8 @@ export type Service = {
   materialsBlocks?: { _key: string; title: string; body?: PortableTextBlock[] }[]
   warrantyBannerBody?: string
   whatWePaintTitle?: string
-  whatWePaint?: { _key: string; icon?: string; title: string; description?: string }[]
+  /** Surfaces: each is a card at the top of What We Paint and its own section below (#slug) */
+  whatWePaint?: PaintSurface[]
   faqs?: { _key: string; question: string; answer: string }[]
 }
 

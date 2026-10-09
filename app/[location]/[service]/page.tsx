@@ -10,7 +10,6 @@ import ServiceFaq from '@/components/service/ServiceFaq'
 import RecentWork from '@/components/service/RecentWork'
 import ServiceHero, { type Crumb } from '@/components/service/ServiceHero'
 import ServiceProcess from '@/components/service/ServiceProcess'
-import SubServices from '@/components/service/SubServices'
 import WhatWePaint from '@/components/service/WhatWePaint'
 import { localPhotos, pairImages, sliderAssets, transformationPairs } from '@/lib/gallery'
 import { getCta, telHref } from '@/lib/location'
@@ -138,10 +137,8 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
 
       <ServiceProcess location={location} service={service} />
 
-      <WhatWePaint service={service} />
-
-      {/* e.g. Siding and Stucco on Exterior (#siding, #stucco) */}
-      <SubServices items={detail?.subServices} />
+      {/* Cards, then one H3 section per surface (#siding, #stucco…); older location sub-services fill in */}
+      <WhatWePaint service={service} location={location} subServices={detail?.subServices} />
 
       {gallery.length >= MIN_GALLERY && (
         <RecentWork images={gallery} title={`${service.shortName} Projects in ${city}`} label={`${service.shortName} projects in ${city}`} />

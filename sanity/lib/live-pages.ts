@@ -2,6 +2,8 @@
 // "Pages" view and the location folder's "Live pages" pane. Links open on the Studio's own origin, so
 // the Studio on painter1.vercel.app opens Vercel pages and on www.painter1.com opens production.
 
+import {publicServiceSlug} from '../../lib/service-slugs'
+
 export type SiteLocation = { _id: string; name?: string; slug?: string; locationType?: string; surveyRef?: string }
 export type SiteService = { _id: string; title?: string; slug?: string; locationKey?: string }
 export type LivePage = { label: string; path: string; group?: string }
@@ -19,7 +21,7 @@ export function locationPages(location: SiteLocation, services: SiteService[]): 
   const growth = location.locationType !== 'maintenance'
   return [
     { label: 'Home', path: base },
-    ...(growth ? servicesInOrder(services).map((s) => ({ label: s.title ?? s.slug!, path: `${base}/${s.slug}` })) : []),
+    ...(growth ? servicesInOrder(services).map((s) => ({ label: s.title ?? s.slug!, path: `${base}/${publicServiceSlug(s.slug!)}` })) : []),
     ...(growth
       ? [
           { label: 'Our Work', path: `${base}/our-work` },
@@ -46,7 +48,7 @@ export function pagesForDocument(
     case 'location':
       return locationPages({ _id: id, slug: doc.slug?.current, locationType: doc.locationType }, services)
     case 'service':
-      return doc.slug?.current ? growth.map((l) => ({ label: l.name ?? l.slug!, path: `/${l.slug}/${doc.slug!.current}` })) : []
+      return doc.slug?.current ? growth.map((l) => ({ label: l.name ?? l.slug!, path: `/${l.slug}/${publicServiceSlug(doc.slug!.current!)}` })) : []
     case 'warrantyTerms':
       return growth.map((l) => ({ label: l.name ?? l.slug!, path: `/${l.slug}/warranty` }))
     case 'privacyPolicy':
