@@ -48,8 +48,9 @@ export default function Footer({ location }: { location: Location }) {
           <p className="mt-1">{location.name}</p>
         </div>
 
-        <div>
-          <h2 className={heading}>Our Services</h2>
+        {/* Column titles are labels, not headings: the page outline ends with the content */}
+        <nav aria-label="Footer: services">
+          <p className={heading}>Our Services</p>
           <ul className="mt-6 space-y-3">
             {serviceLinks.map((link) => (
               <li key={link.href}>
@@ -59,10 +60,10 @@ export default function Footer({ location }: { location: Location }) {
               </li>
             ))}
           </ul>
-        </div>
+        </nav>
 
         <div>
-          <h2 className={heading}>Get In Touch</h2>
+          <p className={heading}>Get In Touch</p>
           <ul className="mt-6 space-y-3">
             {tel && (
               <li>
@@ -102,10 +103,12 @@ export default function Footer({ location }: { location: Location }) {
         </div>
 
         <div>
-          <h2 className={heading}>Follow Us</h2>
-          <div className="mt-6">
-            <SocialIcons links={location.socialLinks} />
-          </div>
+          <nav aria-label="Footer: social media">
+            <p className={heading}>Follow Us</p>
+            <div className="mt-6">
+              <SocialIcons links={location.socialLinks} />
+            </div>
+          </nav>
           <CtaButton href={cta.href} className="mt-8 w-full py-4 tracking-wide uppercase shadow-lg">
             {cta.label}
           </CtaButton>
@@ -117,15 +120,17 @@ export default function Footer({ location }: { location: Location }) {
           <p>
             © {new Date().getFullYear()} {location.name}. All rights reserved.
           </p>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
-            {legalLinks.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} className="hover:text-brand-blue-text">
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <nav aria-label="Footer: legal">
+            <ul className="flex flex-wrap gap-x-6 gap-y-2">
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-brand-blue-text">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
           <a
             href="#top"
             aria-label="Back to top"
