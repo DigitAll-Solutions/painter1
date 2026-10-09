@@ -50,7 +50,9 @@ export const warrantyRequest = defineType({
         defineField({name: 'subject', type: 'string'}),
         defineField({name: 'recipients', type: 'array', of: [defineArrayMember({type: 'string'})], description: 'Who it was (or would be) sent to: the warranty recipients, never Client Tether.'}),
         defineField({name: 'body', type: 'text', rows: 20}),
-        defineField({name: 'resendId', type: 'string'}),
+        defineField({name: 'messageId', title: 'Brevo message ID', type: 'string'}),
+        // Planned Resend integration, never used for sending; hidden unless an old document has it
+        defineField({name: 'resendId', type: 'string', hidden: ({value}) => !value}),
         defineField({name: 'error', type: 'string'}),
         defineField({name: 'sentAt', type: 'datetime'}),
       ],

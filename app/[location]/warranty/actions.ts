@@ -142,8 +142,8 @@ export async function submitWarranty(_previous: WarrantyState, formData: FormDat
     const result: EmailResult =
       delivery.kind === 'refused'
         ? { status: `skipped (${delivery.reason})` }
-        : !process.env.RESEND_API_KEY
-          ? { status: 'skipped (no RESEND_API_KEY)' }
+        : !process.env.BREVO_API_KEY
+          ? { status: 'skipped (no BREVO_API_KEY)' }
           : recipientsError
             ? { status: 'failed', error: recipientsError }
             : await sendEmail({ from: delivery.from, to: recipients, subject: delivery.subject, text: body, replyTo: fields.email })

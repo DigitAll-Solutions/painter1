@@ -3,6 +3,8 @@
 **Decided:** build the client's tested multi-step funnel (§5). The one-page form remains only as the no-JavaScript fallback (§8).
 Until launch the form emails **only a test address** (§6.1). Every submission is first saved as a private `lead` document (§3, §6).
 
+**Update (Oct 9): email goes through Brevo, not Resend.** Read "Resend" below as Brevo (`BREVO_API_KEY`, `LEAD_FROM_EMAIL`, `LEAD_FROM_NAME`; the message ID is stored as `messageId`). Account and DNS setup: `docs/email-setup.md`. The delivery modes in §6.1 are unchanged, except that Brevo has no shared test sender: nothing is sent until `LEAD_FROM_EMAIL` is set.
+
 Verified details of the live forms (fields, consent HTML, templates, recipients) are in
 `docs/reference/live-site/estimate-form.md`, which is **gitignored** because it lists staff emails. No recipient address appears in this file.
 
