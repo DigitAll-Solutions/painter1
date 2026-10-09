@@ -59,3 +59,5 @@ next-env.d.ts
 # Client design mockups and reference photos (corporate pages, stock): local references only
 /docs/reference/corp/
 /docs/reference/Painter1-Our-Painting-Services-*.jpg
+# Backups of production values taken before data clean-ups: local only
+/docs/reference/scheduling-urls-backup*.json
