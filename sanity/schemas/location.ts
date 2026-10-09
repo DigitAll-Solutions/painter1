@@ -351,7 +351,7 @@ export const location = defineType({
       group: 'services',
       description:
         'This location\'s version of each service: nav label, homepage card and service-page overrides. Shared copy lives in Shared → Services.',
-      fields: SERVICE_KEYS.map((name) => defineField({name, type: 'serviceDetail', description: `Overrides for /<slug>/${{interior: 'interior-painting', exterior: 'exterior-painting', cabinet: 'cabinet-refinishing'}[name]}.`})),
+      fields: SERVICE_KEYS.map((name) => defineField({name, type: 'serviceDetail', description: `Overrides for /<slug>/${{interior: 'interior-painting', exterior: 'exterior-painting', cabinet: 'cabinet-painting'}[name]}.`})),
       validation: (rule) =>
         rule.custom((value: Partial<Record<(typeof SERVICE_KEYS)[number], {title?: string}>> | undefined, context) => {
           if ((context.document as {locationType?: string} | undefined)?.locationType === 'maintenance') return true

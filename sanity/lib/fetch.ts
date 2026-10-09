@@ -6,6 +6,7 @@ import type { Location, Service, WarrantyTerms } from './types'
 import type { PortableTextBlock } from 'next-sanity'
 import defaults from '@/lib/estimate-survey-defaults.json'
 import type { SurveyContent } from '@/lib/estimate-survey'
+import { publicServiceSlug, storedServiceSlugs } from '@/lib/service-slugs'
 
 const revalidate = 60
 
@@ -20,12 +21,17 @@ export const getLocationSlugs = () =>
 export const getLocationPages = () =>
   client.fetch<{ slug: string; locationType?: Location['locationType'] }[]>(LOCATION_PAGES_QUERY, {}, { next: { revalidate, tags: ['location'] } })
 
-export const getService = cache(async (slug: string) =>
-  client.fetch<Service | null>(SERVICE_QUERY, { slug }, { next: { revalidate, tags: ['service'] } }),
-)
+/** By public slug; the returned slug is always the public one (the cabinet rename, lib/service-slugs.ts) */
+export const getService = cache(async (slug: string) => {
+  const service = await client.fetch<Service | null>(SERVICE_QUERY, { slugs: storedServiceSlugs(slug) }, { next: { revalidate, tags: ['service'] } })
+  return service && { ...service, slug: publicServiceSlug(service.slug) }
+})
 
-export const getServiceSlugs = () =>
-  client.fetch<string[]>(SERVICE_SLUGS_QUERY, {}, { next: { revalidate, tags: ['service'] } })
+/** Public slugs of every service page */
+export const getServiceSlugs = async () => {
+  const slugs = await client.fetch<string[]>(SERVICE_SLUGS_QUERY, {}, { next: { revalidate, tags: ['service'] } })
+  return [...new Set(slugs.map(publicServiceSlug))]
+}
 
 /** Service document _id → its locationKey (interior | exterior | cabinet) */
 export const getServiceKeys = cache(async () => {

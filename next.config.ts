@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 import { WORK_FILTERS } from "./lib/our-work-filters";
+import { SERVICE_SLUG_RENAMES } from "./lib/service-slugs";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -11,6 +12,8 @@ const nextConfig: NextConfig = {
     return [
       // Temporary (307, not cached by search engines) until the franchisor homepage exists at "/"
       { source: "/", destination: "/knoxville", permanent: false },
+      // Renamed service pages (308): /knoxville/cabinet-refinishing → /knoxville/cabinet-painting, every location
+      ...Object.entries(SERVICE_SLUG_RENAMES).map(([from, to]) => ({ source: `/:location/${from}`, destination: `/:location/${to}`, permanent: true })),
     ];
   },
   async rewrites() {

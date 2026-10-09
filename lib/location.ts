@@ -35,7 +35,7 @@ export const telHref = (phone?: string) => (phone ? `tel:${phone.replace(/[^\d+]
 export const servicePages = [
   { key: 'interior', path: 'interior-painting' },
   { key: 'exterior', path: 'exterior-painting' },
-  { key: 'cabinet', path: 'cabinet-refinishing' },
+  { key: 'cabinet', path: 'cabinet-painting' },
 ] as const
 
 export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | 'services'>): NavLink[] {

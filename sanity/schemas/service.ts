@@ -27,7 +27,7 @@ export const service = defineType({
       name: 'slug',
       type: 'slug',
       group: 'basics',
-      description: 'URL segment, e.g. "interior-painting" → /knoxville/interior-painting.',
+      description: 'URL segment, e.g. "interior-painting" → /knoxville/interior-painting. Changing it changes the page URL for every location: ask a developer first, so the old URL gets a redirect.',
       options: {source: 'title', maxLength: 96},
       validation: (rule) => rule.required(),
     }),

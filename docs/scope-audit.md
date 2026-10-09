@@ -85,15 +85,15 @@ No `redirects()` in `next.config.ts` and no middleware/proxy. **Recommended mech
 | `/knoxville/about-us/` | `/knoxville/about-us` | page to build |
 | `/knoxville/interior-painting/` | `/knoxville/interior-painting` | same page |
 | `/knoxville/exterior-painting/` | `/knoxville/exterior-painting` | same page |
-| `/knoxville/home-siding-painting/` | `/knoxville/exterior-painting` | absorbed (brief) |
-| `/knoxville/stucco-painting/` | `/knoxville/exterior-painting` | absorbed (brief) |
-| `/knoxville/brick-painting/` | `/knoxville/exterior-painting` | brick is an Exterior card |
-| `/knoxville/deck-painting-and-staining/` | `/knoxville/exterior-painting` | Decks card |
-| `/knoxville/fence-painting-and-staining/` | `/knoxville/exterior-painting` | Fences card |
+| `/knoxville/home-siding-painting/` | `/knoxville/exterior-painting#siding` | Siding section (Oct 9) |
+| `/knoxville/stucco-painting/` | `/knoxville/exterior-painting#stucco` | Stucco section (Oct 9) |
+| `/knoxville/brick-painting/` | `/knoxville/exterior-painting#brick` | Brick section (Oct 9) |
+| `/knoxville/deck-painting-and-staining/` | `/knoxville/exterior-painting#decks` | Decks section (Oct 9) |
+| `/knoxville/fence-painting-and-staining/` | `/knoxville/exterior-painting#fences` | Fences section (Oct 9) |
 | `/knoxville/masonry-coating-and-waterproofing/` | `/knoxville/exterior-painting` | closest match; confirm |
 | `/knoxville/concrete-staining/` | `/knoxville/exterior-painting` | closest match; confirm (could be interior floors) |
-| `/knoxville/cabinet-painting/` | `/knoxville/cabinet-refinishing` | page needs its service doc |
-| `/knoxville/cabinet-painting-and-refinishing/` | `/knoxville/cabinet-refinishing` | the live page shows Inland Northwest content, but the URL still has rankings |
+| `/knoxville/cabinet-painting/` | `/knoxville/cabinet-painting` | same page (slug renamed Oct 9); only the trailing slash differs, which Next.js redirects itself |
+| `/knoxville/cabinet-painting-and-refinishing/` | `/knoxville/cabinet-painting` | the live page shows Inland Northwest content, but the URL still has rankings |
 | `/knoxville/popcorn-ceiling-removal/` | `/knoxville/interior-painting` | closest match; confirm |
 | `/knoxville/wallpaper-removal/` | `/knoxville/interior-painting` | closest match; confirm |
 | `/knoxville/residential-painting/` | `/knoxville` | it's a hub of interior + exterior |

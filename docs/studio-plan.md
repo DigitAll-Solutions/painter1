@@ -313,3 +313,15 @@ A "Launch checklist" document view, computed from the document being edited plus
 - **Confirm the list with the client first:** some may simply be missing from the CSV (north-georgia certainly is; see §6).
 - **Until `/locations` exists** (corporate pages, docs/corp-pages-plan.md), the redirects need a temporary target. Agree that target with the client.
 - **Also redirect at launch:** basic-tier locations' old service, About, Our Work and warranty URLs (these pages don't exist for the basic tier) to the location's home page.
+- **Go-live redirects for renamed and merged pages** (every location; `:location` = the location slug). The full live-URL table is in `docs/scope-audit.md`.
+
+| From | To | Status | Where |
+|---|---|---|---|
+| `/:location/cabinet-refinishing` | `/:location/cabinet-painting` | **in code now** (308, `next.config.ts`) | slug renamed Oct 9 |
+| `/:location/cabinet-painting/` (live WordPress URL) | `/:location/cabinet-painting` | automatic (trailing slash) | same page |
+| `/:location/cabinet-painting-and-refinishing/` (live) | `/:location/cabinet-painting` | add at launch | second live cabinet URL |
+| `/:location/home-siding-painting/` (live) | `/:location/exterior-painting#siding` | add at launch | Siding section |
+| `/:location/stucco-painting/` (live) | `/:location/exterior-painting#stucco` | add at launch | Stucco section |
+| `/:location/brick-painting/` (live) | `/:location/exterior-painting#brick` | add at launch | Brick section |
+| `/:location/deck-painting-and-staining/` (live) | `/:location/exterior-painting#decks` | add at launch | Decks section |
+| `/:location/fence-painting-and-staining/` (live) | `/:location/exterior-painting#fences` | add at launch | Fences section |

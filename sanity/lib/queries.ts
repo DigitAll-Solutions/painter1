@@ -39,7 +39,8 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
 
 export const LOCATION_SLUGS_QUERY = defineQuery(`*[_type == "location" && defined(slug.current)].slug.current`)
 
-export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current == $slug][0]{
+// $slugs: the public slug plus any old slug the document may still have (lib/service-slugs.ts)
+export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current in $slugs][0]{
   _id, title, "slug": slug.current, shortName, locationKey, metaDescription, ownerCardVariant,
   heroSubtitle, heroImage{${image}},
   transformationHeading, transformationBody,
