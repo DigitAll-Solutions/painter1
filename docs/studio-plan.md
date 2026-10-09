@@ -296,3 +296,20 @@ A "Launch checklist" document view, computed from the document being edited plus
   - `south-atlanta`: the live URL is `southatl` ("Painter1 of South Atlanta").
 - **On the live page but not in the CSV (21):** atlanta, baldwin-county, bayou-city, boise, charlotte, charlotte-metro, chattanooga, cincinnati-metropolitan, fayetteville, jupiter, lowcountry, montgomery-county, nampa-meridian, nashville, new-england, orlando, pompano-beach, portland, southatl, the-triangle, washington-dc ("The DMV").
 - **The known-slug list keeps the CSV exactly as given (35 slugs).** So until the client confirms, the Studio would warn on `charlotte-metro` and `southatl` (the live URLs) and accept `charloote-metro` and `south-atlanta`.
+
+**Update (Oct 8): the client's new list, `docs/reference/Painter1 URLs.csv`, replaces the CSV above.**
+- **36 usable locations** (37 rows):
+  - 30 full tier: every column marked.
+  - 6 basic tier: marietta, bayou-city, southatl, central-florida, coastal-carolina, portland. Their rows mark only "Home Page" and "Free Estimate"; Service Pages, About Page, Our Work and Warranty are blank.
+- **North Georgia** is listed with `/main-line/`, the same URL as Main Line, so it's dropped until the client corrects it. The live page and the old CSV have `/north-georgia/`.
+- **Fixed since the old CSV:** `charlotte-metro` and `southatl` (the live URLs).
+
+## 7. M3 notes (location migration)
+
+- **301 redirects at launch for live locations not on the client's list.** These 18 locations are on the live /locations/ page but not in `Painter1 URLs.csv`. Without redirects, old links, bookmarks and search rankings hit a 404. Redirect each `/<slug>/` and everything under it (`/<slug>/:path*`) to `/locations`, or to a successor location if the client names one:
+  - atlanta, baldwin-county, boise, charlotte, chattanooga, cincinnati-metropolitan
+  - fayetteville, jupiter, lowcountry, montgomery-county, nampa-meridian, nashville
+  - new-england, north-georgia, orlando, pompano-beach, the-triangle, washington-dc ("The DMV")
+- **Confirm the list with the client first:** some may simply be missing from the CSV (north-georgia certainly is; see §6).
+- **Until `/locations` exists** (corporate pages, docs/corp-pages-plan.md), the redirects need a temporary target. Agree that target with the client.
+- **Also redirect at launch:** basic-tier locations' old service, About, Our Work and warranty URLs (these pages don't exist for the basic tier) to the location's home page.
