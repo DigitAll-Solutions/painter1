@@ -24,8 +24,13 @@ export default function Footer({ location }: { location: Location }) {
       })
   const serviceLinks = [
     ...services,
-    ...(maintenance ? [] : [{ label: 'Our Work', href: `${base}/our-work` }]),
-    { label: 'About Us', href: `${base}/about-us` },
+    ...(maintenance
+      ? []
+      : [
+          { label: 'Our Work', href: `${base}/our-work` },
+          { label: 'Warranty', href: `${base}/warranty` },
+          // About Us returns once /<slug>/about-us exists
+        ]),
     { label: 'Free Estimate', href: cta.href },
   ]
 

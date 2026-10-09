@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Phone } from 'lucide-react'
+import { CalendarCheck, Phone } from 'lucide-react'
 
 import CtaButton from '../CtaButton'
 import NextSteps from './NextSteps'
@@ -39,6 +39,8 @@ type Props = {
   consents: { name: string; content: ReactNode }[]
   ownerCard: ReactNode
   confirmationMessage: string
+  /** Online booking page: "Pick a time now" after a successful request */
+  bookingUrl?: string
   turnstileSiteKey: string
 }
 
@@ -63,7 +65,7 @@ function ErrorText({ name, errors }: { name: string; errors: FieldErrors }) {
 const describe = (name: string, errors: FieldErrors) =>
   errors[name] ? { 'aria-invalid': true as const, 'aria-describedby': `${fieldId(name)}-error` } : {}
 
-export default function EstimateSurvey({ slug, state, city, phone, tel, survey, consents, ownerCard, confirmationMessage, turnstileSiteKey }: Props) {
+export default function EstimateSurvey({ slug, state, city, phone, tel, survey, consents, ownerCard, confirmationMessage, bookingUrl, turnstileSiteKey }: Props) {
   const [result, formAction, pending] = useActionState<EstimateState, FormData>(submitEstimate, { status: 'idle' })
   const [answers, setAnswers] = useState<Answers>(() => emptyAnswers(city))
   const [preset, setPreset] = useState(false)
@@ -207,11 +209,18 @@ export default function EstimateSurvey({ slug, state, city, phone, tel, survey, 
         </h2>
         <p className="mt-3 text-lg text-slate-700">{confirmationMessage}</p>
         <NextSteps title={survey.nextStepsTitle} items={survey.nextSteps} />
-        {tel && (
-          <CtaButton href={tel} className="mt-6 w-full sm:w-auto">
-            <Phone className="size-5" aria-hidden /> Call {phone}
-          </CtaButton>
-        )}
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          {bookingUrl && (
+            <CtaButton href={bookingUrl} className="w-full sm:w-auto">
+              <CalendarCheck className="size-5" aria-hidden /> Pick a time now
+            </CtaButton>
+          )}
+          {tel && (
+            <CtaButton href={tel} variant={bookingUrl ? 'navy' : 'orange'} className="w-full sm:w-auto">
+              <Phone className="size-5" aria-hidden /> Call {phone}
+            </CtaButton>
+          )}
+        </div>
       </div>
     )
   }

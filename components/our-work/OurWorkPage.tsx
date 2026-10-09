@@ -18,7 +18,7 @@ import { tokenValues } from '@/lib/tokens'
 import { urlFor } from '@/sanity/lib/image'
 import { getLocation, getServiceKeys } from '@/sanity/lib/fetch'
 
-/** Location + cards; maintenance locations (Home and About only) and unknown slugs 404 */
+/** Location + cards; basic-tier locations (home and free estimate only) and unknown slugs 404 */
 async function load(slug: string) {
   const [location, serviceKeys] = await Promise.all([getLocation(slug), getServiceKeys()])
   if (!location || location.locationType === 'maintenance') notFound()
