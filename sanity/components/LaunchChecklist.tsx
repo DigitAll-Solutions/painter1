@@ -8,23 +8,24 @@ import type {UserViewComponent} from 'sanity/structure'
 import {locationChecklist, missing, type CheckItem, type LocationDoc} from '../../lib/location-checklist'
 import {STUDIO_API_VERSION} from './useSiteData'
 
-/** Lead recipients count (never the addresses) and service id → key, for the checklist */
+/** Lead and warranty recipient counts (never the addresses) and service id → key, for the checklist */
 export function useChecklistData(locationIds: string[]) {
   const client = useClient({apiVersion: STUDIO_API_VERSION})
-  const [data, setData] = useState<{recipients: Record<string, number>; serviceKeys: Record<string, string>} | null>(null)
+  const [data, setData] = useState<{recipients: Record<string, number>; warranty: Record<string, number>; serviceKeys: Record<string, string>} | null>(null)
   const key = locationIds.join(',')
   useEffect(() => {
     let live = true
     const ids = key ? key.split(',').map((id) => `leads.${id.replace(/^drafts\./, '')}`) : []
     client
-      .fetch<{recipients: {_id: string; n: number}[]; services: {_id: string; locationKey: string}[]}>(
-        `{"recipients": *[_id in $ids]{_id, "n": count(leadRecipients)}, "services": *[_type == "service" && !(_id in path("drafts.**"))]{_id, locationKey}}`,
+      .fetch<{recipients: {_id: string; n: number; w: number}[]; services: {_id: string; locationKey: string}[]}>(
+        `{"recipients": *[_id in $ids]{_id, "n": count(leadRecipients), "w": count(warrantyRecipients)}, "services": *[_type == "service" && !(_id in path("drafts.**"))]{_id, locationKey}}`,
         {ids},
       )
       .then((result) => {
         if (!live) return
         setData({
           recipients: Object.fromEntries(result.recipients.map((r) => [r._id.replace(/^leads\./, ''), r.n ?? 0])),
+          warranty: Object.fromEntries(result.recipients.map((r) => [r._id.replace(/^leads\./, ''), r.w ?? 0])),
           serviceKeys: Object.fromEntries(result.services.map((s) => [s._id, s.locationKey])),
         })
       })
@@ -88,7 +89,7 @@ export const LaunchChecklist: UserViewComponent = ({document, documentId}) => {
   const data = useChecklistData([id])
   if (!data) return <Box padding={4}><Text muted>Checking…</Text></Box>
 
-  const items = locationChecklist(document.displayed as LocationDoc, data.recipients[id] ?? 0, data.serviceKeys)
+  const items = locationChecklist(document.displayed as LocationDoc, data.recipients[id] ?? 0, data.serviceKeys, data.warranty[id] ?? 0)
   const required = missing(items, 'required').length
   const recommended = missing(items, 'recommended').length
   const areas = [...new Set(items.map((item) => item.area))]

@@ -14,13 +14,42 @@ test('a new, empty growth location: every required item is listed', () => {
   const items = locationChecklist({ locationType: 'growth' }, 0, KEYS)
   assert.deepEqual(
     missing(items, 'required').map((i) => i.id),
-    ['name', 'slug', 'city', 'state', 'phone', 'title-interior', 'title-exterior', 'title-cabinet', 'recipients', 'consent', 'subject', 'template'],
+    ['name', 'slug', 'city', 'state', 'phone', 'title-interior', 'title-exterior', 'title-cabinet', 'recipients', 'warrantyRecipients', 'consent', 'subject', 'template'],
   )
 })
 
-test('maintenance locations skip services and per-service photos', () => {
+test('maintenance locations skip services, per-service photos and warranty recipients', () => {
   const items = locationChecklist({ locationType: 'maintenance' }, 0, KEYS)
-  assert.ok(!items.some((i) => i.area === 'Services' || i.id.startsWith('photos-')))
+  assert.ok(!items.some((i) => i.area === 'Services' || i.id.startsWith('photos-') || i.id === 'warrantyRecipients'))
+})
+
+test('before/after pairs: every pair counts, and all of their photos leave Recent Work', () => {
+  const ext = [{ _ref: 'service-exterior-painting' }]
+  const doc: LocationDoc = {
+    services: {
+      exterior: {
+        title: 'Exterior Painting',
+        transformations: [{ before: img('b1'), after: img('a1') }, { before: img('b2'), after: img('a2') }, { before: img('b3') }],
+        // Legacy pair is ignored once transformations exist
+        beforeImage: img('old-b'),
+        afterImage: img('old-a'),
+      },
+    },
+    galleryImages: ['b1', 'a1', 'b2', 'a2', 'old-b', '1', '2'].map((id) => ({ asset: { _ref: `image-${id}` }, services: ext })),
+  }
+  const items = locationChecklist(doc, 1, KEYS)
+  assert.equal(byId(items, 'pair-exterior').detail, '2 pairs')
+  assert.equal(byId(items, 'photos-exterior').detail, '7 tagged, 3 for Recent Work (shows from 3)')
+  // Not migrated yet: the legacy pair still counts
+  const legacy = locationChecklist({ services: { interior: { beforeImage: img('b'), afterImage: img('a') } } }, 1, KEYS)
+  assert.equal(byId(legacy, 'pair-interior').detail, '1 pair')
+  assert.equal(byId(legacy, 'pair-exterior').ok, false)
+})
+
+test('booking page: warned only while online scheduling is on without a URL', () => {
+  assert.equal(locationChecklist({}, 1, KEYS).some((i) => i.id === 'booking'), false)
+  assert.equal(byId(locationChecklist({ hasScheduling: true }, 1, KEYS), 'booking').ok, false)
+  assert.equal(byId(locationChecklist({ hasScheduling: true, schedulingUrl: 'https://appointment.painter1.com/knoxville' }, 1, KEYS), 'booking').ok, true)
 })
 
 test('Recent Work count excludes hidden photos and the page\'s own slider pair', () => {
@@ -50,8 +79,10 @@ test('consent must name this business: placeholder or own name pass, another loc
 })
 
 test('recipients: only the count is shown', () => {
-  assert.equal(byId(locationChecklist({}, 2, KEYS), 'recipients').detail, '2 recipients (in the private Lead recipients document)')
+  assert.equal(byId(locationChecklist({}, 2, KEYS), 'recipients').detail, '2 recipients (in the private Email recipients document)')
   assert.equal(byId(locationChecklist({}, null, KEYS), 'recipients').ok, false)
+  assert.equal(byId(locationChecklist({}, 2, KEYS, 1), 'warrantyRecipients').detail, '1 recipient (in the private Email recipients document)')
+  assert.equal(byId(locationChecklist({}, 2, KEYS), 'warrantyRecipients').detail, 'Not checked')
 })
 
 test('slug rules', () => {

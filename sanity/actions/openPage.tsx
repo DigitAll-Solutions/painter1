@@ -8,7 +8,7 @@ import {useSiteData} from '../components/useSiteData'
 import {pagesForDocument} from '../lib/live-pages'
 
 /** Types that feed site pages; the corporate singletons get a disabled action until their pages exist */
-export const OPEN_PAGE_TYPES = new Set(['location', 'service', 'privacyPolicy', 'estimateSurvey', 'franchisePage', 'locationsPage', 'franchiseOpportunities'])
+export const OPEN_PAGE_TYPES = new Set(['location', 'service', 'privacyPolicy', 'warrantyTerms', 'estimateSurvey', 'franchisePage', 'locationsPage', 'franchiseOpportunities'])
 
 /** "Open page": the published page(s) this document feeds, on the Studio's own origin */
 export const OpenPageAction: DocumentActionComponent = ({type, published}) => {

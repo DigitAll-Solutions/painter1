@@ -1,5 +1,5 @@
 import type {DefaultDocumentNodeResolver, StructureBuilder, StructureResolver} from 'sanity/structure'
-import {Building2, ClipboardList, FlaskConical, Globe2, Inbox, LayoutDashboard, Link2, MapPin, Share2, Users} from 'lucide-react'
+import {Building2, ClipboardList, FlaskConical, Globe2, Inbox, LayoutDashboard, Link2, MapPin, Share2, ShieldCheck, Users} from 'lucide-react'
 
 import {LaunchChecklist} from './components/LaunchChecklist'
 import {LivePagesPane} from './components/LivePagesPane'
@@ -8,26 +8,37 @@ import {PagesView} from './components/PagesView'
 import {STUDIO_API_VERSION} from './components/useSiteData'
 import {stateName} from './lib/us-states'
 
-const singleton = (S: StructureBuilder, type: string, title: string, note?: string) =>
+/** documentId: the fixed _id the site reads (defaults to the type name) */
+const singleton = (S: StructureBuilder, type: string, title: string, {note, documentId = type}: {note?: string; documentId?: string} = {}) =>
   S.listItem()
     .title(note ? `${title} (${note})` : title)
     .id(type)
     .schemaType(type)
-    .child(S.document().schemaType(type).documentId(type).title(title).views(documentViews(S, type)))
+    .child(S.document().schemaType(type).documentId(documentId).title(title).views(documentViews(S, type)))
 
 /** Views for a document: Edit, plus a launch checklist on locations and a "Pages" list where pages exist */
 const documentViews = (S: StructureBuilder, schemaType: string) => {
   const edit = S.view.form().title('Edit')
   const pages = S.view.component(PagesView).title('Pages').id('pages')
   if (schemaType === 'location') return [edit, S.view.component(LaunchChecklist).title('Launch checklist').id('checklist'), pages]
-  if (['service', 'privacyPolicy', 'estimateSurvey'].includes(schemaType)) return [edit, pages]
+  if (['service', 'privacyPolicy', 'estimateSurvey', 'warrantyTerms'].includes(schemaType)) return [edit, pages]
   return [edit]
 }
 
 // Documents opened from generated lists; documents built below with S.document() set their views explicitly
 export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, {schemaType}) => S.document().views(documentViews(S, schemaType))
 
-/** A location's folder: its document, private lead recipients, its leads (newest first), live pages */
+/** Private warranty requests for one location, newest first */
+const warrantyRequestList = (S: StructureBuilder, id: string) =>
+  S.documentList()
+    .title('Warranty requests')
+    .schemaType('warrantyRequest')
+    .apiVersion(STUDIO_API_VERSION)
+    .filter('_type == "warrantyRequest" && location._ref == $id')
+    .params({id})
+    .defaultOrdering([{field: 'submittedAt', direction: 'desc'}])
+
+/** A location's folder: its document, private email recipients, its leads and warranty requests (newest first), live pages */
 const locationFolder = (S: StructureBuilder) => (locationId: string) => {
   const id = locationId.replace(/^drafts\./, '')
   return S.list()
@@ -39,12 +50,12 @@ const locationFolder = (S: StructureBuilder) => (locationId: string) => {
         .id('details')
         .icon(MapPin)
         .child(S.document().schemaType('location').documentId(id).views(documentViews(S, 'location'))),
-      // Private document "leads.<location id>" (dot = never served by the public API)
+      // Private document "leads.<location id>" (dot = never served by the public API): lead and warranty recipients
       S.listItem()
-        .title('Lead recipients')
+        .title('Email recipients')
         .id('recipients')
         .icon(Users)
-        .child(S.document().schemaType('leadSettings').documentId(`leads.${id}`).title('Lead recipients')),
+        .child(S.document().schemaType('leadSettings').documentId(`leads.${id}`).title('Email recipients')),
       S.listItem()
         .title('Leads')
         .id('leads')
@@ -58,6 +69,7 @@ const locationFolder = (S: StructureBuilder) => (locationId: string) => {
             .params({id})
             .defaultOrdering([{field: 'submittedAt', direction: 'desc'}]),
         ),
+      S.listItem().title('Warranty requests').id('warranty-requests').icon(ShieldCheck).child(warrantyRequestList(S, id)),
       S.listItem()
         .title('Live pages')
         .id('pages')
@@ -135,7 +147,8 @@ export const structure: StructureResolver = (S, context) =>
                       S.documentTypeListItem('estimateSurvey').title('All surveys'),
                     ]),
                 ),
-              singleton(S, 'privacyPolicy', 'Privacy Policy'),
+              singleton(S, 'privacyPolicy', 'Privacy Policy', {documentId: 'privacy-policy'}),
+              singleton(S, 'warrantyTerms', 'Warranty terms', {documentId: 'warranty-terms'}),
             ]),
         ),
 
@@ -147,9 +160,9 @@ export const structure: StructureResolver = (S, context) =>
           S.list()
             .title('Corporate')
             .items([
-              singleton(S, 'franchisePage', 'Corporate Homepage', 'not on the site yet'),
-              singleton(S, 'locationsPage', 'Locations Directory', 'not on the site yet'),
-              singleton(S, 'franchiseOpportunities', 'Franchise Opportunities', 'not on the site yet'),
+              singleton(S, 'franchisePage', 'Corporate Homepage', {note: 'not on the site yet'}),
+              singleton(S, 'locationsPage', 'Locations Directory', {note: 'not on the site yet'}),
+              singleton(S, 'franchiseOpportunities', 'Franchise Opportunities', {note: 'not on the site yet'}),
             ]),
         ),
 
@@ -197,6 +210,22 @@ export const structure: StructureResolver = (S, context) =>
                     .apiVersion(STUDIO_API_VERSION)
                     .filter('_type == "lead" && testMode == true')
                     .defaultOrdering([{field: 'submittedAt', direction: 'desc'}]),
+                ),
+              S.divider(),
+              S.listItem()
+                .title('Warranty requests')
+                .id('warranty-newest')
+                .icon(ShieldCheck)
+                .child(S.documentTypeList('warrantyRequest').title('Warranty requests').defaultOrdering([{field: 'submittedAt', direction: 'desc'}])),
+              S.listItem()
+                .title('Warranty requests by location')
+                .id('warranty-by-location')
+                .icon(MapPin)
+                .child(
+                  S.documentTypeList('location')
+                    .title('Warranty requests by location')
+                    .defaultOrdering([{field: 'name', direction: 'asc'}])
+                    .child((locationId) => warrantyRequestList(S, locationId.replace(/^drafts\./, ''))),
                 ),
             ]),
         ),
