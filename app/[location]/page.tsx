@@ -16,7 +16,7 @@ import ServicesGrid from '@/components/home/ServicesGrid'
 import StatsRow from '@/components/home/StatsRow'
 import TransformationSection from '@/components/home/TransformationSection'
 import WarrantyBand from '@/components/home/WarrantyBand'
-import { localPhotos, sliderAssets } from '@/lib/gallery'
+import { localPhotos, pairImages, sliderAssets, transformationPairs } from '@/lib/gallery'
 import { autoHomeDescription, localBusinessSchema, pageTitle } from '@/lib/seo'
 import { urlFor } from '@/sanity/lib/image'
 import { getLocation } from '@/sanity/lib/fetch'
@@ -48,7 +48,8 @@ export default async function LocationHomePage({ params }: PageProps<'/[location
   const inSlider = sliderAssets(
     location.transformationBeforeImage,
     location.transformationAfterImage,
-    ...Object.values(location.services ?? {}).flatMap((service) => [service?.beforeImage, service?.afterImage, ...(service?.images ?? [])]),
+    // the service cards show each service's first pair (or a fallback photo)
+    ...Object.values(location.services ?? {}).flatMap((service) => [...pairImages(transformationPairs(service).slice(0, 1)), ...(service?.images ?? [])]),
   )
   const gallery = localPhotos(location)
     .filter((image) => image.role !== 'before' && !inSlider.has(image.asset._id))
