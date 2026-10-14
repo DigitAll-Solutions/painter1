@@ -33,7 +33,7 @@ export const estimateSurvey = defineType({
       fields: [
         defineField({name: 'interior', type: 'string', description: 'Answer label, e.g. "Interior painting".'}),
         defineField({name: 'exterior', type: 'string', description: 'Answer label, e.g. "Exterior painting".'}),
-        defineField({name: 'cabinet', type: 'string', description: 'Answer label, e.g. "Cabinet refinishing".'}),
+        defineField({name: 'cabinet', type: 'string', description: 'Answer label, e.g. "Cabinet painting".'}),
         defineField({name: 'notSure', title: 'Not sure', type: 'string', description: 'Answer label, e.g. "Not sure yet".'}),
       ],
     }),

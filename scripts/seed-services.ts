@@ -141,14 +141,14 @@ export const SERVICE_SEED = [
   {
     _id: 'service-cabinet-refinishing',
     _type: 'service',
-    title: 'Cabinet Refinishing',
-    slug: { _type: 'slug', current: 'cabinet-refinishing' },
+    title: 'Cabinet Painting',
+    slug: { _type: 'slug', current: 'cabinet-painting' },
     shortName: 'Cabinet',
     locationKey: 'cabinet',
     ownerCardVariant: 'featured',
     heroSubtitle: 'A factory-smooth finish without the cost of new cabinets.',
     metaDescription:
-      'Cabinet refinishing in {city}, {state} by Painter1: Sherwin-Williams cabinet enamel, most kitchens done in 3–5 days, and a 2-year warranty. Free estimate.',
+      'Cabinet painting in {city}, {state} by Painter1: Sherwin-Williams cabinet enamel, most kitchens done in 3–5 days, and a 2-year warranty. Free estimate.',
     transformationHeading: 'Real Kitchens, Real Results',
     transformationBody:
       'Cabinet painting is a cost-effective solution to breathe new life into your kitchen or bathroom without the need for a full remodel. This allows you to preserve the original cabinets while updating the appearance to match contemporary trends or your personal style preferences.',
@@ -176,12 +176,11 @@ export const SERVICE_SEED = [
         _key: 'cost',
         title: 'Cost',
         body: boldText(
-          'Cabinet painting typically costs **60–80% less** than complete cabinet replacement: new custom cabinets range from $15,000–$40,000 or more, while professional refinishing generally costs $3,000–$8,000.',
+          'Cabinet painting typically costs **60–80% less** than complete cabinet replacement: new custom cabinets range from $15,000–$40,000 or more, while professional painting generally costs $3,000–$8,000.',
         ),
       },
     ],
     warrantyBannerBody: warranty('cabinet'),
-    whatWePaintTitle: 'What We Refinish',
     whatWePaint: items([
       { icon: 'CookingPot', title: 'Kitchen cabinets', description: 'Doors, drawers and frames, sprayed with Sherwin-Williams cabinet enamel.' },
       { icon: 'Bath', title: 'Bathroom vanities', description: 'Vanity doors, drawers and frames, prepped and finished the same way.' },
@@ -190,9 +189,9 @@ export const SERVICE_SEED = [
     faqs: faqs([
       [
         'How much does cabinet painting cost?',
-        'Cabinet painting typically costs 60–80% less than replacing your cabinets: new custom cabinets range from $15,000–$40,000 or more, while professional refinishing generally costs $3,000–$8,000. Your free in-home estimate gives you a written price with a detailed breakdown, with no hidden fees.',
+        'Cabinet painting typically costs 60–80% less than replacing your cabinets: new custom cabinets range from $15,000–$40,000 or more, while professional painting generally costs $3,000–$8,000. Your free in-home estimate gives you a written price with a detailed breakdown, with no hidden fees.',
       ],
-      ['How long does cabinet refinishing take?', 'Most kitchens are done in 3–5 days.'],
+      ['How long does cabinet painting take?', 'Most kitchens are done in 3–5 days.'],
       [
         'What do you use on cabinets?',
         'Two coats of primer (shellac or water-based, depending on your cabinet material) and 2–3 topcoats of Sherwin-Williams cabinet enamel, applied with professional-grade HVLP sprayers, or brushes if you prefer.',

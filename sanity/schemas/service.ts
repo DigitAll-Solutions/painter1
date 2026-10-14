@@ -129,7 +129,7 @@ export const service = defineType({
       title: 'What we paint: heading',
       type: 'string',
       group: 'paint',
-      description: 'Leave empty for "What We Paint" (e.g. "What We Refinish" for cabinets).',
+      description: 'Leave empty for "What We Paint" (the same on every service page).',
     }),
     defineField({
       name: 'whatWePaint',
