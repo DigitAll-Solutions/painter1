@@ -6,36 +6,38 @@ import type { Location, Service, WarrantyTerms } from './types'
 import type { PortableTextBlock } from 'next-sanity'
 import defaults from '@/lib/estimate-survey-defaults.json'
 import type { SurveyContent } from '@/lib/estimate-survey'
+import { TAGS } from '@/lib/revalidate'
 import { publicServiceSlug, storedServiceSlugs } from '@/lib/service-slugs'
 
+// Fallback: data is refreshed at least every 60 s even without the publish webhook (app/api/revalidate)
 const revalidate = 60
 
 export const getLocation = cache(async (slug: string) =>
-  client.fetch<Location | null>(LOCATION_QUERY, { slug }, { next: { revalidate, tags: ['location'] } }),
+  client.fetch<Location | null>(LOCATION_QUERY, { slug }, { next: { revalidate, tags: [TAGS.location(slug)] } }),
 )
 
 export const getLocationSlugs = () =>
-  client.fetch<string[]>(LOCATION_SLUGS_QUERY, {}, { next: { revalidate, tags: ['location'] } })
+  client.fetch<string[]>(LOCATION_SLUGS_QUERY, {}, { next: { revalidate, tags: [TAGS.locations] } })
 
 /** Slug and type of every location, for the sitemap */
 export const getLocationPages = () =>
-  client.fetch<{ slug: string; locationType?: Location['locationType'] }[]>(LOCATION_PAGES_QUERY, {}, { next: { revalidate, tags: ['location'] } })
+  client.fetch<{ slug: string; locationType?: Location['locationType'] }[]>(LOCATION_PAGES_QUERY, {}, { next: { revalidate, tags: [TAGS.locations] } })
 
 /** By public slug; the returned slug is always the public one (the cabinet rename, lib/service-slugs.ts) */
 export const getService = cache(async (slug: string) => {
-  const service = await client.fetch<Service | null>(SERVICE_QUERY, { slugs: storedServiceSlugs(slug) }, { next: { revalidate, tags: ['service'] } })
+  const service = await client.fetch<Service | null>(SERVICE_QUERY, { slugs: storedServiceSlugs(slug) }, { next: { revalidate, tags: [TAGS.service] } })
   return service && { ...service, slug: publicServiceSlug(service.slug) }
 })
 
 /** Public slugs of every service page */
 export const getServiceSlugs = async () => {
-  const slugs = await client.fetch<string[]>(SERVICE_SLUGS_QUERY, {}, { next: { revalidate, tags: ['service'] } })
+  const slugs = await client.fetch<string[]>(SERVICE_SLUGS_QUERY, {}, { next: { revalidate, tags: [TAGS.service] } })
   return [...new Set(slugs.map(publicServiceSlug))]
 }
 
 /** Service document _id → its locationKey (interior | exterior | cabinet) */
 export const getServiceKeys = cache(async () => {
-  const rows = await client.fetch<{ _id: string; locationKey: string }[]>(SERVICE_KEYS_QUERY, {}, { next: { revalidate, tags: ['service'] } })
+  const rows = await client.fetch<{ _id: string; locationKey: string }[]>(SERVICE_KEYS_QUERY, {}, { next: { revalidate, tags: [TAGS.service] } })
   return Object.fromEntries(rows.map((row) => [row._id, row.locationKey])) as Record<string, string>
 })
 
@@ -50,14 +52,14 @@ function mergeSurvey(doc: unknown, fallback: unknown): unknown {
 }
 
 export const getEstimateSurvey = cache(async (slug: string) => {
-  const doc = await client.fetch<Record<string, unknown> | null>(ESTIMATE_SURVEY_QUERY, { slug }, { next: { revalidate, tags: ['estimateSurvey', 'location'] } })
+  const doc = await client.fetch<Record<string, unknown> | null>(ESTIMATE_SURVEY_QUERY, { slug }, { next: { revalidate, tags: [TAGS.estimateSurvey, TAGS.location(slug)] } })
   return mergeSurvey(doc, defaults) as SurveyContent
 })
 
 export const getPrivacyPolicy = cache(async () =>
-  client.fetch<{ title?: string; body?: PortableTextBlock[] } | null>(PRIVACY_POLICY_QUERY, {}, { next: { revalidate, tags: ['privacyPolicy'] } }),
+  client.fetch<{ title?: string; body?: PortableTextBlock[] } | null>(PRIVACY_POLICY_QUERY, {}, { next: { revalidate, tags: [TAGS.privacyPolicy] } }),
 )
 
 export const getWarrantyTerms = cache(async () =>
-  client.fetch<WarrantyTerms | null>(WARRANTY_TERMS_QUERY, {}, { next: { revalidate, tags: ['warrantyTerms'] } }),
+  client.fetch<WarrantyTerms | null>(WARRANTY_TERMS_QUERY, {}, { next: { revalidate, tags: [TAGS.warrantyTerms] } }),
 )

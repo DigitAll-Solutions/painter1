@@ -132,3 +132,30 @@ Scripts in `scripts/` change many fields at once. Before running one that writes
 2. **Dry-run the script** (`--dry-run`) and read what it would change.
 3. **Seeds never overwrite Studio edits.** Every script only fills empty fields, or replaces the exact old text it was written to replace. Anything else (text edited in Studio, a list that already has items) is listed as **KEPT** and left alone. `--force` overwrites those after printing each one and asking you to type `OVERWRITE`.
 4. **Check that re-runs are no-ops:** `node --env-file=.env.local scripts/check-seeds.ts` dry-runs every script and mode and fails if any of them would change data.
+
+## Changes show right after publishing (developers)
+
+When a document is published, a Sanity webhook calls the site's `/api/revalidate`. It refreshes only the pages that document affects:
+
+- **A location:** that location's pages (also under its old slug if the slug changed).
+- **A service, the warranty terms, the privacy policy or the estimate survey:** those pages on every location.
+
+The next visit then shows the change (in our test, about 4 seconds after publishing). Without the webhook, pages still refresh within about 60 seconds. Lead documents and lead settings aren't on any page, so the webhook ignores them.
+
+**Set it up once** (needs project admin access; the site needs no change):
+
+1. **Make a secret:** a long random string, e.g. the output of `openssl rand -base64 32`. Use the same value in steps 2 and 3, and nowhere else.
+2. **Add it in Vercel:** the painter1 project → Settings → Environment Variables → add `SANITY_REVALIDATE_SECRET` with the secret, for **Production** (and **Preview** if you also want to test preview deployments). Then redeploy (Deployments → the latest production deployment → ⋯ → Redeploy), so the running site has it.
+3. **Create the webhook** at [sanity.io/manage](https://www.sanity.io/manage) → the Painter1 project (`al9no7gj`) → **API** → **Webhooks** → **Create webhook**:
+   - **Name:** `Refresh site on publish`
+   - **URL:** `https://painter1.vercel.app/api/revalidate` (after launch, the production domain, e.g. `https://www.painter1.com/api/revalidate`)
+   - **Dataset:** `production`
+   - **Trigger on:** Create, Update, Delete
+   - **Filter:** `_type in ["location", "service", "warrantyTerms", "privacyPolicy", "estimateSurvey"]`
+   - **Projection:** `{_type, "slug": slug.current, "previousSlug": before().slug.current}`
+   - **Status:** enabled · **HTTP method:** POST · **API version:** the newest offered
+   - **Drafts** and **Versions:** leave unticked (only published changes)
+   - **Secret:** the secret from step 1
+4. **Check it:** publish a small change in Studio, then open the page. In sanity.io/manage → the webhook → **Attempts log**, each publish should show status **200** and a body like `{"type":"location","revalidated":["location:knoxville","locations"]}`.
+   - **401:** the secret in Vercel and on the webhook don't match, or the site wasn't redeployed after adding it.
+   - **500 "SANITY_REVALIDATE_SECRET is not set":** the Vercel variable is missing.

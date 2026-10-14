@@ -81,7 +81,7 @@ export const SERVICE_SEED = [
     ]),
     faqs: faqs([
       ['Do you move furniture?', 'Yes — our crew moves and protects furniture as part of every job, and puts it back when the work is done.'],
-      ['How long does interior paint smell last?', 'Sherwin-Williams low-VOC lines we use typically clear within a day or two with normal ventilation.'],
+      ['How long does interior paint smell last?', 'Low-VOC Sherwin-Williams paints typically clear within a day or two with normal ventilation.'],
       ['How much does interior painting cost?', 'Cost depends on square footage, number of rooms, and finish level — your free on-site estimate gives you an exact, written number.'],
       ['Do I need to be home during the job?', "Not necessarily — many clients arrange access and receive updates remotely. We'll work out what's easiest for your schedule."],
     ]),
