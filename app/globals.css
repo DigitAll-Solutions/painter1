@@ -56,3 +56,11 @@ body {
     flex-grow: 2.4;
   }
 }
+
+/* Ringbot web chat button (third-party, loaded after the first interaction): on phones, sit above the
+   fixed Call / Free Estimate bar instead of covering it. The bar is 65px tall below the sm breakpoint. */
+@media (max-width: 639.98px) {
+  .LEWIDGET-activator {
+    bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+  }
+}

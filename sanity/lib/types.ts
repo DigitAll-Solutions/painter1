@@ -140,6 +140,8 @@ export type Location = {
   schedulingUrl?: string
   /** Where Schedule CTAs go: the survey (default) or the booking page directly */
   bookingTarget?: 'survey' | 'booking'
+  /** Ringbot web chat embed code or iID (this location's own install) */
+  webchatId?: string
   warranty?: PortableTextBlock[]
   warrantyEyebrow?: string
   warrantyHeading?: string

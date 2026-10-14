@@ -7,6 +7,8 @@ import GoogleTagManager from '@/components/GoogleTagManager'
 import Header from '@/components/Header'
 import HideOnPath from '@/components/HideOnPath'
 import MobileCtaBar from '@/components/MobileCtaBar'
+import RingbotWidget from '@/components/RingbotWidget'
+import { ringbotId } from '@/lib/ringbot'
 import { getLocation, getLocationSlugs } from '@/sanity/lib/fetch'
 
 export const revalidate = 60
@@ -20,6 +22,7 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
   const { location: slug } = await params
   const location = await getLocation(slug)
   if (!location) notFound()
+  const webchat = ringbotId(location.webchatId)
 
   return (
     <>
@@ -34,6 +37,8 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
         <FloatingCta location={location} />
         <MobileCtaBar location={location} />
       </HideOnPath>
+      {/* This location's own Ringbot install, loaded after the first interaction */}
+      {webchat && <RingbotWidget id={webchat} />}
       <AttributionCapture />
       <GoogleTagManager />
     </>

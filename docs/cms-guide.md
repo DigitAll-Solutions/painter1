@@ -74,6 +74,12 @@ Each service page has one **What We Paint** section: a card per surface at the t
 - **Order:** drag the surfaces; cards and sections follow the same order. Renaming a surface keeps each location's photo attached.
 - **Old "Sub-services (old)"** on a location (Knoxville's Siding and Stucco) are read-only and are removed after launch; their text is already in the surfaces.
 
+## Web chat (Ringbot)
+
+- **Where:** Location details → **Leads & consent** → **Web chat (Ringbot)**. Paste the location's Ringbot embed code (`<script src="https://api.callwidget.co/embed?iID=…"></script>`) or just its iID. Empty: no chat button.
+- **Each location has its own install.** The ID carries that location's business name and phone number, so never copy another location's code: a visitor would be connected to the wrong office.
+- The chat button appears in the bottom-right corner after the visitor first scrolls or taps (or after 10 seconds), so it never slows the page down. On phones it sits just above the Call / Free Estimate bar.
+
 ## Online booking
 
 - **Online scheduling** (Leads & consent tab) turns the estimate buttons into "Schedule Your FREE Estimate".
