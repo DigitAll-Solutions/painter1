@@ -1,6 +1,7 @@
 // "What We Paint": one entry per surface, shown as a card at the top and as its own section (#slug)
-// below. Card, link name and section text come from the shared service; the photo only ever comes
-// from THIS location (its surfacePhotos, keyed to the surface's _key), never from another location.
+// below. Card, link name and section text come from the shared service. Photo: THIS location's own
+// (its surfacePhotos, keyed to the surface's _key) when it has one, otherwise the surface's default
+// photo on the shared service (Rick, Oct 14). Never another location's own photo.
 // Older data still renders: a location's subServices (e.g. Knoxville's "Home Siding Painting", anchor
 // "siding") fill the text and photo of the card with the same link name until the post-merge step
 // removes them; sub-services that match no card still get a section (no card).
@@ -62,7 +63,7 @@ export function paintSurfaces(items: PaintSurface[] | undefined, legacy?: Servic
         description: item.description?.trim() || undefined,
         body,
         text: body ? undefined : old?.description?.trim() || item.description?.trim() || undefined,
-        image: photo ?? (old?.image?.asset ? old.image : undefined),
+        image: photo ?? (old?.image?.asset ? old.image : undefined) ?? (item.defaultImage?.asset ? item.defaultImage : undefined),
         card: true,
       }
     })

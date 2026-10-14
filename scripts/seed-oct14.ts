@@ -70,7 +70,7 @@ const HOMEPAGE_WARRANTY_ALT = 'A Painter1 representative shaking hands with a ho
 
 // ---------- Portable Text for the surface copy ----------
 type Span = { _type: 'span'; _key: string; text: string; marks: string[] }
-type Block = { _type: 'block'; _key: string; style: string; markDefs: never[]; children: Span[]; listItem?: 'bullet'; level?: number }
+export type Block = { _type: 'block'; _key: string; style: string; markDefs: never[]; children: Span[]; listItem?: 'bullet'; level?: number }
 /** "Identify the material first. Vinyl…" → bold first sentence, then the rest */
 const firstSentence = (text: string) => {
   const m = text.match(/^(.+?[.?!])(\s.*)?$/)
@@ -81,7 +81,8 @@ const label = (text: string) => {
   const i = text.indexOf(':')
   return [text.slice(0, i + 1), text.slice(i + 1)]
 }
-function surfaceBlocks(slug: string, copy: SurfaceCopy): Block[] {
+/** Rick's surface structure: intro, "How we do it" label, bullets with a bold first sentence, labelled extras, "What you get:", "Warranty note:" */
+export function surfaceBlocks(slug: string, copy: SurfaceCopy): Block[] {
   let n = 0
   const block = (style: string, parts: [string, boolean][], list = false): Block => {
     const key = `${slug}-b${++n}`
@@ -110,8 +111,8 @@ function surfaceBlocks(slug: string, copy: SurfaceCopy): Block[] {
     ...(copy.warrantyNote ? [block('note', boldFirst(copy.warrantyNote, label))] : []),
   ]
 }
-const plain = (blocks: Block[]) => blocks.map((b) => b.children.map((c) => c.text).join('')).join('\n')
-const show = (blocks: Block[]) =>
+export const plain = (blocks: Block[]) => blocks.map((b) => b.children.map((c) => c.text).join('')).join('\n')
+export const show = (blocks: Block[]) =>
   blocks
     .map((b) => `${b.listItem ? '  • ' : b.style === 'label' ? '  [label] ' : b.style === 'note' ? '  [note] ' : '  '}${b.children.map((c) => (c.marks.length ? `**${c.text}**` : c.text)).join('')}`)
     .join('\n')

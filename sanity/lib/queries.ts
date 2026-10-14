@@ -47,7 +47,7 @@ export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current i
   heroSubtitle, heroImage{${image}},
   transformationHeading, transformationBody,
   processIntro, prepIntro, prepBullets, materialsBody, materialsBlocks[]{_key, title, body}, warrantyBannerBody,
-  whatWePaintTitle, whatWePaint[]{_key, icon, title, description, "slug": slug.current, body},
+  whatWePaintTitle, whatWePaint[]{_key, icon, title, description, "slug": slug.current, body, defaultImage{${image}}},
   faqs[]{_key, question, answer}
 }`)
 

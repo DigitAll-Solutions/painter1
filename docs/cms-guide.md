@@ -65,13 +65,17 @@ The **Location details** document has these tabs: Basics · Owner & team · Home
 Each service page has one **What We Paint** section: a card per surface at the top, then a section per surface further down (Siding, Brick, Stucco…). A card's **See details ↓** jumps to its section.
 
 - **Surfaces and their text:** Shared → **Services** → the service → **What we paint** tab → **What we paint (surfaces)**. Every location's page shows the same surfaces and text.
-- **Photos are per location:** Location details → **Services** → the service → **What We Paint photos**. Add a photo, pick its surface from the list, and write alt text that describes the job (what was painted, the colors), not "Painter1 painter". A photo only appears on that location's page; surfaces without one show text only.
+- **Photos: a default for every location, replaced by the location's own:**
+  - **Default photo** (Shared → **Services** → the service → **What we paint** → the surface → **Default photo (shown when the location has none)**): shown on every location's page for that surface until the location adds its own. Today these are Rick's AI images (interior: Walls, Ceilings, Trim, Doors; exterior: Stucco, Trim & Doors, Decks, Fences; cabinet: all three). Alt text describes the scene, never "our crew" or a location, because every location shows it.
+  - **The location's own photo** (Location details → **Services** → the service → **What We Paint photos**): add a photo, pick its surface from the list, and write alt text that describes the job (what was painted, the colors), not "Painter1 painter". It replaces the default on that location's page only; other locations keep the default. It's never shown on another location's page.
+  - **When a location sends real crew photos:** add them to that location's **What We Paint photos**. Don't replace the default: other locations still use it.
+  - **No default and no photo of its own:** the section shows text only.
 - **Each surface (shared, in Services):**
   - **Surface name:** the card title and the section heading. Just the name ("Siding", "Trim & Doors").
   - **Link name:** the end of the link to the section, e.g. `siding` → `/knoxville/exterior-painting#siding`. Click **Generate**. Don't change it after launch.
   - **Icon** and **Card text** (one sentence on the card).
   - **Section text:** the text in the surface's section. The usual order: a short intro paragraph; **How we do it** set in the **Label** style (the style menu); a bullet list where each item starts with a bold sentence; **What you get:** in bold, then the rest; and **Warranty note:** in the **Small note** style. Label and Small note look like small headings but aren't headings, so the page outline stays tidy. `{city}`, `{state}` and `{owner}` are filled in per location. Empty: the card text is shown there.
-- **Order:** drag the surfaces; cards and sections follow the same order. Renaming a surface keeps each location's photo attached.
+- **Order:** drag the surfaces; cards and sections follow the same order. Renaming a surface keeps its default photo and each location's photo attached.
 - **Old "Sub-services (old)"** on a location (Knoxville's Siding and Stucco) are read-only and are removed after launch; their text is already in the surfaces.
 
 ## About page
