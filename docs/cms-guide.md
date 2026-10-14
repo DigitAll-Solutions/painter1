@@ -80,7 +80,7 @@ Every full-tier location has an About page at `/<location>/about-us` (basic-tier
 
 - **Which version shows:** Location details → **Owner & team** → **Franchise structure**.
   - **Owner-led:** "Meet {owner}, the owner who handles your job start to finish", the owner's quote and story, and four steps the owner runs.
-  - **Owner with team:** "The {city} team behind every Painter1 job", a card for each person, and five steps with a named role on each.
+  - **Owner with team:** "The {city} team behind every job", a card for each person, and five steps with a named role on each.
   - If it's empty, a location with team members gets the team version.
 - **What feeds it (Owner & team tab):**
   - **Owner story (About page):** the owner's own words, first person, with a blank line between paragraphs. Usually: background, why they opened this location, local roots, and what they check on every job. For a team, also why they built one. Real facts only, never a template bio.

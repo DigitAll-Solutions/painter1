@@ -10,11 +10,11 @@ import SanityImage from '@/components/SanityImage'
 import Rich, { fillWarranty } from '@/components/warranty/Rich'
 import WarrantyShield from '@/components/warranty/WarrantyShield'
 import { hasWarrantyPage } from '@/lib/location'
-import { breadcrumbSchema, cityName } from '@/lib/seo'
+import { breadcrumbSchema } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
 import { hotspotPosition } from '@/lib/image'
 import { tokenValues } from '@/lib/tokens'
-import { CONTACT_ANCHOR, warrantyContact } from '@/lib/warranty-contact'
+import { CONTACT_ANCHOR, warrantyContact, warrantyDescription } from '@/lib/warranty-contact'
 import { getLocation, getWarrantyTerms } from '@/sanity/lib/fetch'
 
 const CONTACT_ICONS = { call: Phone, text: MessageSquareText, email: Mail }
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<'/[location]/warran
   const { location } = await load((await params).location)
   const { city } = tokenValues(location)
   const title = `2-Year Workmanship Warranty | Painter1 of ${city}`
-  const description = `What the Painter1 two-year workmanship warranty covers in ${cityName(location)}, what it requires, and how to reach ${location.name} with questions.`
+  const description = warrantyDescription(location)
   const url = absoluteUrl(`/${location.slug}/warranty`)
   return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } }
 }

@@ -164,7 +164,7 @@ function TeamHero({ location, city, owner, people, cta, crumbs }: { location: Lo
           city={city}
           title={
             <>
-              The {city} team behind <span className="text-orange-300">every Painter1 job</span>
+              The {city} team behind <span className="text-orange-300">every job</span>
             </>
           }
           intro={`${owned} Every job has a named person accountable for it, and the owner's standard behind it.`.trim()}
@@ -345,7 +345,7 @@ function Standards({ location, variant, first, people }: { location: Location; v
   const cards = [
     { icon: BadgeCheck, title: 'Licensed & insured', body: license ? `License #${license} · General liability coverage.` : 'General liability coverage on every job.' },
     { icon: Paintbrush, title: 'Sherwin-Williams products', body: 'Your estimate names the exact product line and finish.' },
-    { icon: Users, title: 'Vetted painting crews', body: `Experienced painters held to Painter1 standards, with ${checker} checking the work.` },
+    { icon: Users, title: 'Vetted painting crews', body: `Experienced painters held to ${first ? `${first}'s` : 'our'} standards, with ${checker} checking the work.` },
     { icon: ShieldCheck, title: '2-year workmanship warranty', body: 'In writing: covered repairs at no labor charge.', link: warranty },
   ]
   return (

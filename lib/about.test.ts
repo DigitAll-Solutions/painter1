@@ -113,3 +113,10 @@ test('team owner section: "Why I built a team" only when the owner wrote about i
   assert.equal(teamStoryHeading(storyParagraphs(undefined)), 'From the owner')
   assert.equal(teamStoryHeading(storyParagraphs('   ')), 'From the owner')
 })
+
+test('crew standards are the owner’s, or "our" without an owner name', async () => {
+  const { ownerSteps } = await import('./about.ts')
+  assert.match(ownerSteps('Keith').find((s) => s.title === 'The painting')!.text, /to Keith's standards/)
+  assert.match(ownerSteps('').find((s) => s.title === 'The painting')!.text, /to our standards/)
+  assert.ok(!ownerSteps('Keith').some((s) => /Painter1/.test(s.text)))
+})
