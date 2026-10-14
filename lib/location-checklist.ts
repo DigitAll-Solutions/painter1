@@ -67,9 +67,8 @@ const consentText = (blocks?: Block[]) => (blocks ?? []).flatMap((b) => b.childr
 /**
  * @param recipients number of lead recipients in the private leads.<id> document (null = unknown)
  * @param serviceKeys service document _id → interior | exterior | cabinet
- * @param warrantyRecipients number of warranty recipients in the same document (null = unknown)
  */
-export function locationChecklist(doc: LocationDoc, recipients: number | null, serviceKeys: Record<string, string>, warrantyRecipients: number | null = null): CheckItem[] {
+export function locationChecklist(doc: LocationDoc, recipients: number | null, serviceKeys: Record<string, string>): CheckItem[] {
   const items: CheckItem[] = []
   const add = (item: CheckItem) => items.push(item)
   const maintenance = doc.locationType === 'maintenance'
@@ -155,18 +154,8 @@ export function locationChecklist(doc: LocationDoc, recipients: number | null, s
     label: 'Lead recipients',
     level: 'required',
     ok: (recipients ?? 0) > 0,
-    detail: recipients == null ? 'Not checked' : `${recipients} recipient${recipients === 1 ? '' : 's'} (in the private Email recipients document)`,
+    detail: recipients == null ? 'Not checked' : `${recipients} recipient${recipients === 1 ? '' : 's'} (in the private Lead recipients document)`,
   })
-  // Warranty requests never go to Client Tether, so they need their own list (growth locations have the page)
-  if (!maintenance)
-    add({
-      id: 'warrantyRecipients',
-      area: 'Leads & consent',
-      label: 'Warranty recipients',
-      level: 'required',
-      ok: (warrantyRecipients ?? 0) > 0,
-      detail: warrantyRecipients == null ? 'Not checked' : `${warrantyRecipients} recipient${warrantyRecipients === 1 ? '' : 's'} (in the private Email recipients document)`,
-    })
   const blocks = doc.consentBlocks ?? []
   add({ id: 'consent', area: 'Leads & consent', label: 'Consent checkboxes', level: 'required', ok: blocks.length > 0, detail: 'Without them the form says "please call us"', path: 'consentBlocks' })
   // Consent must name THIS business: the {locationName} placeholder, or the location's own name

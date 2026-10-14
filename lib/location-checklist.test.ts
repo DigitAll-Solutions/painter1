@@ -14,13 +14,13 @@ test('a new, empty growth location: every required item is listed', () => {
   const items = locationChecklist({ locationType: 'growth' }, 0, KEYS)
   assert.deepEqual(
     missing(items, 'required').map((i) => i.id),
-    ['name', 'slug', 'city', 'state', 'phone', 'title-interior', 'title-exterior', 'title-cabinet', 'recipients', 'warrantyRecipients', 'consent', 'subject', 'template'],
+    ['name', 'slug', 'city', 'state', 'phone', 'title-interior', 'title-exterior', 'title-cabinet', 'recipients', 'consent', 'subject', 'template'],
   )
 })
 
-test('maintenance locations skip services, per-service photos and warranty recipients', () => {
+test('maintenance locations skip services and per-service photos', () => {
   const items = locationChecklist({ locationType: 'maintenance' }, 0, KEYS)
-  assert.ok(!items.some((i) => i.area === 'Services' || i.id.startsWith('photos-') || i.id === 'warrantyRecipients'))
+  assert.ok(!items.some((i) => i.area === 'Services' || i.id.startsWith('photos-')))
 })
 
 test('before/after pairs: every pair counts, and all of their photos leave Recent Work', () => {
@@ -82,10 +82,8 @@ test('consent must name this business: placeholder or own name pass, another loc
 })
 
 test('recipients: only the count is shown', () => {
-  assert.equal(byId(locationChecklist({}, 2, KEYS), 'recipients').detail, '2 recipients (in the private Email recipients document)')
+  assert.equal(byId(locationChecklist({}, 2, KEYS), 'recipients').detail, '2 recipients (in the private Lead recipients document)')
   assert.equal(byId(locationChecklist({}, null, KEYS), 'recipients').ok, false)
-  assert.equal(byId(locationChecklist({}, 2, KEYS, 1), 'warrantyRecipients').detail, '1 recipient (in the private Email recipients document)')
-  assert.equal(byId(locationChecklist({}, 2, KEYS), 'warrantyRecipients').detail, 'Not checked')
 })
 
 test('slug rules', () => {

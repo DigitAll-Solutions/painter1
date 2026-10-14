@@ -147,8 +147,10 @@ export type Location = {
   warrantyButtonLabel?: string
   warrantyCtaHref?: string
   warrantyPdf?: { asset?: { url?: string; originalFilename?: string } }
-  warrantyResponseTime?: string
+  /** Homepage warranty band photo */
   warrantyImage?: SanityImage
+  /** Warranty page hero photo (this location's own; no fallback) */
+  warrantyPageImage?: SanityImage
   warrantyGraphic?: SanityImage
   privacyPolicy?: PortableTextBlock[]
   leadEmailSubject?: string
@@ -220,10 +222,9 @@ export type WarrantyTerms = {
   exclusionsIntro?: string
   exclusions?: { _key: string; text: string; editorNote?: string }[]
   sameEverywhere?: string
-  requestEyebrow?: string
-  requestHeading?: string
-  requestIntro?: string
-  steps?: string[]
+  /** Contact block (empty: the defaults in the page) */
+  contactHeading?: string
+  contactText?: string
   disclaimer?: string
   contractNote?: string
   contractNoteConfirmed?: boolean

@@ -1,5 +1,5 @@
-// Server-side email through Brevo's transactional API (plain fetch, no SDK). Used by the estimate and
-// warranty actions. Bodies are sent as text only (textContent), exactly as built: the Client Tether
+// Server-side email through Brevo's transactional API (plain fetch, no SDK). Used by the estimate action.
+// Bodies are sent as text only (textContent), exactly as built: the Client Tether
 // parser reads the lead email, so not a byte may change. Docs: docs/email-setup.md.
 export const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email'
 

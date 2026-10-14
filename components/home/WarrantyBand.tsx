@@ -8,7 +8,7 @@ import type { Location } from '@/sanity/lib/types'
 const DEFAULT_COPY = {
   eyebrow: '2 Year Workmanship Warranty',
   heading: 'Coverage You Get in Writing',
-  body: "If paint we applied peels, blisters, or flakes within two years, we'll come back and fix it, labor and materials included. Every residential and commercial job gets the same written warranty, backed by the local Painter1 owner who did your job.",
+  body: "If paint we applied peels, blisters, or flakes within two years, we'll come back and fix it at no labor charge. Every residential and commercial job gets the same written warranty, backed by the local Painter1 owner who did your job.",
   button: "See What's Covered",
 }
 const DEFAULT_GRAPHIC = '/warranty-graphic-B-fandeck.svg'

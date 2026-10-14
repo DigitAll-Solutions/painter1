@@ -3,7 +3,7 @@
   "serviceOptions": {
     "interior": "Interior Painting",
     "exterior": "Exterior Painting",
-    "cabinet": "Cabinet Refinishing",
+    "cabinet": "Cabinet Painting",
     "notSure": "Not sure"
   },
   "areasQuestion": "Which areas are you looking to paint?",

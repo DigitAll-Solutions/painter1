@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { CalendarDays, ClipboardList, Download, PenLine, Phone, ShieldCheck, User, Wrench, type LucideIcon } from 'lucide-react'
+import { CalendarDays, ClipboardList, Download, Mail, MessageSquareText, PenLine, Phone, ShieldCheck, User, Wrench, type LucideIcon } from 'lucide-react'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
 import CTASection from '@/components/CTASection'
@@ -8,16 +8,16 @@ import CtaButton from '@/components/CtaButton'
 import JsonLd from '@/components/JsonLd'
 import SanityImage from '@/components/SanityImage'
 import Rich, { fillWarranty } from '@/components/warranty/Rich'
-import WarrantyForm from '@/components/warranty/WarrantyForm'
 import WarrantyShield from '@/components/warranty/WarrantyShield'
-import { hasWarrantyPage, telHref } from '@/lib/location'
+import { hasWarrantyPage } from '@/lib/location'
 import { breadcrumbSchema, cityName } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
+import { hotspotPosition } from '@/lib/image'
 import { tokenValues } from '@/lib/tokens'
-import { turnstileSiteKey } from '@/lib/turnstile'
+import { CONTACT_ANCHOR, warrantyContact } from '@/lib/warranty-contact'
 import { getLocation, getWarrantyTerms } from '@/sanity/lib/fetch'
 
-const REQUEST_ANCHOR = 'request-repair'
+const CONTACT_ICONS = { call: Phone, text: MessageSquareText, email: Mail }
 const STAT_ICONS: Record<string, LucideIcon> = { calendar: CalendarDays, shield: ShieldCheck, wrench: Wrench, user: User }
 
 async function load(slug: string) {
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<'/[location]/warran
   const { location } = await load((await params).location)
   const { city } = tokenValues(location)
   const title = `2-Year Workmanship Warranty | Painter1 of ${city}`
-  const description = `What the Painter1 two-year workmanship warranty covers in ${cityName(location)}, what it requires, and how to request a warranty repair from ${location.name}.`
+  const description = `What the Painter1 two-year workmanship warranty covers in ${cityName(location)}, what it requires, and how to reach ${location.name} with questions.`
   const url = absoluteUrl(`/${location.slug}/warranty`)
   return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } }
 }
@@ -41,11 +41,11 @@ export default async function WarrantyPage({ params }: PageProps<'/[location]/wa
   const { city } = tokenValues(location)
   const tokens = { city, ownerFull: location.ownerName ?? '', locationName: location.name }
   const fill = (text?: string) => fillWarranty(text, tokens)
-  const tel = telHref(location.phone)
-  const photo = location.warrantyImage ?? location.heroImage
+  // This location's own warranty photo only; without one the hero shows the shield alone
+  const photo = location.warrantyPageImage
+  const contact = warrantyContact(location, terms)
   const pdf = location.warrantyPdf?.asset?.url
   const intro = location.ownerName ? terms.heroIntro : terms.heroIntroNoOwner || terms.heroIntro
-  const steps = terms.steps ?? []
   const disclaimer = [fill(terms.disclaimer), terms.contractNoteConfirmed ? terms.contractNote : ''].filter(Boolean).join(' ')
 
   return (
@@ -71,9 +71,12 @@ export default async function WarrantyPage({ params }: PageProps<'/[location]/wa
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-200">{fill(intro)}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <CtaButton href={`#${REQUEST_ANCHOR}`} size="md" className="focus-visible:outline-white">
-                <Wrench className="size-5" aria-hidden /> Request a Warranty Repair
-              </CtaButton>
+              {/* Low-key on purpose: warranty requests are rare (Oct 14) */}
+              {contact.links.length > 0 && (
+                <CtaButton href={`#${CONTACT_ANCHOR}`} variant="outline" size="md" className="focus-visible:outline-white">
+                  Questions? Contact Us
+                </CtaButton>
+              )}
               {pdf && (
                 <CtaButton href={`${pdf}?dl=`} variant="outline" size="md" className="focus-visible:outline-white">
                   <Download className="size-5" aria-hidden /> Download Warranty Sheet (PDF)
@@ -81,12 +84,18 @@ export default async function WarrantyPage({ params }: PageProps<'/[location]/wa
               )}
             </div>
           </div>
-          <div className="relative">
-            <div className="relative aspect-4/3 overflow-hidden rounded-3xl bg-ink/40">
-              {photo && <SanityImage image={photo} fill preload quality={70} sizes="(min-width: 1024px) 600px, 100vw" className="object-cover" />}
+          {photo ? (
+            <div className="relative">
+              <div className="relative aspect-4/3 overflow-hidden rounded-3xl bg-ink/40">
+                <SanityImage image={photo} fill preload quality={70} sizes="(min-width: 1024px) 600px, 100vw" className="object-cover" style={{ objectPosition: hotspotPosition(photo) }} />
+              </div>
+              <WarrantyShield className="absolute -bottom-6 -left-3 w-28 drop-shadow-xl sm:w-36 lg:top-1/2 lg:bottom-auto lg:-left-14 lg:w-44 lg:-translate-y-1/2" />
             </div>
-            <WarrantyShield className="absolute -bottom-6 -left-3 w-28 drop-shadow-xl sm:w-36 lg:top-1/2 lg:bottom-auto lg:-left-14 lg:w-44 lg:-translate-y-1/2" />
-          </div>
+          ) : (
+            <div className="flex justify-center">
+              <WarrantyShield className="w-40 drop-shadow-xl sm:w-52 lg:w-64" />
+            </div>
+          )}
         </div>
       </section>
 
@@ -212,47 +221,45 @@ export default async function WarrantyPage({ params }: PageProps<'/[location]/wa
         </section>
       )}
 
-      {/* Request a warranty repair */}
-      <section id={REQUEST_ANCHOR} className="scroll-mt-20 bg-mist py-16 md:scroll-mt-24 md:py-24">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 lg:grid-cols-[5fr_7fr] lg:gap-16">
-          <div>
-            {terms.requestEyebrow && <p className="text-sm font-bold tracking-[0.2em] text-cta-dark uppercase">{terms.requestEyebrow}</p>}
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl md:text-5xl">
-              <Rich text={terms.requestHeading} accentClass="text-brand-blue-dark" />
+      {/* Questions: a short contact block (it replaced the repair request form) */}
+      {contact.links.length > 0 && (
+        <section id={CONTACT_ANCHOR} aria-labelledby={`${CONTACT_ANCHOR}-heading`} className="scroll-mt-20 bg-mist py-14 md:scroll-mt-24 md:py-16">
+          <div className="mx-auto max-w-3xl px-4 text-center">
+            <h2 id={`${CONTACT_ANCHOR}-heading`} className="text-2xl font-extrabold tracking-tight text-balance sm:text-3xl">
+              {contact.heading}
             </h2>
-            {terms.requestIntro && <p className="mt-5 text-lg leading-relaxed text-slate-700">{terms.requestIntro}</p>}
-            {steps.length > 0 && (
-              <ol className="mt-6 space-y-4">
-                {steps.map((step, i) => (
-                  <li key={i} className="flex gap-3 text-slate-700">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-cta font-bold text-white">{i + 1}</span>
-                    <span className="pt-1">
-                      <Rich text={step} />
-                      {i === steps.length - 1 && location.warrantyResponseTime?.trim() && ` ${location.warrantyResponseTime.trim()}`}
-                    </span>
+            <p className="mt-3 text-lg text-slate-700">{contact.text}</p>
+            <ul className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              {contact.links.map((link) => {
+                const Icon = CONTACT_ICONS[link.kind]
+                return (
+                  <li key={link.kind}>
+                    <a
+                      href={link.href}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-bold text-ink shadow-sm ring-1 ring-slate-300 transition-colors hover:bg-slate-50 hover:ring-brand-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue sm:w-auto"
+                    >
+                      <Icon className="size-5 shrink-0 text-brand-blue-dark" aria-hidden />
+                      {/* Visible "Call (865) 345-5800"; announced "Call Painter1 of Knoxville at (865) 345-5800" */}
+                      <span>
+                        {link.verb} <span className="sr-only">{location.name} at </span>
+                        {/* A long email address may wrap, but only before the @ */}
+                        {link.kind === 'email' ? (
+                          <>
+                            {link.value.split('@')[0]}
+                            <wbr />@{link.value.split('@').slice(1).join('@')}
+                          </>
+                        ) : (
+                          link.value
+                        )}
+                      </span>
+                    </a>
                   </li>
-                ))}
-              </ol>
-            )}
-            {tel && (
-              <div className="mt-8 rounded-2xl bg-white p-6 ring-1 ring-slate-200">
-                <p className="text-slate-600">Prefer to call?</p>
-                <a href={tel} className="mt-1 inline-flex items-center gap-2 text-2xl font-extrabold text-ink hover:text-brand-blue-dark">
-                  <Phone className="size-5" aria-hidden /> {location.phone}
-                </a>
-                {!!location.businessHours?.length && (
-                  <ul className="mt-2 text-sm text-slate-600">
-                    {location.businessHours.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
+                )
+              })}
+            </ul>
           </div>
-          <WarrantyForm slug={location.slug} locationName={location.name} phone={location.phone} tel={tel} turnstileSiteKey={turnstileSiteKey()} />
-        </div>
-      </section>
+        </section>
+      )}
 
       <CTASection location={location} />
 

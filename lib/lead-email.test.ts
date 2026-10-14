@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
-import { composeDescription, emptyAnswers, OTHER_AREA, type SurveyContent } from './estimate-survey.ts'
+import { composeDescription, emptyAnswers, OTHER_AREA, type Answers, type SurveyContent } from './estimate-survey.ts'
 import { buildLeadEmail } from './lead-email.ts'
 
 const survey: SurveyContent = JSON.parse(readFileSync(new URL('./estimate-survey-defaults.json', import.meta.url), 'utf-8'))
@@ -31,7 +31,7 @@ const answers = {
   phone: '(865) 555-0123',
 }
 
-const inputsFor = (a: typeof answers, extra: Record<string, unknown> = {}) => ({
+const inputsFor = (a: Answers, extra: Record<string, unknown> = {}) => ({
   names: { first_name: a.firstName, last_name: a.lastName },
   email: a.email,
   phone: a.phone,
@@ -101,6 +101,16 @@ test('only the Message block differs from the plain template output', () => {
   const [beforeB, afterB] = plain.split('Message:\nX')
   assert.equal(beforeA, beforeB + 'Message:\n')
   assert.equal(afterA, afterB)
+})
+
+test('cabinet lead: the service label sits only in the Message block, never in the PARSER line', () => {
+  const a = { ...answers, service: 'cabinet' as const, areas: ['Kitchen cabinets'] }
+  const out = buildLeadEmail(TEMPLATE_73, { inputs: inputsFor(a), submission })
+  assert.equal(survey.serviceOptions.cabinet, 'Cabinet Painting')
+  assert.ok(out.includes('Message:\nService: Cabinet Painting\nAreas: Kitchen cabinets\n'))
+  assert.equal(out.split('Service: Cabinet Painting').length, 2, 'appears once, in {inputs.description}')
+  assert.ok(out.endsWith('PARSER: Paid Search, Google, knoxville-exterior '), 'Client Tether parse line comes from attribution only')
+  assert.ok(!/refinish/i.test(out))
 })
 
 test('"Not sure": no Areas line; no customer message: block ends after Timeline', () => {

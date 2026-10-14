@@ -4,23 +4,22 @@ For the Painter1 team who edits the website. The Studio is at **/studio** on the
 
 ## Who can see what (read this first)
 
-- **Every Studio member can read leads**: the estimate requests and warranty requests with customers' names, emails, phone numbers, addresses and photos, whatever their role. Only give Studio access to people who are allowed to see lead data, and remove access when someone leaves.
+- **Every Studio member can read leads**: the estimate requests with customers' names, emails, phone numbers and addresses, whatever their role. Only give Studio access to people who are allowed to see lead data, and remove access when someone leaves.
 - **Roles:**
   - **Editor:** changes and publishes everything. This is the normal role for the content team.
   - **Contributor:** can make changes but can't publish them; an Editor reviews and publishes.
   - **Viewer:** read-only, and can still read leads.
   - **Administrator:** for the agency and the account owner only (members, settings, URLs).
-- **Email recipients** (the addresses that receive estimate and warranty emails) are kept out of the public website data, but every Studio member can see them.
-- **Warranty photos** that customers upload can be opened by anyone who has the photo's link. The link is only in the warranty email and the Studio.
+- **Lead recipients** (the addresses that receive estimate emails) are kept out of the public website data, but every Studio member can see them.
 
 ## How the Studio is organized
 
 | Section | What's in it |
 |---|---|
-| **Locations** | **Onboarding overview** (every location and what's still missing), then the locations grouped by state. Each location opens as a folder: **Location details**, **Email recipients**, **Leads** and **Warranty requests** (newest first), and **Live pages**. |
+| **Locations** | **Onboarding overview** (every location and what's still missing), then the locations grouped by state. Each location opens as a folder: **Location details**, **Lead recipients**, **Leads** (newest first) and **Live pages**. |
 | **Shared** | Content used by every location: **Services** (the shared copy of each service page), **Estimate survey** (the questions on the free-estimate form), the **Privacy Policy** and the **Warranty terms** (the text of every location's warranty page). |
 | **Corporate** | Corporate Homepage, Locations Directory, Franchise Opportunities. These pages are **not on the site yet**; editing them changes nothing for now. |
-| **All leads** | Every estimate request, newest first, also **by location**, plus **test leads** (sent while email delivery was in test mode). Below them: every **warranty request**, newest first and by location. |
+| **All leads** | Every estimate request, newest first, also **by location**, plus **test leads** (sent while email delivery was in test mode). |
 
 ## Working on a location
 
@@ -43,10 +42,7 @@ The **Location details** document has these tabs: Basics · Owner & team · Home
    - **Name:** "Painter1 of {City}".
    - **City** and **State** (from the list).
    - **URL slug:** click **Generate**, which uses the city. It must match the location's live URL: `painter1.com/maryville` → `maryville`. The Studio warns if it isn't on the client's location list.
-3. **Email recipients:** open the location's folder → **Email recipients**.
-   - **Lead recipients** receive estimate requests (Client Tether's address goes here).
-   - **Warranty request recipients** receive warranty requests. Never add Client Tether here; the Studio refuses it.
-   - Until a list has an address, those requests are saved but nobody is emailed.
+3. **Lead recipients:** open the location's folder → **Lead recipients** and add the addresses that receive estimate requests (Client Tether's address goes here too). Until there's one, estimate requests are saved but nobody is emailed.
 4. **Work down the Launch checklist** until nothing is red, then **Publish**.
 5. **After publishing:** the URL slug is **locked**. Changing a live URL breaks every link to it, so ask an administrator, who will add redirects.
 
@@ -74,7 +70,7 @@ Each service page has one **What We Paint** section: a card per surface at the t
   - **Surface name:** the card title and the section heading. Just the name ("Siding", "Trim & Doors").
   - **Link name:** the end of the link to the section, e.g. `siding` → `/knoxville/exterior-painting#siding`. Click **Generate**. Don't change it after launch.
   - **Icon** and **Card text** (one sentence on the card).
-  - **Section text:** the text in the surface's section. Paragraphs and bullet lists; use bold for short labels. `{city}`, `{state}` and `{owner}` are filled in per location. Empty: the card text is shown there.
+  - **Section text:** the text in the surface's section. The usual order: a short intro paragraph; **How we do it** set in the **Label** style (the style menu); a bullet list where each item starts with a bold sentence; **What you get:** in bold, then the rest; and **Warranty note:** in the **Small note** style. Label and Small note look like small headings but aren't headings, so the page outline stays tidy. `{city}`, `{state}` and `{owner}` are filled in per location. Empty: the card text is shown there.
 - **Order:** drag the surfaces; cards and sections follow the same order. Renaming a surface keeps each location's photo attached.
 - **Old "Sub-services (old)"** on a location (Knoxville's Siding and Stucco) are read-only and are removed after launch; their text is already in the surfaces.
 
@@ -92,6 +88,10 @@ Each service page has one **What We Paint** section: a card per surface at the t
   - Write `{city}`, `{ownerFull}` and `{locationName}` where this location's details go.
   - `**double asterisks**` make words bold (in headings, the accent color).
   - Items with an **editor note** (e.g. "Nail pops: confirm for network") still need confirming; the note never shows on the site.
-- **This location's parts** (Location details → Warranty tab): the photo, the PDF warranty sheet and the reply time. The owner quote, phone and hours come from Owner and Basics. Empty fields hide their line.
-- **Requests** from the form are saved under the location's **Warranty requests** with the customer's photos, then emailed to the **Warranty request recipients**.
+- **This location's parts** (Location details → Warranty tab):
+  - **Warranty page: photo** — the photo at the top of the warranty page, beside the 2-year shield. Use one of this location's own jobs. Without one, the page shows the shield on its own (never another location's photo).
+  - **Homepage warranty: photo** is a different field: it's the photo in the warranty section on this location's homepage.
+  - **Warranty sheet (PDF):** optional download button.
+  - The owner quote comes from Owner; the phone and email come from Basics.
+- **Questions block:** near the bottom of the page, "Questions About Your Warranty?" with **Call**, **Text** and **Email** buttons. Call and Text use the location's main phone (every main line takes texts); Email shows only when the location has a public email. The heading and line can be changed in Shared → Warranty terms → Contact & small print (`{ownerTeam}` becomes "Keith's team"). There is no request form: locations rarely get warranty requests.
 - Locations on the basic tier (home page and free estimate only) have no warranty page.

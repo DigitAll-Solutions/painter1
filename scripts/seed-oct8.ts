@@ -20,7 +20,9 @@ import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
 
-import { CLIENT_TETHER, warrantyRecipients } from '../lib/warranty.ts'
+// Inlined when lib/warranty.ts was removed (Oct 14); this script has already run
+const CLIENT_TETHER = /@parse\.clienttether\.com$/i
+const warrantyRecipients = (addresses: string[] | undefined) => (addresses ?? []).map((a) => a.trim()).filter((a) => a && !CLIENT_TETHER.test(a))
 
 const DRY_RUN = process.argv.includes('--dry-run')
 /** Post-merge only: drop the old single-pair fields once the deployed site reads transformations */

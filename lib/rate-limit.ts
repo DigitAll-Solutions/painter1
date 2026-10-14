@@ -1,11 +1,11 @@
 import { leadReadClient } from '@/sanity/lib/private-client'
 
-// Per-IP limit for the public forms, counted from the private documents they save (lead / warrantyRequest
-// store the visitor's IP), so it holds across serverless instances. Fails open: if the count can't be
+// Per-IP limit for the estimate form, counted from the private lead documents it saves (each stores the
+// visitor's IP), so it holds across serverless instances. Fails open: if the count can't be
 // read, the request goes through (Turnstile and the honeypot still apply).
 export const FORM_LIMIT = { requests: 5, minutes: 60 }
 
-export async function tooManyRequests(type: 'lead' | 'warrantyRequest', ip: string): Promise<boolean> {
+export async function tooManyRequests(type: 'lead', ip: string): Promise<boolean> {
   if (!ip) return false
   const reader = leadReadClient()
   if (!reader) return false

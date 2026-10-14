@@ -10,7 +10,7 @@ export const NEW_LOCATION_DEFAULTS = {
   services: {
     interior: {_type: 'serviceDetail', title: 'Interior Painting'},
     exterior: {_type: 'serviceDetail', title: 'Exterior Painting'},
-    cabinet: {_type: 'serviceDetail', title: 'Cabinet Refinishing'},
+    cabinet: {_type: 'serviceDetail', title: 'Cabinet Painting'},
   },
   leadEmailSubject: "Painter1.com - Get Free Estimate - Form Submission",
   leadConfirmationMessage: "Thank you for your message. We will get in touch with you shortly",
