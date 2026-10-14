@@ -7,7 +7,7 @@ import { aboutMeta, aboutPageLocation, aboutPeople, aboutVariant, ABOUT_PATH } f
 import { breadcrumbSchema, businessNode } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
 import { urlFor } from '@/sanity/lib/image'
-import { getLocation, getLocationCount } from '@/sanity/lib/fetch'
+import { getLocation } from '@/sanity/lib/fetch'
 
 async function load(slug: string) {
   // Full-tier locations only (client's list): unknown and basic-tier locations 404 (tested in about.test.ts)
@@ -31,7 +31,6 @@ export async function generateMetadata({ params }: PageProps<'/[location]/about-
 
 export default async function AboutUsPage({ params }: PageProps<'/[location]/about-us'>) {
   const location = await load((await params).location)
-  const networkCount = await getLocationCount()
   const url = absoluteUrl(`/${location.slug}/${ABOUT_PATH}`)
   const staff = aboutPeople(location).filter((person) => !person.isOwner)
 
@@ -53,7 +52,7 @@ export default async function AboutUsPage({ params }: PageProps<'/[location]/abo
           { name: 'About', url },
         ])}
       />
-      <AboutPage location={location} networkCount={networkCount} />
+      <AboutPage location={location} />
     </>
   )
 }

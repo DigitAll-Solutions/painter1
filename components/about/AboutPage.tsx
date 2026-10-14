@@ -5,7 +5,7 @@ import CTASection from '@/components/CTASection'
 import CtaButton from '@/components/CtaButton'
 import SanityImage from '@/components/SanityImage'
 import { Accent } from '@/components/Section'
-import { aboutPeople, aboutReviews, aboutVariant, networkLine, NETWORK_PAGE_URL, ownerSteps, ROLE_LABEL, storyParagraphs, teamSteps, teamStoryHeading, tenure, type Person, type Step } from '@/lib/about'
+import { aboutPeople, aboutReviews, aboutVariant, ownerSteps, ROLE_LABEL, storyParagraphs, teamSteps, teamStoryHeading, tenure, type Person, type Step } from '@/lib/about'
 import { getCta, getWarrantyHref, telHref } from '@/lib/location'
 import type { Location, Review } from '@/sanity/lib/types'
 
@@ -17,7 +17,7 @@ const h2 = 'mt-2 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl
  * The location's About page. Variant from the data (lib/about.ts): "owner" (owner-led) or "team"
  * (owner with estimators / project managers). Every section and line hides when its data is missing.
  */
-export default function AboutPage({ location, networkCount }: { location: Location; networkCount: number }) {
+export default function AboutPage({ location }: { location: Location }) {
   const variant = aboutVariant(location)
   const city = location.address?.city?.trim() || location.name
   const owner = location.ownerName?.trim()
@@ -65,20 +65,6 @@ export default function AboutPage({ location, networkCount }: { location: Locati
       <Standards location={location} variant={variant} first={first} people={people} />
 
       <StatsAndReviews location={location} city={city} reviews={reviews} />
-
-      <section className="bg-mist py-14 md:py-16">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-3xl">
-            <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Locally owned. Backed by Painter1.</h2>
-            <p className="mt-3 text-lg text-slate-700">{networkLine(location.name, networkCount)}</p>
-          </div>
-          {NETWORK_PAGE_URL && (
-            <a href={NETWORK_PAGE_URL} className="inline-flex shrink-0 items-center gap-2 font-bold text-brand-blue-text hover:underline">
-              About the Painter1 network <ArrowRight className="size-4" aria-hidden />
-            </a>
-          )}
-        </div>
-      </section>
 
       {variant === 'team' ? (
         <CTASection location={location} title="Ready to meet the team?" subtitle={people.some((p) => p.role === 'estimator') ? 'Schedule a free on-site estimate with one of our estimators.' : 'Schedule a free on-site estimate.'} />
