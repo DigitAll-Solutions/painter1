@@ -59,14 +59,26 @@ export default function GallerySlider({ label, slides, perView = 3, noun = ['pho
     }, 150)
   }, [measure, total, noun])
 
+  // Measuring forces a layout, so it waits until the slider is near the screen instead of running
+  // while the page hydrates. Until then the server-rendered state (first slide, "next" on) holds.
   useEffect(() => {
-    measure()
     const el = track.current
     if (!el) return
-    const observer = new ResizeObserver(() => measure())
-    observer.observe(el)
+    let resize: ResizeObserver | undefined
+    const near = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+        near.disconnect()
+        // Its first callback runs right away: that's the initial measurement
+        resize = new ResizeObserver(() => measure())
+        resize.observe(el)
+      },
+      { rootMargin: '400px 0px' },
+    )
+    near.observe(el)
     return () => {
-      observer.disconnect()
+      near.disconnect()
+      resize?.disconnect()
       clearTimeout(settle.current)
     }
   }, [measure])

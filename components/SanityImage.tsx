@@ -1,5 +1,4 @@
 import type { CSSProperties, ImgHTMLAttributes } from 'react'
-import { preload as preloadResource } from 'react-dom'
 
 import { urlFor } from '@/sanity/lib/image'
 import type { SanityImage as SanityImageType } from '@/sanity/lib/types'
@@ -17,7 +16,7 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'alt' 
   /** Largest rendered width in CSS pixels; caps the srcset. Defaults to the source width. */
   width?: number
   height?: number
-  /** Above-the-fold image: preload it and fetch with high priority */
+  /** Above-the-fold (LCP) image: eager, fetchPriority high (React preloads it in the page's <head>) */
   preload?: boolean
   /**
    * With `fill` only: render without src/srcset (kept in data-src/data-srcset) so a client
@@ -55,7 +54,10 @@ export default function SanityImage({
 
   const url = (w: number) => {
     const b = urlFor(image).width(w).quality(quality).auto('format')
-    return (aspect ? b.height(Math.round(w / aspect)).fit('crop') : b.fit('max')).url()
+    const full = (aspect ? b.height(Math.round(w / aspect)).fit('crop') : b.fit('max')).url()
+    // The LCP image comes through this site's own origin (next.config.ts rewrite): no second connection
+    // before it can load. Other images stay on cdn.sanity.io.
+    return preload ? full.replace('https://cdn.sanity.io/images/', '/sanity-img/') : full
   }
 
   // Retina screens need up to 2x the rendered width, never more than the source
@@ -64,10 +66,16 @@ export default function SanityImage({
   const srcSet = widths.map((w) => `${url(w)} ${w}w`).join(', ')
   const src = url(widths[Math.min(widths.length - 1, 3)])
 
-  if (preload) preloadResource(src, { as: 'image', imageSrcSet: srcSet, imageSizes: sizes, fetchPriority: 'high' })
+  // No ReactDOM.preload() here: that hint travels in the RSC payload, so every <Link> prefetch of another
+  // page (the header's home and estimate links, right after load) made the browser download that page's
+  // hero too. The eager, fetchPriority="high" <img> below is preloaded by React in this page's own <head>.
 
   const intrinsicWidth = width ?? sourceWidth
-  const lqip = image.asset.metadata?.lqip
+  // Blurred placeholder only for eager, above-the-fold images that aren't the preloaded LCP image. Base64
+  // barely compresses (it was ~20% of a page's HTML), and lazy images load as they come into view over
+  // their container's background colour, so they don't need one.
+  const lqip = !preload && loading === 'eager' ? image.asset.metadata?.lqip : undefined
+  const placeholder = lqip ? { backgroundImage: `url(${lqip})`, backgroundSize: 'cover', ...style } : style
   const altText = alt ?? image.alt ?? ''
 
   if (deferred && fill && !preload) {
@@ -84,7 +92,7 @@ export default function SanityImage({
           alt={altText}
           decoding="async"
           className={classes}
-          style={lqip ? { backgroundImage: `url(${lqip})`, backgroundSize: 'cover', ...style } : style}
+          style={placeholder}
         />
         {/* Same photo over the placeholder when JavaScript is off */}
         <noscript dangerouslySetInnerHTML={{ __html: fallback }} />
@@ -107,7 +115,7 @@ export default function SanityImage({
       // The preloaded (LCP) image decodes normally so its paint isn't deferred; everything else decodes off the main thread
       decoding={preload ? undefined : 'async'}
       className={`${fill ? 'absolute inset-0 size-full' : ''} ${className}`}
-      style={lqip && !preload ? { backgroundImage: `url(${lqip})`, backgroundSize: 'cover', ...style } : style}
+      style={placeholder}
     />
   )
 }

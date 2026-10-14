@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import Link from 'next/link'
+import Link from '@/components/IntentLink'
 import { ChevronUp } from 'lucide-react'
 
 import CtaButton from './CtaButton'

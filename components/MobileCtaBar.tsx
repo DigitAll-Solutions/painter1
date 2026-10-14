@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/IntentLink'
 import { CalendarCheck, Phone } from 'lucide-react'
 
 import { getCta, telHref } from '@/lib/location'

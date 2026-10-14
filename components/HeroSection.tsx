@@ -1,10 +1,10 @@
 import { CalendarCheck, ClipboardCheck, Phone, ShieldCheck, Sparkles, Star, type LucideIcon } from 'lucide-react'
 
 import CtaButton from './CtaButton'
+import HeroVideo from './HeroVideo'
 import OwnerSeal from './OwnerSeal'
 import SanityImage from './SanityImage'
 import { getCta, heroSubtitle, telHref } from '@/lib/location'
-import { urlFor } from '@/sanity/lib/image'
 import type { Location, SanityImage as SanityImageType } from '@/sanity/lib/types'
 
 type Props = {
@@ -38,20 +38,9 @@ export default function HeroSection({ location, headline, subheadline, image, ho
         home ? '-mt-16 min-h-svh pt-16 md:-mt-20 md:min-h-190 md:pt-20' : ''
       }`}
     >
-      {bg && !video && <SanityImage image={bg} fill preload quality={60} sizes="100vw" className="-z-10 object-cover" alt={bg.alt} />}
-      {video && (
-        <video
-          className="absolute inset-0 -z-10 size-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          aria-hidden
-          poster={bg ? urlFor(bg).width(1600).auto('format').url() : undefined}
-        >
-          <source src={video} type={location.heroVideo?.asset?.mimeType} />
-        </video>
-      )}
+      {/* The hero image is the LCP; with a video it's also the poster until the video plays */}
+      {bg && <SanityImage image={bg} fill preload quality={60} sizes="100vw" className="-z-10 object-cover" alt={bg.alt} />}
+      {video && <HeroVideo src={video} type={location.heroVideo?.asset?.mimeType} />}
       <div className="absolute inset-0 -z-10 bg-ink/55" aria-hidden />
       <div className="absolute inset-x-0 top-0 -z-10 h-40 bg-linear-to-b from-ink/70 to-transparent" aria-hidden />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-56 bg-linear-to-t from-ink/80 to-transparent" aria-hidden />

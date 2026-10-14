@@ -273,8 +273,11 @@ export default function EstimateSurvey({ slug, state, city, phone, tel, survey, 
         (URL_ATTRIBUTION as readonly string[]).includes(key) ? (
           <input key={key} type="hidden" name={key} value={attribution[key] ?? ''} />
         ) : (
-          // Uncontrolled: Attributer (via GTM) writes these values directly
-          <input key={key} type="hidden" name={key} defaultValue="" />
+          // Attributer (via GTM) writes these values directly. It only fills fields it can find by id
+          // "[attributer-<field>]" (or a "[<field>]" placeholder value). No value / defaultValue prop: on a
+          // hidden input React re-applies defaultValue on every re-render (each survey step), which wiped
+          // what Attributer wrote. Without Attributer they stay empty.
+          <input key={key} id={`[attributer-${key}]`} type="hidden" name={key} />
         ),
       )}
       {/* Honeypot: hidden from people and assistive tech */}

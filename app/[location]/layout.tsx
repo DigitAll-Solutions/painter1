@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { preconnect } from 'react-dom'
 
 import AttributionCapture from '@/components/AttributionCapture'
 import FloatingCta from '@/components/FloatingCta'
@@ -22,6 +23,8 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
   const { location: slug } = await params
   const location = await getLocation(slug)
   if (!location) notFound()
+  // Every page's hero / LCP image comes from the Sanity image CDN: open that connection with the HTML
+  preconnect('https://cdn.sanity.io')
   const webchat = ringbotId(location.webchatId)
 
   return (
