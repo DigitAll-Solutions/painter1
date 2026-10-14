@@ -1,10 +1,10 @@
-// node --test: About page variants, people and roles, steps, reviews, network line, story
+// node --test: About page variants, people and roles, steps, reviews, story
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import type { Review, TeamMember } from '@/sanity/lib/types'
 
-import { aboutPeople, aboutReviews, aboutVariant, memberRole, networkLine, storyParagraphs, teamSteps, tenure } from './about.ts'
+import { aboutPeople, aboutReviews, aboutVariant, memberRole, storyParagraphs, teamSteps, tenure } from './about.ts'
 
 const member = (name: string, jobTitle: string, extra: Partial<TeamMember> = {}): TeamMember => ({ _key: name, name, jobTitle, ...extra })
 const review = (reviewerName: string, reviewText: string, teamMemberMentioned?: string, reviewDate = '2026-09-01'): Review => ({ _key: reviewerName, reviewerName, reviewText, teamMemberMentioned, reviewDate })
@@ -68,11 +68,6 @@ test('reviews: team variant matches estimator, PM, owner, then fills with owner 
   assert.deepEqual(aboutReviews({ reviews, ownerName: 'Keith Lane' }, 'owner', people).map((r) => r.reviewerName), ['C', 'D'])
   // Nobody named: no reviews (the section hides)
   assert.deepEqual(aboutReviews({ reviews: [review('E', 'Great crew.', 'Zulien')], ownerName: 'Keith Lane' }, 'owner', people), [])
-})
-
-test('network line: the count from Sanity, left out while it is small', () => {
-  assert.equal(networkLine('Painter1 of Knoxville', 36), 'Painter1 of Knoxville is independently owned and operated, and part of a national network of 36 Painter1 locations that share the same standards, products and warranty.')
-  assert.equal(networkLine('Painter1 of Knoxville', 1), 'Painter1 of Knoxville is independently owned and operated, and part of the national Painter1 network: the same standards, products and warranty at every location.')
 })
 
 test('story: paragraphs on blank lines, empty when missing', () => {

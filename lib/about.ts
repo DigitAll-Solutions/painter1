@@ -7,10 +7,6 @@ import { hasAboutPage } from './location.ts'
 
 export const ABOUT_PATH = 'about-us' // the live site's URL (/knoxville/about-us/)
 
-/** The corporate "About the Painter1 network" page doesn't exist yet: the link stays hidden until it does */
-export const NETWORK_PAGE_URL: string | null = null
-/** Below this many locations the network line leaves the number out ("part of the national Painter1 network") */
-export const MIN_NETWORK_COUNT = 10
 
 export type AboutVariant = 'owner' | 'team'
 
@@ -159,13 +155,7 @@ export function aboutReviews(location: Pick<Location, 'reviews' | 'ownerName'>, 
   return picked.slice(0, 3)
 }
 
-// ---------- Network and story ----------
-export function networkLine(name: string, count: number) {
-  return count >= MIN_NETWORK_COUNT
-    ? `${name} is independently owned and operated, and part of a national network of ${count} Painter1 locations that share the same standards, products and warranty.`
-    : `${name} is independently owned and operated, and part of the national Painter1 network: the same standards, products and warranty at every location.`
-}
-
+// ---------- Story ----------
 /** The owner's story (Studio "Owner story") as paragraphs, split on blank lines */
 export const storyParagraphs = (text?: string) => (text ?? '').split(/\n\s*\n/).map((p) => p.replace(/\s+/g, ' ').trim()).filter(Boolean)
 
