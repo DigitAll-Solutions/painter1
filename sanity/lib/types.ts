@@ -108,6 +108,8 @@ export type Location = {
   ownerName?: string
   /** First-person owner story (About page); paragraphs split on blank lines */
   ownerBio?: string
+  /** First person: why the owner built a team (About page, team version). Empty: a neutral heading */
+  ownerTeamStory?: string
   /** Shown under "Licensed & insured" on the About page, only where the location has one */
   licenseNumber?: string
   /** About page (team variant) hero photo */
