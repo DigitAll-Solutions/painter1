@@ -27,6 +27,9 @@ export const ESTIMATE_ANCHOR = 'estimate'
 // have no warranty page; everyone else links to /<slug>/warranty (or the per-location override)
 export const hasWarrantyPage = (location: Pick<Location, 'locationType'>) => location.locationType !== 'maintenance'
 
+// The About page is full tier only too (client's list: "About Page" blank for basic locations)
+export const hasAboutPage = (location: Pick<Location, 'locationType'>) => location.locationType !== 'maintenance'
+
 export const getWarrantyHref = (location: Pick<Location, 'slug' | 'warrantyCtaHref' | 'locationType'>) =>
   hasWarrantyPage(location) ? location.warrantyCtaHref?.trim() || `/${location.slug}/warranty` : undefined
 
@@ -55,7 +58,7 @@ export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | '
     })),
     { label: 'Our Work', href: `${base}/our-work` },
     { label: 'Warranty', href: `${base}/warranty` },
-    // About Us (full tier in the client's list) returns once /<slug>/about-us exists: it would 404 today
+    { label: 'About Us', href: `${base}/about-us` },
   ]
 }
 

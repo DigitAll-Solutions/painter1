@@ -1,7 +1,7 @@
 import { cache } from 'react'
 
 import { client } from './client'
-import { ESTIMATE_SURVEY_QUERY, LOCATION_PAGES_QUERY, PRIVACY_POLICY_QUERY, LOCATION_QUERY, LOCATION_SLUGS_QUERY, SERVICE_KEYS_QUERY, SERVICE_QUERY, SERVICE_SLUGS_QUERY, WARRANTY_TERMS_QUERY } from './queries'
+import { ESTIMATE_SURVEY_QUERY, LOCATION_COUNT_QUERY, LOCATION_PAGES_QUERY, PRIVACY_POLICY_QUERY, LOCATION_QUERY, LOCATION_SLUGS_QUERY, SERVICE_KEYS_QUERY, SERVICE_QUERY, SERVICE_SLUGS_QUERY, WARRANTY_TERMS_QUERY } from './queries'
 import type { Location, Service, WarrantyTerms } from './types'
 import type { PortableTextBlock } from 'next-sanity'
 import defaults from '@/lib/estimate-survey-defaults.json'
@@ -16,6 +16,9 @@ export const getLocation = cache(async (slug: string) =>
 
 export const getLocationSlugs = () =>
   client.fetch<string[]>(LOCATION_SLUGS_QUERY, {}, { next: { revalidate, tags: ['location'] } })
+
+/** How many locations are published (About page network line) */
+export const getLocationCount = () => client.fetch<number>(LOCATION_COUNT_QUERY, {}, { next: { revalidate, tags: ['location'] } })
 
 /** Slug and type of every location, for the sitemap */
 export const getLocationPages = () =>

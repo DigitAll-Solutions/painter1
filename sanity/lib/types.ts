@@ -84,6 +84,8 @@ export type TeamMember = {
   _key: string
   name: string
   jobTitle: string
+  /** owner | estimator | projectManager | office | other (About page badges and steps) */
+  role?: string
   withOwnerSince?: string
   bio?: string
   photo?: SanityImage
@@ -104,7 +106,12 @@ export type Location = {
   businessHours?: string[]
   socialLinks?: { facebook?: string; google?: string; instagram?: string; yelp?: string; youtube?: string }
   ownerName?: string
+  /** First-person owner story (About page); paragraphs split on blank lines */
   ownerBio?: string
+  /** Shown under "Licensed & insured" on the About page, only where the location has one */
+  licenseNumber?: string
+  /** About page (team variant) hero photo */
+  teamPhoto?: SanityImage
   ownerPhoto?: SanityImage
   ownerPronoun?: 'he' | 'she' | 'they'
   ownerSinceYear?: string
