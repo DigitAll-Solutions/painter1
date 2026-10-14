@@ -144,7 +144,7 @@ The next visit then shows the change (in our test, about 4 seconds after publish
 
 **Set it up once** (needs project admin access; the site needs no change):
 
-1. **Make a secret:** a long random string, e.g. the output of `openssl rand -base64 32`. Use the same value in steps 2 and 3, and nowhere else.
+1. **Make a secret:** a long random string. In any terminal with Node (PowerShell included): `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` (or `openssl rand -base64 32` where OpenSSL is installed). Use the same value in steps 2 and 3, and nowhere else.
 2. **Add it in Vercel:** the painter1 project → Settings → Environment Variables → add `SANITY_REVALIDATE_SECRET` with the secret, for **Production** (and **Preview** if you also want to test preview deployments). Then redeploy (Deployments → the latest production deployment → ⋯ → Redeploy), so the running site has it.
 3. **Create the webhook** at [sanity.io/manage](https://www.sanity.io/manage) → the Painter1 project (`al9no7gj`) → **API** → **Webhooks** → **Create webhook**:
    - **Name:** `Refresh site on publish`
