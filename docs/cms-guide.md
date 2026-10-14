@@ -74,6 +74,23 @@ Each service page has one **What We Paint** section: a card per surface at the t
 - **Order:** drag the surfaces; cards and sections follow the same order. Renaming a surface keeps each location's photo attached.
 - **Old "Sub-services (old)"** on a location (Knoxville's Siding and Stucco) are read-only and are removed after launch; their text is already in the surfaces.
 
+## About page
+
+Every full-tier location has an About page at `/<location>/about-us` (basic-tier locations don't). It builds itself from the location's data, and any section without data is simply left out.
+
+- **Which version shows:** Location details → **Owner & team** → **Franchise structure**.
+  - **Owner-led:** "Meet {owner}, the owner who handles your job start to finish", the owner's quote and story, and four steps the owner runs.
+  - **Owner with team:** "The {city} team behind every Painter1 job", a card for each person, and five steps with a named role on each.
+  - If it's empty, a location with team members gets the team version.
+- **What feeds it (Owner & team tab):**
+  - **Owner story (About page):** the owner's own words, first person, with a blank line between paragraphs. Usually: background, why they opened this location, local roots, and what they check on every job. For a team, also why they built one. Real facts only, never a template bio.
+  - **Owner quote**, **Owner since (year)**, **Owner photo** and **Owner on the job photo:** the same fields the homepage uses.
+  - **Contractor license number:** shown as "License #…" under "Licensed & insured", only where the state requires one.
+  - **Team photo (About page):** the owner with the estimators and project managers, at the top of the team version.
+  - **Team members:** for each person, their **Name**, **Job title** (shown as written), **Role** (Owner, Estimator, Project Manager, Office & Scheduling or Other; it sets their badge and who appears on each step), **What they do for you** (one line; empty uses a standard line for the role), **With owner since** (gives "N years with the company") and **Photo** (empty shows their initials). The homepage shows the first two. Painting crews aren't listed: they're covered by "Vetted painting crews".
+- **Steps:** when nobody has a role (for example no Estimator), that step shows "Owner".
+- **Ratings and reviews:** rating, review count and **Project counts** come from the same fields as the homepage. The reviews shown are the ones that name the team (the **Names mentioned** field on each review) or the owner.
+
 ## Web chat (Ringbot)
 
 - **Where:** Location details → **Leads & consent** → **Web chat (Ringbot)**. Paste the location's Ringbot embed code (`<script src="https://api.callwidget.co/embed?iID=…"></script>`) or just its iID. Empty: no chat button.
