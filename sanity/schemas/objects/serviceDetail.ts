@@ -6,7 +6,6 @@ export const serviceDetail = defineType({
   name: 'serviceDetail',
   title: 'Service',
   type: 'object',
-  fieldsets: [{name: 'notOnSite', title: 'Not on the site (imported copy)', options: {collapsible: true, collapsed: true}}],
   fields: [
     defineField({
       name: 'title',
@@ -28,7 +27,6 @@ export const serviceDetail = defineType({
       rows: 3,
       description: "Overrides the service's default description for this location only (max ~160 characters).",
     }),
-    defineField({name: 'description', type: 'text', rows: 4, fieldset: 'notOnSite', description: 'Imported description; the service pages use the shared service copy.'}),
     defineField({
       name: 'cardBullets',
       title: 'Homepage card bullets',
@@ -75,32 +73,6 @@ export const serviceDetail = defineType({
       rows: 5,
       description:
         'Optional. Replaces the service page’s default text beside the before/after slider for this location. Tokens: {city}, {state}, {owner} (owner first name).',
-    }),
-    defineField({
-      name: 'highlights',
-      title: "What's included",
-      type: 'array',
-      fieldset: 'notOnSite',
-      description: 'Imported list; the service pages use the shared service process.',
-      of: [defineArrayMember({type: 'string'})],
-    }),
-    defineField({
-      name: 'process',
-      title: 'Process steps',
-      type: 'array',
-      fieldset: 'notOnSite',
-      description: 'Imported steps; the service pages use the shared service process.',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          name: 'processStep',
-          fields: [
-            defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'description', type: 'text', rows: 3}),
-            defineField({name: 'items', type: 'array', of: [defineArrayMember({type: 'string'})]}),
-          ],
-        }),
-      ],
     }),
     // This location's own photos for the shared "What we paint" surfaces, keyed to the surface's _key
     defineField({

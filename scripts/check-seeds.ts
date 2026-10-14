@@ -16,8 +16,6 @@ export const RUNS: string[][] = [
   ['seed-services.ts'],
   ['seed-leads.ts'],
   ['seed-privacy.ts'],
-  // One-off (post-merge, Oct 14 cleanup): reports its pending removals until it has run
-  ['unset-legacy-fields.ts'],
 ]
 
 let failed = 0
@@ -31,7 +29,7 @@ for (const [script, ...mode] of RUNS) {
     console.log(`✗ ${label.padEnd(48)} failed: ${why}`)
     continue
   }
-  const [line, changes, kept] = summary
+  const [, changes, kept] = summary
   if (Number(changes)) failed++
   console.log(`${Number(changes) ? '✗' : '✓'} ${label.padEnd(48)} changes=${changes} kept=${kept}`)
 }

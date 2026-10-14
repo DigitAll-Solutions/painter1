@@ -97,11 +97,6 @@ export const warrantyTerms = defineType({
       description:
         'One line under the heading. {ownerTeam} becomes "Keith’s team" (the owner’s first name), or "our team" when the location has no owner name. Empty: "Reach out to {ownerTeam} by phone, text or email and we’ll help." The Call, Text and Email buttons come from the location’s phone and email.',
     }),
-    // Old request-form fields: no longer shown on the site; hidden (data kept)
-    defineField({name: 'requestEyebrow', type: 'string', group: 'request', hidden: true, description: 'Small heading above the form section.'}),
-    defineField({name: 'requestHeading', type: 'string', group: 'request', hidden: true, description: MARKUP}),
-    defineField({name: 'requestIntro', type: 'text', rows: 2, group: 'request', hidden: true, description: 'Text beside the form.'}),
-    defineField({name: 'steps', title: 'Steps', type: 'array', group: 'request', hidden: true, description: `Numbered steps beside the form. ${MARKUP} The location's response time (if set) follows the last step.`, of: [defineArrayMember({type: 'string'})]}),
     defineField({name: 'disclaimer', type: 'string', group: 'request', description: `Small print at the bottom of the page. ${TOKENS}`}),
     defineField({
       name: 'contractNote',
