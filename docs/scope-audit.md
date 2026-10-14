@@ -3,7 +3,7 @@
 Audited 2026-10-06 against `main` @ `8fc72a4` (PR #8 merged).
 Sources: `docs/contract/painter1-nextjs-project-brief.pdf` (client brief, 28 Aug 2026), `docs/contract/Painter1-Proposal-Sagar-Bharvadiya.docx` (signed proposal, 29 Aug 2026, $5,500 fixed, 3 phases), features agreed in chat, Knoxville data in Sanity, `docs/painter1-knoxville/` (live-site download).
 
-Legend: **✅ done** · **🟡 partial** · **❌ missing**
+Legend: **✅ done** · **🟡 partial** · **❌ missing** · **➖ dropped** (scope change agreed with the client)
 
 > The brief and proposal live in `docs/contract/`. That folder and the duplicate `painter1-nextjs-project-brief.pdf` in the repo root are **gitignored** (`.gitignore` lines 49–50); git history shows they were never committed.
 
@@ -13,10 +13,11 @@ Legend: **✅ done** · **🟡 partial** · **❌ missing**
 - **Agreed features:** structured data and alt text are solid. Scheduling, meta overrides and the hero video's mobile handling are partial.
 - **Performance:** Lighthouse mobile Performance 91–93, but **LCP 3.1–3.2s**, so the promised sub-2s is **not met**.
 - **Deliverables not started:** the 301 redirect map and the data schema / CMS setup document.
+- **Scope change (Oct 14):** the Reviews page template is dropped; reviews stay on the homepage (see §1, row 8).
 
 ## 1. Page templates (10 per location)
 
-Every location should get all 10 (brief §3; proposal "Page Templates (10)"). Nav and footer links to the missing pages currently 404.
+Every location should get all 10 (brief §3; proposal "Page Templates (10)"); 9 since the Reviews page was dropped on Oct 14 (row 8). Nav and footer links to the missing pages currently 404.
 
 | # | Template | Status | Route | What Knoxville gets today | Files / notes |
 |---|---|---|---|---|---|
@@ -27,7 +28,7 @@ Every location should get all 10 (brief §3; proposal "Page Templates (10)"). Na
 | 5 | Our Work (map-ready) | ❌ missing | `/[location]/our-work` | 404. Homepage "See All Our Work" links here. Data exists: 18 gallery images with service tags and captions | Build with the gallery and map as separate regions (e.g. a `<WorkMap>` slot fed by optional per-image coordinates) so a map can be added later without a template rebuild |
 | 6 | About Us / Owner | ❌ missing | `/[location]/about-us` | 404. Nav links here (also the only page besides home for maintenance locations). Data exists: `ownerBio`, 6 `aboutSections`, team members, owner photos | — |
 | 7 | Warranty | ❌ missing | `/[location]/warranty` | No page; warranty links fall back to `/knoxville#estimate`. Data exists: `warranty` rich text (22 blocks) | `getWarrantyHref` in `lib/location.ts` |
-| 8 | Reviews | ❌ missing | `/[location]/reviews` | No page. Data: 10 HTML reviews, Trustindex ID, rating/count | Review schema helpers exist (`lib/reviews.ts`) |
+| 8 | Reviews | ➖ dropped (Oct 14) | `/[location]/reviews` → `/[location]#reviews` | **Scope change: Rick confirmed there's no separate reviews page; reviews stay on the homepage** (Trustindex + HTML reviews, `#reviews`). No nav, footer or other link points to a reviews page | Old `/:location/reviews` and anything under it 308 to `/:location#reviews` (`next.config.ts`; go-live table in `docs/studio-plan.md` §7) |
 | 9 | Free Estimate / Survey | ❌ missing (planned) | `/[location]/free-estimate` | **404, and every CTA on the site points here** (`getCta`, `lib/location.ts`) | Plan: `docs/estimate-page-plan.md` (version B decided) |
 | 10 | Privacy Policy | ❌ missing | `/[location]/privacy-policy` | 404; footer links here (plus `#do-not-sell`). Data exists: `privacyPolicy` rich text (180 blocks) | — |
 
@@ -104,7 +105,7 @@ No `redirects()` in `next.config.ts` and no middleware/proxy. **Recommended mech
 
 **Older URLs seen in the Internet Archive** (may still have backlinks; confirm against Search Console/GA landing-page reports in Phase 2):
 - **2024 city pages** `/knoxville/{alcoa,clinton,farragut,gatlinburg,lenoir-city,maryville,oak-ridge,pigeon-forge}/` → `/knoxville`.
-- **2021 site** `/knoxville/contact`, `/knoxville/estimate` → `/knoxville/free-estimate`; `/knoxville/reviews` → `/knoxville/reviews`; `/knoxville/services`, `/knoxville/services/business` → `/knoxville`; `/knoxville/cities-we-serve/…` (15 pages) → `/knoxville`; `/knoxville/blog` → `/knoxville` (no blog in scope); `/knoxville/locations` → the corporate locations directory (no route yet).
+- **2021 site** `/knoxville/contact`, `/knoxville/estimate` → `/knoxville/free-estimate`; `/knoxville/reviews` → `/knoxville#reviews` (in code, 308; no reviews page, Oct 14); `/knoxville/services`, `/knoxville/services/business` → `/knoxville`; `/knoxville/cities-we-serve/…` (15 pages) → `/knoxville`; `/knoxville/blog` → `/knoxville` (no blog in scope); `/knoxville/locations` → the corporate locations directory (no route yet).
 - **Google Ads landing page** `/knoxville/professional-painting-services-gaw-1/` and `/…/thank-you/` → `/knoxville/free-estimate`. Ads final URLs should be updated before switch-over (estimate plan L10).
 
 ### 4b. Documented data schema / CMS setup (brief §5 deliverable) — ❌ missing

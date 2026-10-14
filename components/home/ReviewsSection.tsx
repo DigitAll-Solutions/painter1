@@ -12,7 +12,8 @@ export default function ReviewsSection({ location }: { location: Location }) {
   if (!widgetId && !reviews.length) return null
 
   return (
-    <Section id="reviews" eyebrow="Real Google Reviews" title="What Your Neighbors Are Saying">
+    // #reviews: the anchor old /:location/reviews URLs redirect to (next.config.ts); clear of the sticky header
+    <Section id="reviews" className="scroll-mt-20 md:scroll-mt-24" eyebrow="Real Google Reviews" title="What Your Neighbors Are Saying">
       {widgetId && <TrustindexWidget widgetId={widgetId} />}
       {reviews.length > 0 && (
         <div className={widgetId ? 'mt-10' : ''}>
