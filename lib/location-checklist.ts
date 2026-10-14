@@ -19,7 +19,7 @@ export type CheckItem = {
 type Img = { asset?: { _ref?: string } } | undefined
 type Gallery = { asset?: { _ref?: string }; services?: { _ref?: string }[]; notLocalProject?: boolean }
 type Pair = { before?: Img; after?: Img }
-type Detail = { title?: string; beforeImage?: Img; afterImage?: Img; transformations?: Pair[]; surfacePhotos?: { image?: Img }[] } | undefined
+type Detail = { title?: string; transformations?: Pair[]; surfacePhotos?: { image?: Img }[] } | undefined
 type Block = { children?: { text?: string }[] }
 export type LocationDoc = {
   name?: string
@@ -112,9 +112,8 @@ export function locationChecklist(doc: LocationDoc, recipients: number | null, s
     for (const key of SERVICE_KEYS) {
       const detail = doc.services?.[key]
       add({ id: `title-${key}`, area: 'Services', label: `${SERVICE_LABEL[key]}: menu title`, level: 'required', ok: has(detail?.title), path: `services.${key}.title` })
-      // Before/after pairs (the legacy single pair counts until it's migrated)
-      const pairs = (detail?.transformations ?? []).filter((p) => hasImage(p.before) && hasImage(p.after))
-      const allPairs = pairs.length ? pairs : hasImage(detail?.beforeImage) && hasImage(detail?.afterImage) ? [{ before: detail?.beforeImage, after: detail?.afterImage }] : []
+      // Before/after pairs
+      const allPairs = (detail?.transformations ?? []).filter((p) => hasImage(p.before) && hasImage(p.after))
       add({
         id: `pair-${key}`,
         area: 'Services',

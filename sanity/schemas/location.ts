@@ -752,15 +752,6 @@ export const location = defineType({
       options: {accept: 'application/pdf'},
       description: 'Optional. Shows a "Download Warranty Sheet (PDF)" button on the warranty page.',
     }),
-    defineField({
-      name: 'warrantyResponseTime',
-      title: 'Warranty response time',
-      type: 'string',
-      group: 'legal',
-      description: 'No longer shown: the warranty page has no request steps now. Kept only for older data.',
-      readOnly: true,
-      hidden: ({value}) => !value,
-    }),
     {
       ...imageWithAlt('warrantyGraphic', 'Homepage warranty: graphic'),
       group: 'legal',

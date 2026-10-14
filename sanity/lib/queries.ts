@@ -3,12 +3,9 @@ import { defineQuery } from 'next-sanity'
 const image = `alt, hotspot, crop, asset->{_id, metadata{lqip, dimensions{width, height, aspectRatio}}}`
 
 const service = `{
-  title, summary, description, cardBullets, highlights, process, transformationBody, metaTitle, metaDescription,
+  title, summary, cardBullets, transformationBody, metaTitle, metaDescription,
   heroImage{${image}},
-  beforeImage{${image}},
-  afterImage{${image}},
   transformations[]{_key, title, projectType, area, before{${image}}, after{${image}}},
-  subServices[]{_key, title, anchor, description, image{${image}}},
   surfacePhotos[defined(surface) && defined(image.asset)]{_key, surface, image{${image}}},
   images[]{_key, ${image}}
 }`

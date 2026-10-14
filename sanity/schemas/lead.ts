@@ -95,8 +95,6 @@ export const lead = defineType({
         defineField({name: 'subject', type: 'string'}),
         defineField({name: 'body', type: 'text', rows: 20}),
         defineField({name: 'messageId', title: 'Brevo message ID', type: 'string'}),
-        // Planned Resend integration, never used for sending; hidden unless an old document has it
-        defineField({name: 'resendId', type: 'string', hidden: ({value}) => !value}),
         defineField({name: 'error', type: 'string'}),
         defineField({name: 'sentAt', type: 'datetime'}),
       ],

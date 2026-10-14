@@ -7,7 +7,7 @@ type Props = { location: Location }
 // Owner card on service pages, the same on every service (Rick, Oct 14): H2 "Why {city} Homeowners Call
 // {owner} First", the owner photo, then the owner's name line (H3). The quote is only ever the owner's own
 // recorded words (location.ownerQuote); without one the card shows just the name line. No owner photo →
-// the same card, text only. The service's old ownerCardVariant field is ignored.
+// the same card, text only.
 export default function OwnerCard({ location }: Props) {
   const heading = ownerHeading(location)
   if (!heading) return null

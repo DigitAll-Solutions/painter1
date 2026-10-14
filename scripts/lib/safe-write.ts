@@ -128,9 +128,3 @@ export class SafeWrite {
     return true
   }
 }
-
-/** A retired step: says why and writes nothing (the summary line still reports 0 changes) */
-export function retired(name: string, why: string) {
-  console.log(`RETIRED: ${why}\nNothing written.`)
-  console.log(`\nSAFE-WRITE ${name}: changes=0 kept=0 (retired)`)
-}

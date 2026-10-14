@@ -8,8 +8,7 @@
  * Safe to re-run (scripts/lib/safe-write.ts): a service document is created when missing; after that only
  * EMPTY fields are filled. Anything with content (Rick's surface copy, default photos, card text, FAQs,
  * anything edited in Studio) is kept and listed; --force overwrites it after confirmation. Knoxville:
- * only empty fields are filled, the alt-text mojibake fix replaces only the broken text, and the old
- * interior before/after fields stay empty once a before/after pair holds those photos.
+ * only empty fields are filled, and the alt-text mojibake fix replaces only the broken text.
  *   … --force   overwrite what's listed as KEPT (asks first)
  */
 import { createHash } from 'node:crypto'
@@ -251,20 +250,6 @@ const PHOTO_DIR = 'docs/painter1-knoxville/images'
 const NEVER_UPLOAD = /Inland-Northwest|b-city-g\d+|_print_no_phone|Painter1-Our-Painting-Services-|Painter1-Who-We-Are-Imagery-/i
 type Photo = { file: string; filename: string; alt: string }
 
-/** Interior before/after slider (services.interior), not added to the gallery */
-const INTERIOR_PAIR: { before: Photo; after: Photo } = {
-  before: {
-    file: '2025_09_Interior-Painting-Before-2.jpg',
-    filename: 'Interior-Painting-Before-2.jpg',
-    alt: 'Living room before painting: white board-and-batten accent wall behind a grey sectional sofa, with spots marked for patching.',
-  },
-  after: {
-    file: '2025_09_Interior-Painting-After-2.jpg',
-    filename: 'Interior-Painting-After-2.jpg',
-    alt: 'The same living room after painting: board-and-batten accent wall in dark charcoal, with blue-grey walls around it.',
-  },
-}
-
 /** New gallery photos. The fence page's Before-1/After-1 are pixel-identical copies of this deck pair, so it is added once. */
 const GALLERY_PHOTOS: (Photo & { _key: string; service: string; projectType: string })[] = [
   {
@@ -288,31 +273,10 @@ const GALLERY_PHOTOS: (Photo & { _key: string; service: string; projectType: str
 // ---------- run ----------
 
 type Ref = { _type: 'reference'; _ref: string; _key: string }
-// Knoxville's Exterior sub-sections (rendered with anchors so old URLs can redirect to them)
-const SUB_SERVICES: Record<string, { anchor: string; description?: string; imageFile?: string; imageAlt?: string; note: string }> = {
-  'Home Siding Painting': {
-    anchor: 'siding',
-    imageFile: 'Siding-Painting-After-1.jpg',
-    imageAlt: 'Side of a house with freshly painted white horizontal siding and grey window trim, next to a stained wood privacy screen.',
-    note: 'text already matches the live page; photo: franchise stock → real Knoxville siding photo already in Sanity',
-  },
-  'Stucco Painting': {
-    anchor: 'stucco',
-    description:
-      'At Painter1, we understand the unique challenges and requirements of painting stucco surfaces. Our team of experts uses high-quality paints and materials designed specifically for stucco, ensuring a durable, long-lasting finish that resists fading, cracking, and peeling.',
-    note: 'text from the live stucco-painting page (its "Call Painter1 of Knoxville today…" line left out, as for Siding); no real stucco photo exists',
-  },
-}
-
 type LocationDoc = {
   _id: string
   _rev: string
   galleryImages?: { _key: string; alt?: string; serviceType?: string; services?: Ref[]; assetRef?: string }[]
-  interiorBefore?: string
-  interiorAfter?: string
-  /** Asset refs already in services.interior.transformations (the before/after pairs) */
-  interiorPairRefs?: string[]
-  exteriorSub?: { _key: string; title: string; anchor?: string; description?: string; imageRef?: string; imageAlt?: string }[]
   reviews?: { _key: string; reviewerName?: string; serviceTag?: string; services?: Ref[] }[]
 }
 
@@ -368,56 +332,11 @@ function planAsset(photo: Photo, existing: SanityAsset[]): AssetPlan {
 
 const imageField = (asset: AssetPlan) => ({ _type: 'image', alt: asset.alt, asset: { _type: 'reference', _ref: asset.assetId } })
 
-/** Anchors, live stucco wording and the real siding photo for Knoxville's Exterior sub-sections */
-function planSubServices(doc: LocationDoc, assetIds: Record<string, string | undefined>) {
-  const set: Record<string, unknown> = {}
-  const lines: string[] = ['  Exterior sub-sections (services.exterior.subServices):']
-  for (const sub of doc.exteriorSub ?? []) {
-    const plan = SUB_SERVICES[sub.title]
-    if (!plan) {
-      lines.push(`    [${sub._key}] ${sub.title}: not in the plan, no change`)
-      continue
-    }
-    const path = `services.exterior.subServices[_key=="${sub._key}"]`
-    lines.push(`    [${sub._key}] ${sub.title}  (${plan.note})`)
-    if (sub.anchor !== plan.anchor) {
-      set[`${path}.anchor`] = plan.anchor
-      lines.push(`        anchor: ${sub.anchor ?? '(none)'} → "${plan.anchor}"  (#${plan.anchor})`)
-    }
-    if (plan.description && sub.description !== plan.description) {
-      set[`${path}.description`] = plan.description
-      lines.push(`        description:\n          before: ${sub.description ?? '(none)'}\n          after:  ${plan.description}`)
-    }
-    if (plan.imageFile) {
-      const assetId = assetIds[plan.imageFile]
-      if (!assetId) throw new Error(`${plan.imageFile} is not in Sanity`)
-      if (sub.imageRef !== assetId || sub.imageAlt !== plan.imageAlt) {
-        set[`${path}.image`] = { _type: 'image', alt: plan.imageAlt, asset: { _type: 'reference', _ref: assetId } }
-        lines.push(`        image: ${sub.imageRef ?? '(none)'} → ${plan.imageFile} (${assetId})\n        alt: ${plan.imageAlt}`)
-      }
-    }
-  }
-  return { set, lines }
-}
-
-/** Interior slider + new gallery photos for one location document */
+/** New gallery photos for one location document */
 function planPhotos(doc: LocationDoc, assets: Map<string, AssetPlan>) {
   const set: Record<string, unknown> = {}
   const insert: Record<string, unknown>[] = []
-  const lines: string[] = ['  Interior before/after slider (services.interior):']
-  for (const side of ['before', 'after'] as const) {
-    const asset = assets.get(INTERIOR_PAIR[side].file)!
-    const current = side === 'before' ? doc.interiorBefore : doc.interiorAfter
-    // Oct 8: the slider reads before/after pairs; the old fields were cleared once a pair held the photos
-    if (doc.interiorPairRefs?.includes(asset.assetId)) {
-      lines.push(`    ${side}Image: ${asset.filename} is in a before/after pair, no change (old field stays empty)`)
-    } else if (current === asset.assetId) {
-      lines.push(`    ${side}Image: already ${asset.filename}, no change`)
-    } else {
-      set[`services.interior.${side}Image`] = imageField(asset)
-      lines.push(`    ${side}Image: ${current ?? '(empty)'} → ${asset.filename}\n        alt: ${asset.alt}`)
-    }
-  }
+  const lines: string[] = []
   lines.push('  New gallery photos (inserted at the START of galleryImages, in this order):')
   const inGallery = new Set((doc.galleryImages ?? []).map((image) => image.assetRef))
   for (const photo of GALLERY_PHOTOS) {
@@ -557,7 +476,7 @@ async function main() {
   }
 
   // Photos: everything listed above, uploaded only if Sanity doesn't already have the same filename + size
-  const photos = [INTERIOR_PAIR.before, INTERIOR_PAIR.after, ...GALLERY_PHOTOS]
+  const photos = [...GALLERY_PHOTOS]
   const existingAssets = await client.fetch<SanityAsset[]>(
     `*[_type == "sanity.imageAsset" && originalFilename in $names]{_id, originalFilename, size}`,
     { names: photos.map((photo) => photo.filename) },
@@ -570,15 +489,9 @@ async function main() {
   console.log('')
 
   const docs = await client.fetch<LocationDoc[]>(
-    `*[_type == "location" && slug.current == $slug]{_id, _rev, "interiorBefore": services.interior.beforeImage.asset._ref, "interiorAfter": services.interior.afterImage.asset._ref, "interiorPairRefs": services.interior.transformations[].before.asset._ref + services.interior.transformations[].after.asset._ref, "exteriorSub": services.exterior.subServices[]{_key, title, anchor, description, "imageRef": image.asset._ref, "imageAlt": image.alt}, galleryImages[]{_key, alt, serviceType, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, serviceTag, services}}`,
+    `*[_type == "location" && slug.current == $slug]{_id, _rev, galleryImages[]{_key, alt, serviceType, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, serviceTag, services}}`,
     { slug: LOCATION_SLUG },
   )
-  const subFiles = Object.values(SUB_SERVICES).flatMap((plan) => (plan.imageFile ? [plan.imageFile] : []))
-  const subServiceAssets = Object.fromEntries(
-    await Promise.all(
-      subFiles.map(async (file) => [file, await client.fetch<string | null>(`*[_type == "sanity.imageAsset" && originalFilename == $file][0]._id`, { file })] as const),
-    ),
-  ) as Record<string, string | undefined>
   const published = docs.find((d) => !d._id.startsWith('drafts.'))
   if (!published) throw new Error(`Location "${LOCATION_SLUG}" not found`)
   const targets = [published, ...docs.filter((d) => d._id.startsWith('drafts.'))]
@@ -590,11 +503,8 @@ async function main() {
     const { set, lines, skipped } = planLocation(doc)
     const photoPlan = planPhotos(doc, assets)
     Object.assign(set, photoPlan.set)
-    const subPlan = planSubServices(doc, subServiceAssets)
-    Object.assign(set, subPlan.set)
     console.log(`  ${doc._id}  (rev ${doc._rev})`)
     console.log(photoPlan.lines.join('\n'))
-    console.log(subPlan.lines.join('\n'))
     console.log(lines.join('\n'))
     console.log('  Not changed:')
     console.log(skipped.join('\n') || '    —')

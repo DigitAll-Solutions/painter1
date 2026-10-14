@@ -11,31 +11,13 @@
  */
 import { spawnSync } from 'node:child_process'
 
-/** Every script that writes to Sanity, with each of its modes */
+/** Every script that writes to Sanity (onboarding and recovery), with each of its modes */
 export const RUNS: string[][] = [
   ['seed-services.ts'],
-  ['seed-about.ts'],
   ['seed-leads.ts'],
-  ['seed-our-work.ts'],
   ['seed-privacy.ts'],
-  ['seed-oct8.ts'],
-  ['seed-oct8.ts', '--remove-legacy'],
-  ['seed-oct9.ts'],
-  ['seed-oct9.ts', '--cabinet-slug'],
-  ['seed-oct9.ts', '--remove-shared-photos'],
-  ['seed-oct9.ts', '--remove-subservices'],
-  ['seed-oct14.ts'],
-  ['seed-oct14.ts', '--labor-only'],
-  ['seed-oct14.ts', '--cabinet-wording'],
-  ['seed-oct14.ts', '--surface-copy'],
-  ['seed-oct14.ts', '--surface-photos'],
-  ['seed-surface-defaults.ts'],
-  ['seed-surface-defaults.ts', '--remove-duplicates'],
-  ['seed-surface-defaults.ts', '--cabinet-copy'],
-  ['neutral-service-text.ts'],
-  ['fix-network-claims.ts'],
-  ['clear-owner-card-variant.ts'],
-  ['migrate-studio.ts'],
+  // One-off (post-merge, Oct 14 cleanup): reports its pending removals until it has run
+  ['unset-legacy-fields.ts'],
 ]
 
 let failed = 0
@@ -51,7 +33,7 @@ for (const [script, ...mode] of RUNS) {
   }
   const [line, changes, kept] = summary
   if (Number(changes)) failed++
-  console.log(`${Number(changes) ? '✗' : '✓'} ${label.padEnd(48)} changes=${changes} kept=${kept}${line.includes('(retired)') ? ' (retired)' : ''}`)
+  console.log(`${Number(changes) ? '✗' : '✓'} ${label.padEnd(48)} changes=${changes} kept=${kept}`)
 }
 console.log(failed ? `\n${failed} run(s) would change data or failed.` : `\nAll ${RUNS.length} runs: 0 changes on the current dataset.`)
 process.exit(failed ? 1 : 0)

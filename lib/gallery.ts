@@ -15,18 +15,13 @@ export const TITLE_BAND = 'bg-[linear-gradient(to_top,rgb(11_27_51/0.9)_0%,rgb(1
 
 export type TransformationPair = { key: string; before: SanityImage; after: SanityImage; title: string }
 
-/**
- * A service's before/after pairs in order: the transformations list, or (until the migration has run)
- * the legacy single beforeImage/afterImage. Pairs missing either photo are skipped.
- */
-export function transformationPairs(detail: Pick<ServiceDetail, 'transformations' | 'beforeImage' | 'afterImage'> | undefined): TransformationPair[] {
-  const pairs = (detail?.transformations ?? []).flatMap((item) =>
+/** A service's before/after pairs in order. Pairs missing either photo are skipped. */
+export function transformationPairs(detail: Pick<ServiceDetail, 'transformations'> | undefined): TransformationPair[] {
+  return (detail?.transformations ?? []).flatMap((item) =>
     item.before?.asset && item.after?.asset
       ? [{ key: item._key, before: item.before, after: item.after, title: item.title?.trim() || [item.projectType, item.area].filter(Boolean).join(', ') }]
       : [],
   )
-  if (pairs.length) return pairs
-  return detail?.beforeImage?.asset && detail.afterImage?.asset ? [{ key: 'legacy', before: detail.beforeImage, after: detail.afterImage, title: '' }] : []
 }
 
 /** Every photo in a service's pairs (so the same page's gallery can skip them) */
