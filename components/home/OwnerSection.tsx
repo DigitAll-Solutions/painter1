@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/IntentLink'
 import { ArrowRight, BadgeCheck, ClipboardList, HardHat, House, PaintRoller, Ruler, ShieldCheck, Star, type LucideIcon } from 'lucide-react'
 
 import CtaButton from '../CtaButton'

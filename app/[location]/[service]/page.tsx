@@ -130,7 +130,6 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
 
       <TransformationBlock
         pairs={pairs}
-        eagerFirst
         rowLabel={`${service.shortName} before and after projects in ${city}`}
         heading={fill(service.transformationHeading || service.title)}
         body={transformationBody}

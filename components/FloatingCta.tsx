@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/IntentLink'
 
 import { getCta } from '@/lib/location'
 import type { Location } from '@/sanity/lib/types'

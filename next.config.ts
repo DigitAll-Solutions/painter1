@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      // The LCP image of each page (SanityImage with preload) loads through this site's own origin, so a
+      // phone doesn't have to open a second connection (DNS + TCP + TLS) to cdn.sanity.io before it can
+      // start. Sanity's cache headers pass through (public, s-maxage 30 days), so Vercel's CDN caches it.
+      // Array rewrites run before the dynamic [location] routes.
+      { source: "/sanity-img/:path*", destination: "https://cdn.sanity.io/images/:path*" },
       // Our Work filter links (?service=interior …) are served by prebuilt pages, so the gallery
       // filters work without JavaScript and every view stays static. Unknown values show "All".
       {

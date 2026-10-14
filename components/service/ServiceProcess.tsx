@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/IntentLink'
 import { PortableText, type PortableTextComponents } from 'next-sanity'
 import { Hammer, Palette, ShieldCheck } from 'lucide-react'
 

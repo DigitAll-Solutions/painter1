@@ -227,7 +227,8 @@ function TeamOwnerStory({ location, owner, teamStory, story, quote }: { location
         {location.ownerPhoto && (
           <div className="relative mx-auto w-full max-w-md">
             <div className="relative aspect-4/5 overflow-hidden rounded-3xl bg-mist">
-              <SanityImage image={location.ownerPhoto} fill sizes="(min-width: 1024px) 448px, 100vw" className="object-cover" />
+              {/* Without a team photo the hero is text only, so this is the page's LCP image on a phone */}
+              <SanityImage image={location.ownerPhoto} fill preload={!location.teamPhoto} sizes="(min-width: 1024px) 448px, 100vw" className="object-cover" />
             </div>
             {(since || owner) && (
               <div className="absolute -bottom-5 left-4 rounded-2xl bg-navy px-5 py-3 text-white shadow-xl">
