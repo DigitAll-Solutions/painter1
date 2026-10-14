@@ -127,7 +127,7 @@ export const serviceDetail = defineType({
       name: 'surfacePhotos',
       title: 'What We Paint photos',
       description:
-        'This location’s own job photo for a surface section on this service page (e.g. a Siding job you did). Only shown on this location’s page. Surfaces without a photo show text only. The surfaces and their text are in Shared → Services.',
+        'This location’s own job photo for a surface section on this service page (e.g. a Siding job you did). Only shown on this location’s page, where it replaces the surface’s default photo. Surfaces without one show the default photo (Shared → Services → What we paint), or text only when there’s no default either. The surfaces and their text are in Shared → Services.',
       type: 'array',
       validation: (rule) =>
         rule.custom((items: {surface?: string}[] | undefined) => {

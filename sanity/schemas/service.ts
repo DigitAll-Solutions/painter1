@@ -137,7 +137,7 @@ export const service = defineType({
       type: 'array',
       group: 'paint',
       description:
-        'One item per surface. Each shows as a card at the top of "What We Paint" (4 items: one row of 4; 6 items: two rows of 3) and as its own section below the cards, where the card’s "See details" link jumps to. Every location’s page shows the same surfaces and text; photos are per location (Location → Services → What We Paint photos).',
+        'One item per surface. Each shows as a card at the top of "What We Paint" (4 items: one row of 4; 6 items: two rows of 3) and as its own section below the cards, where the card’s "See details" link jumps to. Every location’s page shows the same surfaces and text. Photo: the location’s own (Location → Services → What We Paint photos) when it has one, otherwise the surface’s default photo.',
       validation: (rule) =>
         rule.custom((items: {slug?: {current?: string}}[] | undefined) => {
           const slugs = (items ?? []).map((item) => item.slug?.current).filter(Boolean)
@@ -182,6 +182,16 @@ export const service = defineType({
                   marks: {decorators: [{title: 'Bold', value: 'strong'}, {title: 'Italic', value: 'em'}], annotations: []},
                 }),
               ],
+            }),
+            // Fallback for every location; a location's own photo (location → Services → What We Paint photos) always wins
+            defineField({
+              name: 'defaultImage',
+              title: 'Default photo (shown when the location has none)',
+              type: 'image',
+              options: {hotspot: true},
+              fields: [altField],
+              description:
+                'Shown in this surface’s section on every location’s page until that location adds its own photo (Location → Services → What We Paint photos), which then replaces it on that location only. Alt text: describe the scene; don’t say it’s a particular location’s crew.',
             }),
             // Old shared photo: photos are per location now (location → Services → What We Paint photos).
             // Never shown on the site; hidden once empty, removed post-merge (seed-oct9 --remove-shared-photos).

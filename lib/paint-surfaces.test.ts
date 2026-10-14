@@ -72,3 +72,20 @@ test('photos are per location, matched by the surface key (not the title); a sha
   const renamed = paintSurfaces([{ ...cards[0], title: 'House Siding' }], undefined, [{ _key: 'k1', surface: 'a', image: img('knox-siding') }])
   assert.equal(renamed[0].image?.asset._id, 'image-knox-siding')
 })
+
+test('default photo: shown when the location has none of its own; the location’s own photo always wins', () => {
+  const items: PaintSurface[] = [
+    { ...cards[0], defaultImage: img('default-siding') },
+    { ...cards[1], defaultImage: img('default-trim') },
+    cards[2],
+  ]
+  // Knoxville has its own Siding photo; Maryville has none
+  const knox = paintSurfaces(items, undefined, [{ _key: 'k1', surface: 'a', image: img('knox-siding') }])
+  const maryville = paintSurfaces(items)
+  assert.deepEqual(knox.map((s) => s.image?.asset._id), ['image-knox-siding', 'image-default-trim', undefined])
+  assert.deepEqual(maryville.map((s) => s.image?.asset._id), ['image-default-siding', 'image-default-trim', undefined])
+  // Older location data (subServices) is the location's own too, so it wins over the default
+  assert.equal(paintSurfaces(items, knoxville)[0].image?.asset._id, 'image-siding')
+  // A default without an uploaded file is ignored
+  assert.equal(paintSurfaces([{ ...cards[2], defaultImage: { asset: undefined } as never }])[0].image, undefined)
+})

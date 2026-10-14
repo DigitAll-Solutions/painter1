@@ -182,8 +182,10 @@ export type PaintSurface = {
   description?: string
   /** Anchor id; derived from the title when missing (older data) */
   slug?: string
-  /** Section text (Portable Text). Photos are per location: ServiceDetail.surfacePhotos */
+  /** Section text (Portable Text) */
   body?: PortableTextBlock[]
+  /** Shown when the location has no photo of its own for this surface (ServiceDetail.surfacePhotos) */
+  defaultImage?: SanityImage
 }
 
 export type ServiceLocationKey = 'interior' | 'exterior' | 'cabinet'
