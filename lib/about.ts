@@ -3,6 +3,8 @@
 // and anything missing is left out (never a placeholder).
 import type { Location, Review, TeamMember } from '@/sanity/lib/types'
 
+import { hasAboutPage } from './location.ts'
+
 export const ABOUT_PATH = 'about-us' // the live site's URL (/knoxville/about-us/)
 
 /** The corporate "About the Painter1 network" page doesn't exist yet: the link stays hidden until it does */
@@ -11,6 +13,15 @@ export const NETWORK_PAGE_URL: string | null = null
 export const MIN_NETWORK_COUNT = 10
 
 export type AboutVariant = 'owner' | 'team'
+
+/** The location the About page renders, or null (404): unknown locations and basic tier have no About page */
+export const aboutPageLocation = <T extends Pick<Location, 'locationType'>>(location: T | null | undefined): T | null => (location && hasAboutPage(location) ? location : null)
+
+/**
+ * Team variant's owner section: the "why I built a team" heading only over the owner's own words on
+ * that; otherwise a neutral heading over the general story (headings never promise missing content).
+ */
+export const teamStoryHeading = (teamStory: string[]) => (teamStory.length ? 'Why I built a team instead of doing it all myself' : 'From the owner')
 
 /** "Owner with team" / "Owner-led" from the location; unset falls back to whether it lists team members */
 export function aboutVariant(location: Pick<Location, 'franchiseStructure' | 'teamMembers'>): AboutVariant {

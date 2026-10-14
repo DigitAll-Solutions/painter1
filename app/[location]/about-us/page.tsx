@@ -3,17 +3,16 @@ import { notFound } from 'next/navigation'
 
 import AboutPage from '@/components/about/AboutPage'
 import JsonLd from '@/components/JsonLd'
-import { aboutMeta, aboutPeople, aboutVariant, ABOUT_PATH } from '@/lib/about'
-import { hasAboutPage } from '@/lib/location'
+import { aboutMeta, aboutPageLocation, aboutPeople, aboutVariant, ABOUT_PATH } from '@/lib/about'
 import { breadcrumbSchema, businessNode } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
 import { urlFor } from '@/sanity/lib/image'
 import { getLocation, getLocationCount } from '@/sanity/lib/fetch'
 
 async function load(slug: string) {
-  const location = await getLocation(slug)
-  // Full-tier locations only (client's list): basic-tier locations have no About page
-  if (!location || !hasAboutPage(location)) notFound()
+  // Full-tier locations only (client's list): unknown and basic-tier locations 404 (tested in about.test.ts)
+  const location = aboutPageLocation(await getLocation(slug))
+  if (!location) notFound()
   return location
 }
 

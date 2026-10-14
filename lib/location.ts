@@ -62,6 +62,29 @@ export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | '
   ]
 }
 
+/** Footer "Our Services" column: service pages, Our Work, Warranty and About for full tier; Free Estimate for all */
+export function footerLinks(location: Pick<Location, 'slug' | 'locationType' | 'services' | 'hasScheduling' | 'schedulingUrl' | 'bookingTarget'>): NavLink[] {
+  const base = `/${location.slug}`
+  const full = location.locationType !== 'maintenance'
+  const services = full
+    ? servicePages.flatMap(({ key, path }) => {
+        const title = location.services?.[key]?.title
+        return title ? [{ label: title, href: `${base}/${path}` }] : []
+      })
+    : []
+  return [
+    ...services,
+    ...(full
+      ? [
+          { label: 'Our Work', href: `${base}/our-work` },
+          ...(hasWarrantyPage(location) ? [{ label: 'Warranty', href: `${base}/warranty` }] : []),
+          ...(hasAboutPage(location) ? [{ label: 'About Us', href: `${base}/about-us` }] : []),
+        ]
+      : []),
+    { label: 'Free Estimate', href: getCta(location).href },
+  ]
+}
+
 export const formatAddress = (address: Location['address']) =>
   address
     ? [address.street, [[address.city, address.state].filter(Boolean).join(', '), address.zip].filter(Boolean).join(' ')].filter(

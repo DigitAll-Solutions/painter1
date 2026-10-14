@@ -5,7 +5,7 @@ import CTASection from '@/components/CTASection'
 import CtaButton from '@/components/CtaButton'
 import SanityImage from '@/components/SanityImage'
 import { Accent } from '@/components/Section'
-import { aboutPeople, aboutReviews, aboutVariant, networkLine, NETWORK_PAGE_URL, ownerSteps, ROLE_LABEL, storyParagraphs, teamSteps, tenure, type Person, type Step } from '@/lib/about'
+import { aboutPeople, aboutReviews, aboutVariant, networkLine, NETWORK_PAGE_URL, ownerSteps, ROLE_LABEL, storyParagraphs, teamSteps, teamStoryHeading, tenure, type Person, type Step } from '@/lib/about'
 import { getCta, getWarrantyHref, telHref } from '@/lib/location'
 import type { Location, Review } from '@/sanity/lib/types'
 
@@ -39,7 +39,7 @@ export default function AboutPage({ location, networkCount }: { location: Locati
       )}
 
       {variant === 'team' ? (
-        <TeamOwnerStory location={location} owner={owner} story={story} quote={quote} />
+        <TeamOwnerStory location={location} owner={owner} teamStory={storyParagraphs(location.ownerTeamStory)} story={story} quote={quote} />
       ) : (
         <OwnerWords owner={owner} first={first} attribution={location.ownerQuoteAttribution} story={story} quote={quote} />
       )}
@@ -186,9 +186,12 @@ function TeamHero({ location, city, owner, people, cta, crumbs }: { location: Lo
           <CtaButton href={cta.href} size="md" className="focus-visible:outline-white">
             {cta.label}
           </CtaButton>
-          <CtaButton href={`#${TEAM_ANCHOR}`} variant="outline" size="md" className="focus-visible:outline-white">
-            Meet the Team <ArrowDown className="size-5" aria-hidden />
-          </CtaButton>
+          {/* Only when there are team cards to jump to */}
+          {people.length > 0 && (
+            <CtaButton href={`#${TEAM_ANCHOR}`} variant="outline" size="md" className="focus-visible:outline-white">
+              Meet the Team <ArrowDown className="size-5" aria-hidden />
+            </CtaButton>
+          )}
         </HeroText>
         {location.teamPhoto && (
           <div className="relative mt-12 aspect-video overflow-hidden rounded-3xl bg-ink/40">
@@ -228,8 +231,9 @@ function OwnerWords({ owner, first, attribution, story, quote }: { owner?: strin
   )
 }
 
-function TeamOwnerStory({ location, owner, story, quote }: { location: Location; owner?: string; story: string[]; quote?: string }) {
-  if (!story.length && !quote) return null
+function TeamOwnerStory({ location, owner, teamStory, story, quote }: { location: Location; owner?: string; teamStory: string[]; story: string[]; quote?: string }) {
+  if (!teamStory.length && !story.length && !quote) return null
+  const heading = teamStoryHeading(teamStory)
   const since = tenure({ since: location.ownerSinceYear, isOwner: true })
   return (
     <section className="bg-white py-16 md:py-24">
@@ -248,9 +252,10 @@ function TeamOwnerStory({ location, owner, story, quote }: { location: Location;
           </div>
         )}
         <div>
-          <p className={eyebrow}>From the owner</p>
-          <h2 className={`${h2} md:text-4xl`}>Why I built a team instead of doing it all myself</h2>
-          {story.map((paragraph, i) => (
+          {/* "Why I built a team" only over the owner's words on that; otherwise "From the owner" */}
+          {teamStory.length > 0 && <p className={eyebrow}>From the owner</p>}
+          <h2 className={`${h2} md:text-4xl`}>{heading}</h2>
+          {[...teamStory, ...story].map((paragraph, i) => (
             <p key={i} className="mt-4 text-lg leading-relaxed text-slate-700">
               {paragraph}
             </p>

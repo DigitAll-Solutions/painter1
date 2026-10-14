@@ -293,6 +293,16 @@ export const location = defineType({
         'The owner’s story in their own words, first person ("I…"), shown as "My story" on the About page. A blank line starts a new paragraph. Usually: background (years in the trade, what they did before Painter1), why they opened this location, local roots, and what they personally check on every job. For a team, also why they built one. Only real facts from the owner: no template bios. Empty: the section is left out.',
     }),
     defineField({
+      name: 'ownerTeamStory',
+      title: 'Why I built a team (About page)',
+      type: 'text',
+      rows: 6,
+      group: 'owner',
+      description:
+        'For a team: the owner, first person, on why they added estimators or project managers and what they still check themselves. When filled, the About page shows it under "Why I built a team instead of doing it all myself"; when empty, that heading isn’t used and the owner story appears under "From the owner".',
+      hidden: ({document}) => document?.franchiseStructure !== 'owner-with-team',
+    }),
+    defineField({
       name: 'licenseNumber',
       title: 'Contractor license number',
       type: 'string',

@@ -4,7 +4,7 @@ import { ChevronUp } from 'lucide-react'
 
 import CtaButton from './CtaButton'
 import SocialIcons from './SocialIcons'
-import { formatAddress, getCta, servicePages, telHref } from '@/lib/location'
+import { footerLinks, formatAddress, getCta, telHref } from '@/lib/location'
 import type { Location } from '@/sanity/lib/types'
 
 const heading = 'text-sm font-extrabold uppercase tracking-[0.25em] text-ink'
@@ -14,25 +14,7 @@ export default function Footer({ location }: { location: Location }) {
   const cta = getCta(location)
   const tel = telHref(location.phone)
   const address = formatAddress(location.address)
-  const maintenance = location.locationType === 'maintenance'
-
-  const services = maintenance
-    ? []
-    : servicePages.flatMap(({ key, path }) => {
-        const title = location.services?.[key]?.title
-        return title ? [{ label: title, href: `${base}/${path}` }] : []
-      })
-  const serviceLinks = [
-    ...services,
-    ...(maintenance
-      ? []
-      : [
-          { label: 'Our Work', href: `${base}/our-work` },
-          { label: 'Warranty', href: `${base}/warranty` },
-          { label: 'About Us', href: `${base}/about-us` },
-        ]),
-    { label: 'Free Estimate', href: cta.href },
-  ]
+  const serviceLinks = footerLinks(location)
 
   const legalLinks = [
     { label: 'Privacy Policy', href: `${base}/privacy-policy` },

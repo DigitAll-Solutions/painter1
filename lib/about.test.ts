@@ -92,3 +92,29 @@ test('meta: within 60 / 160 characters, with or without an owner name', async ()
     }
   }
 })
+
+test('basic tier (fixture): the About URL 404s and neither nav nor footer links to it; full tier does', async () => {
+  const { aboutPageLocation } = await import('./about.ts')
+  const { footerLinks, getNavLinks } = await import('./location.ts')
+  const services = { interior: { title: 'Interior Painting' }, exterior: { title: 'Exterior Painting' }, cabinet: { title: 'Cabinet Painting' } }
+  const basic = { slug: 'fixture-basic', locationType: 'maintenance' as const, services }
+  const full = { slug: 'fixture-full', locationType: 'growth' as const, services }
+  // The About page renders aboutPageLocation(...) and calls notFound() on null
+  assert.equal(aboutPageLocation(basic), null)
+  assert.equal(aboutPageLocation(null), null)
+  assert.equal(aboutPageLocation(full), full)
+  const hrefs = (links: { href: string }[]) => links.map((l) => l.href)
+  assert.ok(!hrefs(getNavLinks(basic)).some((h) => h.endsWith('/about-us')))
+  assert.ok(!hrefs(footerLinks(basic)).some((h) => h.endsWith('/about-us')))
+  assert.deepEqual(hrefs(getNavLinks(basic)), ['/fixture-basic', '/fixture-basic/free-estimate'])
+  assert.deepEqual(hrefs(footerLinks(basic)), ['/fixture-basic/free-estimate'])
+  assert.ok(hrefs(getNavLinks(full)).includes('/fixture-full/about-us'))
+  assert.ok(hrefs(footerLinks(full)).includes('/fixture-full/about-us'))
+})
+
+test('team owner section: "Why I built a team" only when the owner wrote about it', async () => {
+  const { teamStoryHeading } = await import('./about.ts')
+  assert.equal(teamStoryHeading(storyParagraphs('I added a project manager so every job gets a daily check.')), 'Why I built a team instead of doing it all myself')
+  assert.equal(teamStoryHeading(storyParagraphs(undefined)), 'From the owner')
+  assert.equal(teamStoryHeading(storyParagraphs('   ')), 'From the owner')
+})
