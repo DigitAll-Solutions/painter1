@@ -15,8 +15,6 @@ test('pairs keep their order, skip incomplete ones, and title falls back to type
       { _key: 'k2', before: img('b2') },
       { _key: 'k3', before: img('b3'), after: img('a3'), projectType: 'Exterior', area: 'Farragut' },
     ],
-    beforeImage: img('old-b'),
-    afterImage: img('old-a'),
   })
   assert.deepEqual(
     pairs.map((p) => [p.key, p.title]),
@@ -28,11 +26,7 @@ test('pairs keep their order, skip incomplete ones, and title falls back to type
   assert.deepEqual([...sliderAssets(...pairImages(pairs))], ['image-b1', 'image-a1', 'image-b3', 'image-a3'])
 })
 
-test('until migrated, the legacy single pair is read', () => {
-  assert.deepEqual(
-    transformationPairs({ beforeImage: img('b'), afterImage: img('a') }).map((p) => p.key),
-    ['legacy'],
-  )
-  assert.deepEqual(transformationPairs({ beforeImage: img('b') }), [])
+test('no pairs: nothing to show', () => {
+  assert.deepEqual(transformationPairs({ transformations: [] }), [])
   assert.deepEqual(transformationPairs(undefined), [])
 })

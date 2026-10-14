@@ -32,7 +32,7 @@ const sectionText: PortableTextComponents = {
  */
 export default function WhatWePaint({ service, location, surfaces }: { service: Service; location: Location; surfaces: SurfaceSection[] }) {
   if (!surfaces.length) return null
-  const cards = surfaces.filter((surface) => surface.card)
+  const cards = surfaces
 
   return (
     <section aria-labelledby={HEADING_ID}>

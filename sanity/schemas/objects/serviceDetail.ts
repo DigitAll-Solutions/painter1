@@ -69,26 +69,6 @@ export const serviceDetail = defineType({
         }),
       ],
     }),
-    // Legacy single pair: copied into "Before/after pairs" by scripts/seed-oct8.ts and kept until the
-    // previous site version is gone (it reads only these); removed with --remove-legacy. Hidden once empty.
-    defineField({
-      name: 'beforeImage',
-      type: 'image',
-      options: {hotspot: true},
-      fields: [altField],
-      readOnly: true,
-      description: 'Old single pair, kept until launch and then removed. Edit "Before/after pairs" instead: once it has a pair, this one is ignored.',
-      hidden: ({value}) => !value,
-    }),
-    defineField({
-      name: 'afterImage',
-      type: 'image',
-      options: {hotspot: true},
-      fields: [altField],
-      readOnly: true,
-      description: 'Old single pair, kept until launch and then removed. Edit "Before/after pairs" instead: once it has a pair, this one is ignored.',
-      hidden: ({value}) => !value,
-    }),
     defineField({
       name: 'transformationBody',
       type: 'text',
@@ -154,32 +134,6 @@ export const serviceDetail = defineType({
             select: {surface: 'surface', alt: 'image.alt', media: 'image'},
             prepare: ({surface, alt, media}) => ({title: surface ? `#${surface}` : 'Choose a surface', subtitle: alt, media}),
           },
-        }),
-      ],
-    }),
-    defineField({
-      name: 'subServices',
-      title: 'Sub-services (old)',
-      description:
-        'Replaced by the surfaces in Shared → Services → What we paint, where each surface has its card, section text and photo. Being removed after launch; edit the surfaces instead.',
-      hidden: ({value}) => !(value as unknown[] | undefined)?.length,
-      readOnly: true,
-      type: 'array',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          name: 'subService',
-          fields: [
-            defineField({name: 'title', type: 'string', description: 'Section heading, e.g. "Home Siding Painting".', validation: (rule) => rule.required()}),
-            defineField({
-              name: 'anchor',
-              type: 'string',
-              description: 'Link target on the service page, e.g. "siding" → /knoxville/exterior-painting#siding. Lowercase letters, numbers and dashes.',
-              validation: (rule) => rule.regex(/^[a-z0-9-]+$/, {name: 'anchor'}),
-            }),
-            defineField({name: 'description', type: 'text', rows: 4, description: 'Section text.'}),
-            defineField({name: 'image', type: 'image', options: {hotspot: true}, fields: [altField], description: 'Optional photo beside the text (a real local job).'}),
-          ],
         }),
       ],
     }),

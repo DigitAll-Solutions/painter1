@@ -81,7 +81,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
   const transformationBody = fill(detail?.transformationBody || service.transformationBody || '')
 
   // What We Paint: shared surfaces with this location's own photos
-  const surfaces = paintSurfaces(service.whatWePaint, detail?.subServices, detail?.surfacePhotos)
+  const surfaces = paintSurfaces(service.whatWePaint, detail?.surfacePhotos)
 
   // "See The Transformation" pairs; Recent Work never repeats any of their photos or the surface photos
   const pairs = transformationPairs(detail)

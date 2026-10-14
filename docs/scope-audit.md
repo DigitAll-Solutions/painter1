@@ -29,7 +29,7 @@ Every location should get all 10 (brief §3; proposal "Page Templates (10)"); 9 
 | 6 | About Us / Owner | ❌ missing | `/[location]/about-us` | 404. Nav links here (also the only page besides home for maintenance locations). Data exists: `ownerBio`, 6 `aboutSections`, team members, owner photos | — |
 | 7 | Warranty | ❌ missing | `/[location]/warranty` | No page; warranty links fall back to `/knoxville#estimate`. Data exists: `warranty` rich text (22 blocks) | `getWarrantyHref` in `lib/location.ts` |
 | 8 | Reviews | ➖ dropped (Oct 14) | `/[location]/reviews` → `/[location]#reviews` | **Scope change: Rick confirmed there's no separate reviews page; reviews stay on the homepage** (Trustindex + HTML reviews, `#reviews`). No nav, footer or other link points to a reviews page | Old `/:location/reviews` and anything under it 308 to `/:location#reviews` (`next.config.ts`; go-live table in `docs/studio-plan.md` §7) |
-| 9 | Free Estimate / Survey | ❌ missing (planned) | `/[location]/free-estimate` | **404, and every CTA on the site points here** (`getCta`, `lib/location.ts`) | Plan: `docs/estimate-page-plan.md` (version B decided) |
+| 9 | Free Estimate / Survey | ❌ missing (planned) | `/[location]/free-estimate` | **404, and every CTA on the site points here** (`getCta`, `lib/location.ts`) | Plan: `docs/archive/estimate-page-plan.md` (version B decided) |
 | 10 | Privacy Policy | ❌ missing | `/[location]/privacy-policy` | 404; footer links here (plus `#do-not-sell`). Data exists: `privacyPolicy` rich text (180 blocks) | — |
 
 ## 2. Features agreed in chat
@@ -110,7 +110,7 @@ No `redirects()` in `next.config.ts` and no middleware/proxy. **Recommended mech
 
 ### 4b. Documented data schema / CMS setup (brief §5 deliverable) — ❌ missing
 
-Existing docs are developer plans (`docs/service-template-plan.md`, `docs/service-hero-slider-plan.md`, `docs/estimate-page-plan.md`), not an editor-facing guide. Field descriptions in Studio cover part of it. Needed:
+Existing docs are developer plans (`docs/archive/service-template-plan.md`, `docs/archive/service-hero-slider-plan.md`, `docs/archive/estimate-page-plan.md`), not an editor-facing guide. Field descriptions in Studio cover part of it. Needed:
 - How to add a location: required fields, growth vs maintenance, slug rules.
 - Per-field reference: tokens `{city}`/`{state}`/`{owner}`, image rules, hero/gallery photo sizes, captions, review tagging.
 - Service documents and per-location overrides.

@@ -30,12 +30,9 @@ test('before/after pairs: every pair counts, and all of their photos leave Recen
       exterior: {
         title: 'Exterior Painting',
         transformations: [{ before: img('b1'), after: img('a1') }, { before: img('b2'), after: img('a2') }, { before: img('b3') }],
-        // Legacy pair is ignored once transformations exist
-        beforeImage: img('old-b'),
-        afterImage: img('old-a'),
       },
     },
-    galleryImages: ['b1', 'a1', 'b2', 'a2', 'old-b', '1', '2'].map((id) => ({ asset: { _ref: `image-${id}` }, services: ext })),
+    galleryImages: ['b1', 'a1', 'b2', 'a2', 'other', '1', '2'].map((id) => ({ asset: { _ref: `image-${id}` }, services: ext })),
   }
   const items = locationChecklist(doc, 1, KEYS)
   assert.equal(byId(items, 'pair-exterior').detail, '2 pairs')
@@ -43,10 +40,6 @@ test('before/after pairs: every pair counts, and all of their photos leave Recen
   // What We Paint photos are on the page too, so they leave Recent Work as well
   const withSurface = locationChecklist({ ...doc, services: { exterior: { ...doc.services!.exterior, surfacePhotos: [{ image: img('1') }] } } }, 1, KEYS)
   assert.equal(byId(withSurface, 'photos-exterior').detail, '7 tagged, 2 for Recent Work (shows from 3)')
-  // Not migrated yet: the legacy pair still counts
-  const legacy = locationChecklist({ services: { interior: { beforeImage: img('b'), afterImage: img('a') } } }, 1, KEYS)
-  assert.equal(byId(legacy, 'pair-interior').detail, '1 pair')
-  assert.equal(byId(legacy, 'pair-exterior').ok, false)
 })
 
 test('booking page: warned only while online scheduling is on without a URL', () => {
@@ -58,7 +51,7 @@ test('booking page: warned only while online scheduling is on without a URL', ()
 test('Recent Work count excludes hidden photos and the page\'s own slider pair', () => {
   const ext = [{ _ref: 'service-exterior-painting' }]
   const doc: LocationDoc = {
-    services: { exterior: { title: 'Exterior Painting', beforeImage: img('b'), afterImage: img('a') } },
+    services: { exterior: { title: 'Exterior Painting', transformations: [{ before: img('b'), after: img('a') }] } },
     galleryImages: [
       { asset: { _ref: 'image-b' }, services: ext },
       { asset: { _ref: 'image-a' }, services: ext },

@@ -1,7 +1,7 @@
 # Sanity Studio for 37 locations — audit and plan
 
 One Studio (`/studio`), one dataset (`production`). The client's internal team edits; franchisees don't.
-Status: **built on branch `studio-structure`; data migration (`scripts/migrate-studio.ts`) runs dry first, then on approval.** Decisions S1–S8 (agreed) are at the end.
+Status: **built and merged; the data migration (`scripts/migrate-studio.ts`) was applied and the script removed (Oct 14 cleanup).** Decisions S1–S8 (agreed) are at the end.
 
 ## 1. Audit
 
@@ -264,6 +264,8 @@ A "Launch checklist" document view, computed from the document being edited plus
 - **No data migration** apart from optional S1 for Knoxville; existing fields keep their names.
 
 ## 5. Post-merge steps (in this order)
+
+Steps 1–2 are done (applied Oct 2026; the script was removed in the Oct 14 cleanup). Step 3 still applies.
 
 1. **After the merge has deployed** (the production deployment runs the code that fills `{locationName}`), migrate the consent text:
    ```

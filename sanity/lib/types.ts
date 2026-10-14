@@ -45,11 +45,7 @@ export type Transformation = {
 export type ServiceDetail = {
   title: string
   summary?: string
-  description?: string
   cardBullets?: string[]
-  /** Legacy single pair, read until the migration moves it into transformations[0] */
-  beforeImage?: SanityImage
-  afterImage?: SanityImage
   /** "See The Transformation" before/after pairs, first one first */
   transformations?: Transformation[]
   transformationBody?: string
@@ -57,9 +53,6 @@ export type ServiceDetail = {
   metaDescription?: string
   /** Crew-at-work photo for this location's service page hero */
   heroImage?: SanityImage
-  highlights?: string[]
-  process?: { _key: string; title: string; description?: string; items?: string[] }[]
-  subServices?: { _key: string; title: string; anchor?: string; description?: string; image?: SanityImage }[]
   /** This location's own photo per What We Paint surface, keyed to the surface's _key */
   surfacePhotos?: { _key: string; surface: string; image: SanityImage }[]
   images?: (SanityImage & { _key: string })[]
@@ -74,8 +67,6 @@ export type Review = {
   source?: string
   /** _ids of the service documents this review is tagged with */
   services?: string[]
-  /** Legacy string tag from the WordPress import: interior | exterior | cabinet | general */
-  serviceTag?: string
   neighborhoodTag?: string
   teamMemberMentioned?: string
 }
@@ -132,11 +123,8 @@ export type Location = {
   transformationBeforeImage?: SanityImage
   transformationAfterImage?: SanityImage
   transformationBody?: string
-  intro?: string
   yearsInBusiness?: number
-  whyChooseUs?: string[]
   processSteps?: { _key: string; title: string; description?: string }[]
-  aboutSections?: { _key: string; heading?: string; body?: string }[]
   services?: { interior?: ServiceDetail; exterior?: ServiceDetail; cabinet?: ServiceDetail }
   heroImage?: SanityImage
   heroVideo?: { asset?: { url: string; mimeType?: string } }
@@ -163,7 +151,6 @@ export type Location = {
   /** Warranty page hero photo (this location's own; no fallback) */
   warrantyPageImage?: SanityImage
   warrantyGraphic?: SanityImage
-  privacyPolicy?: PortableTextBlock[]
   leadEmailSubject?: string
   leadEmailTemplate?: string
   leadConfirmationMessage?: string

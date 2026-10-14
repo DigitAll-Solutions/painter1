@@ -63,3 +63,5 @@ next-env.d.ts
 /docs/reference/scheduling-urls-backup*.json
 # Full dataset backups (scripts/backup-sanity.ts): include private lead details, local only
 /docs/backups/
+# Knoxville's imported old-site copy, exported before it was removed from Sanity (M3 reference): local only
+/docs/reference/knoxville-imported-copy.json

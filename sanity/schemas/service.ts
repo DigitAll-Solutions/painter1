@@ -65,21 +65,6 @@ export const service = defineType({
       description: 'Crew at work for this service, landscape, at least 1920x1080. Used when the location has no hero image of its own for this service.',
     }),
     defineField({name: 'metaDescription', type: 'text', rows: 3, group: 'basics', description: `Search result description. ${TOKENS}`}),
-    defineField({
-      name: 'ownerCardVariant',
-      title: 'Owner card',
-      type: 'string',
-      group: 'basics',
-      description: 'No longer used: every service page shows the same owner card (photo, name line, quote). Hidden; cleared by scripts/clear-owner-card-variant.ts.',
-      hidden: true,
-      options: {
-        list: [
-          {title: 'Featured', value: 'featured'},
-          {title: 'Compact', value: 'compact'},
-        ],
-        layout: 'radio',
-      },
-    }),
 
     // Transformation
     defineField({name: 'transformationHeading', type: 'string', group: 'transformation', description: `E.g. "Real Interiors, Real Results". ${TOKENS}`}),
@@ -192,18 +177,6 @@ export const service = defineType({
               fields: [altField],
               description:
                 'Shown in this surface’s section on every location’s page until that location adds its own photo (Location → Services → What We Paint photos), which then replaces it on that location only. Alt text: describe the scene; don’t say it’s a particular location’s crew.',
-            }),
-            // Old shared photo: photos are per location now (location → Services → What We Paint photos).
-            // Never shown on the site; hidden once empty, removed post-merge (seed-oct9 --remove-shared-photos).
-            defineField({
-              name: 'image',
-              title: 'Old shared photo (not shown)',
-              type: 'image',
-              options: {hotspot: true},
-              fields: [altField],
-              readOnly: true,
-              hidden: ({value}) => !value,
-              description: 'No longer used: each location adds its own photo under Location → Services → What We Paint photos. Being removed.',
             }),
           ],
           preview: {select: {title: 'title', subtitle: 'slug.current'}, prepare: ({title, subtitle}) => ({title, subtitle: subtitle ? `#${subtitle}` : 'No link name yet'})},
