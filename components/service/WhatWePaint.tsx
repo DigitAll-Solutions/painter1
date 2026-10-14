@@ -14,9 +14,15 @@ const gridFor = (count: number) =>
 
 const HEADING_ID = 'what-we-paint'
 
+// Section rich text. "Label" (e.g. "How we do it") and "Small note" (e.g. "Warranty note: …") are
+// paragraph styles, not headings, so the outline stays H2 → H3.
 const sectionText: PortableTextComponents = {
-  block: { normal: ({ children }) => <p className="mt-4 text-lg leading-relaxed text-slate-600 first:mt-0">{children}</p> },
-  list: { bullet: ({ children }) => <ul className="mt-4 space-y-3 pl-5 text-lg leading-relaxed text-slate-600 marker:text-brand-orange [list-style-type:disc] first:mt-0">{children}</ul> },
+  block: {
+    normal: ({ children }) => <p className="mt-4 text-lg leading-relaxed text-slate-600 first:mt-0">{children}</p>,
+    label: ({ children }) => <p className="mt-7 text-sm font-bold tracking-[0.16em] text-cta-dark uppercase first:mt-0">{children}</p>,
+    note: ({ children }) => <p className="mt-6 border-l-2 border-slate-300 pl-3 text-sm leading-relaxed text-slate-600 first:mt-0">{children}</p>,
+  },
+  list: { bullet: ({ children }) => <ul className="mt-3 space-y-3 pl-5 text-lg leading-relaxed text-slate-600 marker:text-brand-orange [list-style-type:disc] first:mt-0">{children}</ul> },
   marks: { strong: ({ children }) => <strong className="font-bold text-ink">{children}</strong> },
 }
 

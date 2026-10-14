@@ -168,11 +168,16 @@ export const service = defineType({
               name: 'body',
               title: 'Section text',
               type: 'array',
-              description: `The text in this surface's section below the cards. Paragraphs and bullet lists; bold for short labels. Empty: the card text is shown there instead. ${TOKENS}`,
+              description: `The text in this surface's section below the cards. Usual order: a short intro paragraph; a Label "How we do it"; a bullet list where each item starts with a bold sentence; "What you get:" (bold) as a paragraph; a Small note "Warranty note: …" (bold label). Empty: the card text is shown there instead. ${TOKENS}`,
               of: [
                 defineArrayMember({
                   type: 'block',
-                  styles: [{title: 'Paragraph', value: 'normal'}],
+                  // Label and Small note are styles, not headings: the page outline stays H2 → H3
+                  styles: [
+                    {title: 'Paragraph', value: 'normal'},
+                    {title: 'Label (e.g. "How we do it")', value: 'label'},
+                    {title: 'Small note (e.g. "Warranty note: …")', value: 'note'},
+                  ],
                   lists: [{title: 'Bullets', value: 'bullet'}],
                   marks: {decorators: [{title: 'Bold', value: 'strong'}, {title: 'Italic', value: 'em'}], annotations: []},
                 }),
