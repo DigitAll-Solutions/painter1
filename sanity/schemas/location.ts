@@ -42,7 +42,6 @@ export const location = defineType({
     {name: 'area', title: 'Service area'},
     {name: 'stats', title: 'Project counts (homepage owner section and hero subtitle)', options: {columns: 3}},
     {name: 'scheduling', title: 'Online scheduling', options: {collapsible: true, collapsed: true}},
-    {name: 'notOnSite', title: 'Not on the site yet (About and Warranty pages)', options: {collapsible: true, collapsed: true}},
   ],
   fields: [
     // ---------- Basics ----------
@@ -370,33 +369,6 @@ export const location = defineType({
         }),
       ],
     }),
-    defineField({name: 'intro', title: 'Welcome text', type: 'text', rows: 6, group: 'content', fieldset: 'notOnSite', description: 'Imported welcome copy from the old site. Not shown: the About page uses the Owner story (Owner & team tab).'}),
-    defineField({
-      name: 'whyChooseUs',
-      type: 'array',
-      group: 'content',
-      fieldset: 'notOnSite',
-      description: 'Imported list from the old site. Not shown on the new pages.',
-      of: [defineArrayMember({type: 'string'})],
-    }),
-    defineField({
-      name: 'aboutSections',
-      title: 'About page sections',
-      type: 'array',
-      group: 'content',
-      fieldset: 'notOnSite',
-      description: 'Imported sections of the old About page. Not shown: the About page uses the Owner story (Owner & team tab).',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          name: 'aboutSection',
-          fields: [
-            defineField({name: 'heading', type: 'string', description: 'Section heading.'}),
-            defineField({name: 'body', type: 'text', rows: 6, description: 'Section text.'}),
-          ],
-        }),
-      ],
-    }),
 
     // ---------- Services ----------
     defineField({
@@ -509,21 +481,6 @@ export const location = defineType({
             // Map-ready: a project map can read these later without changing the page template
             defineField({name: 'city', type: 'string', description: 'For the project map. Leave empty for the location\'s city.'}),
             defineField({name: 'geo', title: 'Map position', type: 'geopoint', description: 'For the project map (optional).'}),
-            defineField({
-              name: 'serviceType',
-              type: 'string',
-              hidden: true,
-              readOnly: true,
-              description: 'Legacy tag, replaced by Services.',
-              options: {
-                list: [
-                  {title: 'Interior', value: 'interior'},
-                  {title: 'Exterior', value: 'exterior'},
-                  {title: 'Cabinet', value: 'cabinet'},
-                  {title: 'Commercial', value: 'commercial'},
-                ],
-              },
-            }),
           ],
         }),
       ],
@@ -551,22 +508,6 @@ export const location = defineType({
               type: 'array',
               description: 'Service pages this review appears on. Leave empty for general reviews.',
               of: [defineArrayMember({type: 'reference', to: [{type: 'service'}]})],
-            }),
-            defineField({
-              name: 'serviceTag',
-              type: 'string',
-              hidden: true,
-              readOnly: true,
-              description: 'Legacy tag, replaced by Services.',
-              options: {
-                list: [
-                  {title: 'Interior', value: 'interior'},
-                  {title: 'Exterior', value: 'exterior'},
-                  {title: 'Cabinet', value: 'cabinet'},
-                  {title: 'General', value: 'general'},
-                ],
-                layout: 'radio',
-              },
             }),
             defineField({name: 'neighborhoodTag', type: 'string', description: 'Optional, e.g. "Farragut" or "Sequoyah Hills".'}),
             defineField({name: 'teamMemberMentioned', type: 'string', description: 'Names mentioned in the review, e.g. "Jarrod Davenport, Charlie".'}),
@@ -757,14 +698,6 @@ export const location = defineType({
       group: 'legal',
       description: 'Shown beside the warranty copy on the homepage. Leave blank for the default blue paint fan-deck illustration.',
     },
-    defineField({name: 'warranty', title: 'Warranty terms', type: 'blockContent', group: 'legal', fieldset: 'notOnSite', description: 'Old imported warranty text. Not shown: the warranty page uses Shared → Warranty terms.'}),
-    defineField({
-      name: 'privacyPolicy',
-      type: 'blockContent',
-      group: 'legal',
-      hidden: true,
-      description: 'Legacy import. The site uses the shared Privacy Policy document (Shared → Privacy Policy).',
-    }),
 
     // ---------- SEO ----------
     defineField({name: 'metaTitle', type: 'string', group: 'seo', description: 'Homepage title. Leave empty for "Painters in {City}, {State} | Painter1".'}),

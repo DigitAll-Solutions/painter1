@@ -76,7 +76,6 @@ Each service page has one **What We Paint** section: a card per surface at the t
   - **Icon** and **Card text** (one sentence on the card).
   - **Section text:** the text in the surface's section. The usual order: a short intro paragraph; **How we do it** set in the **Label** style (the style menu); a bullet list where each item starts with a bold sentence; **What you get:** in bold, then the rest; and **Warranty note:** in the **Small note** style. Label and Small note look like small headings but aren't headings, so the page outline stays tidy. `{city}`, `{state}` and `{owner}` are filled in per location. Empty: the card text is shown there.
 - **Order:** drag the surfaces; cards and sections follow the same order. Renaming a surface keeps its default photo and each location's photo attached.
-- **Old "Sub-services (old)"** on a location (Knoxville's Siding and Stucco) are read-only and are removed after launch; their text is already in the surfaces.
 
 ## About page
 

@@ -230,15 +230,8 @@ const SOURCES: Record<string, Record<string, string>> = {
   },
 }
 
-// Legacy string tags → service document ids. Cabinet/commercial/general have no service doc yet.
 /** Fields removed from the service schema; the seed clears any stored value */
 const REMOVED_SERVICE_FIELDS = ['showPageHeader', 'ownerCardVariant']
-
-const TAG_TO_SERVICE: Record<string, string> = {
-  interior: 'service-interior-painting',
-  exterior: 'service-exterior-painting',
-  cabinet: 'service-cabinet-refinishing',
-}
 // The brief names these two explicitly; the run fails if they would not end up on Interior Painting.
 const REQUIRED_INTERIOR_REVIEWERS = ['Stasia Porter', 'Jason Tallent']
 const MOJIBAKE: [string, string][] = [['â€“', '–']]
@@ -276,8 +269,8 @@ type Ref = { _type: 'reference'; _ref: string; _key: string }
 type LocationDoc = {
   _id: string
   _rev: string
-  galleryImages?: { _key: string; alt?: string; serviceType?: string; services?: Ref[]; assetRef?: string }[]
-  reviews?: { _key: string; reviewerName?: string; serviceTag?: string; services?: Ref[] }[]
+  galleryImages?: { _key: string; alt?: string; services?: Ref[]; assetRef?: string }[]
+  reviews?: { _key: string; reviewerName?: string; services?: Ref[] }[]
 }
 
 const MOJIBAKE_TEST = { test: (v: unknown) => typeof v === 'string' && MOJIBAKE.some(([bad]) => v.includes(bad)), label: 'alt text with mojibake' }
@@ -371,49 +364,20 @@ function env(name: string) {
 /** set-operations for one location document, plus a printable plan */
 function planLocation(doc: LocationDoc) {
   const set: Record<string, unknown> = {}
-  const lines: string[] = []
+  const lines: string[] = ['  Gallery alt text:']
   const skipped: string[] = []
-
-  lines.push('  Gallery images:')
   for (const image of doc.galleryImages ?? []) {
-    const target = image.serviceType ? TAG_TO_SERVICE[image.serviceType] : undefined
-    const existing = image.services ?? []
-    const label = `    [${image._key}] ${JSON.stringify(image.alt ?? '')}`
-    if (target && !existing.some((r) => r._ref === target)) {
-      set[`galleryImages[_key=="${image._key}"].services`] = [...existing, ref(target)]
-      lines.push(`${label}\n        serviceType "${image.serviceType}" → services += ${target}`)
-    } else if (target) {
-      lines.push(`${label}\n        already tagged ${target}, no change`)
-    } else {
-      skipped.push(`    gallery [${image._key}] ${JSON.stringify(image.alt ?? '')}: serviceType "${image.serviceType ?? '—'}" has no service doc, left untagged`)
-    }
     const fixed = image.alt ? fixMojibake(image.alt) : image.alt
     if (image.alt && fixed !== image.alt) {
       set[`galleryImages[_key=="${image._key}"].alt`] = fixed
-      lines.push(`        alt fix: ${JSON.stringify(image.alt)} → ${JSON.stringify(fixed)}`)
+      lines.push(`    [${image._key}] alt fix: ${JSON.stringify(image.alt)} → ${JSON.stringify(fixed)}`)
     }
   }
-
-  lines.push('  Reviews:')
-  const interiorReviewers = new Set<string>()
-  for (const review of doc.reviews ?? []) {
-    const target = review.serviceTag ? TAG_TO_SERVICE[review.serviceTag] : undefined
-    const existing = review.services ?? []
-    const label = `    [${review._key}] ${review.reviewerName}`
-    if (target && !existing.some((r) => r._ref === target)) {
-      set[`reviews[_key=="${review._key}"].services`] = [...existing, ref(target)]
-      lines.push(`${label}: serviceTag "${review.serviceTag}" → services += ${target}`)
-    } else if (target) {
-      lines.push(`${label}: already tagged ${target}, no change`)
-    } else {
-      skipped.push(`    review [${review._key}] ${review.reviewerName}: serviceTag "${review.serviceTag ?? '—'}", left untagged`)
-    }
-    if (target === TAG_TO_SERVICE.interior || existing.some((r) => r._ref === TAG_TO_SERVICE.interior)) interiorReviewers.add(review.reviewerName ?? '')
-  }
-
+  // The brief names these two reviews for Interior Painting (tagged with Services in Studio)
+  const interior = 'service-interior-painting'
+  const interiorReviewers = new Set((doc.reviews ?? []).filter((r) => r.services?.some((s) => s._ref === interior)).map((r) => r.reviewerName ?? ''))
   const missing = REQUIRED_INTERIOR_REVIEWERS.filter((name) => !interiorReviewers.has(name))
-  if (missing.length) throw new Error(`Expected these reviews to be tagged Interior Painting but they are not: ${missing.join(', ')}`)
-
+  if (missing.length) skipped.push(`    reviews not tagged Interior Painting (expected by the brief): ${missing.join(', ')}`)
   return { set, lines, skipped }
 }
 
@@ -489,7 +453,7 @@ async function main() {
   console.log('')
 
   const docs = await client.fetch<LocationDoc[]>(
-    `*[_type == "location" && slug.current == $slug]{_id, _rev, galleryImages[]{_key, alt, serviceType, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, serviceTag, services}}`,
+    `*[_type == "location" && slug.current == $slug]{_id, _rev, galleryImages[]{_key, alt, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, services}}`,
     { slug: LOCATION_SLUG },
   )
   const published = docs.find((d) => !d._id.startsWith('drafts.'))

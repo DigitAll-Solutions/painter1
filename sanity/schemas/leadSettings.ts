@@ -19,8 +19,6 @@ export const leadSettings = defineType({
       of: [defineArrayMember({type: 'string', validation: (rule) => rule.email()})],
       validation: (rule) => rule.min(1),
     }),
-    // The warranty request form was removed (Oct 14); this list is no longer read. Hidden, data kept.
-    defineField({name: 'warrantyRecipients', title: 'Warranty request recipients (not used)', type: 'array', hidden: true, of: [defineArrayMember({type: 'string'})]}),
   ],
   preview: {
     select: {recipients: 'leadRecipients', id: '_id'},
