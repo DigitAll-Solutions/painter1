@@ -108,7 +108,7 @@ export function ownerSteps(owner: string): Step[] {
   return [
     { title: 'Free on-site estimate', badge: 'Owner', text: `${who} walks the project with you, answers questions and puts a written, itemized estimate in your hands.` },
     { title: 'Colors & scheduling', badge: 'Owner', text: 'Help choosing colors and sheens, and a start date that works around your schedule.' },
-    { title: 'The painting', badge: 'Painting crew', text: `A vetted crew does the prep and painting to Painter1 standards, while ${owner || 'the owner'} checks in on progress.` },
+    { title: 'The painting', badge: 'Painting crew', text: `A vetted crew does the prep and painting to ${owner ? `${owner}'s` : 'our'} standards, while ${owner || 'the owner'} checks in on progress.` },
     { title: 'Walkthrough & follow-up', badge: 'Owner', text: `${who} walks the finished job with you, fixes anything that isn't right, and follows up afterward.` },
   ]
 }

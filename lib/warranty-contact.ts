@@ -7,6 +7,19 @@ export const CONTACT_ANCHOR = 'warranty-contact'
 const DEFAULT_HEADING = 'Questions About Your Warranty?'
 const DEFAULT_TEXT = 'Reach out to {ownerTeam} by phone, text or email and we’ll help.'
 
+/** Meta description (≤ 160 characters): drops the repeated place, then the location name, when names are long */
+export function warrantyDescription(location: Pick<Location, 'name' | 'address'>) {
+  const city = location.address?.city ?? location.name
+  const place = [location.address?.city, location.address?.state].filter(Boolean).join(', ') || location.name
+  const what = `What the two-year workmanship warranty from Painter1 of ${city} covers`
+  const options = [
+    `${what} in ${place}, what it requires, and how to reach ${location.name} with questions.`,
+    `${what}, what it requires, and how to reach ${location.name} with questions.`,
+    `${what}, what it requires, and how to reach us with questions.`,
+  ]
+  return options.find((o) => o.length <= 160) ?? options[options.length - 1].slice(0, 160)
+}
+
 export type ContactLink = { kind: 'call' | 'text' | 'email'; href: string; verb: string; value: string; label: string }
 
 export function warrantyContact(location: Pick<Location, 'name' | 'phone' | 'email' | 'ownerName'>, terms: Pick<WarrantyTerms, 'contactHeading' | 'contactText'>) {
