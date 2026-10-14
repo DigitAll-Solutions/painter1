@@ -123,3 +123,12 @@ Every full-tier location has an About page at `/<location>/about-us` (basic-tier
   - The owner quote comes from Owner; the phone and email come from Basics.
 - **Questions block:** near the bottom of the page, "Questions About Your Warranty?" with **Call**, **Text** and **Email** buttons. Call and Text use the location's main phone (every main line takes texts); Email shows only when the location has a public email. The heading and line can be changed in Shared → Warranty terms → Contact & small print (`{ownerTeam}` becomes "Keith's team"). There is no request form: locations rarely get warranty requests.
 - Locations on the basic tier (home page and free estimate only) have no warranty page.
+
+## Before any bulk change (developers)
+
+Scripts in `scripts/` change many fields at once. Before running one that writes (anything without `--dry-run`):
+
+1. **Back up the dataset:** `node --env-file=.env.local scripts/backup-sanity.ts`. It saves every document (published, drafts and the private lead documents) and every image's record to `docs/backups/<date>/` on your machine. That folder is gitignored and holds private lead details, so keep it off shared drives. The image files stay in Sanity. To restore documents: `npx sanity dataset import docs/backups/<date>/documents.ndjson production --replace` (agree it with the client first).
+2. **Dry-run the script** (`--dry-run`) and read what it would change.
+3. **Seeds never overwrite Studio edits.** Every script only fills empty fields, or replaces the exact old text it was written to replace. Anything else (text edited in Studio, a list that already has items) is listed as **KEPT** and left alone. `--force` overwrites those after printing each one and asking you to type `OVERWRITE`.
+4. **Check that re-runs are no-ops:** `node --env-file=.env.local scripts/check-seeds.ts` dry-runs every script and mode and fails if any of them would change data.

@@ -5,14 +5,20 @@
  *   node --env-file=.env.local scripts/seed-services.ts --dry-run   # print every change, write nothing
  *   node --env-file=.env.local scripts/seed-services.ts             # apply (needs SANITY_API_WRITE_TOKEN)
  *
- * Re-running is safe: service docs are created if missing, then only the fields below are set;
- * Knoxville patches only add missing service references and fix mojibake in alt text.
+ * Safe to re-run (scripts/lib/safe-write.ts): a service document is created when missing; after that only
+ * EMPTY fields are filled. Anything with content (Rick's surface copy, default photos, card text, FAQs,
+ * anything edited in Studio) is kept and listed; --force overwrites it after confirmation. Knoxville:
+ * only empty fields are filled, the alt-text mojibake fix replaces only the broken text, and the old
+ * interior before/after fields stay empty once a before/after pair holds those photos.
+ *   … --force   overwrite what's listed as KEPT (asks first)
  */
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 import { createClient, type SanityClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const LOCATION_SLUG = 'knoxville'
@@ -105,12 +111,12 @@ export const SERVICE_SEED = [
       'We paint exclusively with **Sherwin-Williams** exterior lines — Resilience, Duration, and Emerald, matched to your project and budget during your estimate.',
     ),
     materialsBlocks: [
-      { _key: 'typical-timeline', title: 'Typical Timeline', body: boldText('Most exterior projects take **3–4 days** from start to finish, weather permitting.') },
+      { _key: 'typical-timeline', title: 'Typical Timeline', body: boldText('Your estimate will include **how long the job will take**, which depends on the size of the home and the weather.') },
       {
         _key: 'weather-window',
         title: 'Weather Window',
         body: boldText(
-          "We paint in temperatures from **35°F to 95°F** — Sherwin-Williams' exterior lines are formulated to cure properly across that range, so we're not limited to just the peak summer months.",
+          "Sherwin-Williams' exterior lines are formulated to cure properly across **a wide temperature range**, so we're not limited to just the peak summer months.",
         ),
       },
     ],
@@ -127,9 +133,9 @@ export const SERVICE_SEED = [
       ['Do you paint stucco and siding?', 'Yes — siding is our most common exterior surface, and we also paint stucco homes with a specialized coating approach.'],
       [
         'What temperature do you need for exterior painting?',
-        "We paint in temperatures ranging from 35°F to 95°F, using Sherwin-Williams exterior lines formulated to cure properly across that range — so we're not limited to just summer.",
+        "It depends on the paint: Sherwin-Williams exterior lines are formulated to cure properly across a wide temperature range, so we're not limited to just summer.",
       ],
-      ['How long does an exterior repaint take?', 'Most exterior projects take 3–4 days from start to finish, depending on the size of the home and weather conditions.'],
+      ['How long does an exterior repaint take?', 'It depends on the size of the home and weather conditions. Your estimate will include how long the job will take.'],
       [
         'How long will the paint job last?',
         "Proper prep — pressure washing, scraping, and caulking — combined with quality Sherwin-Williams paint is what makes an exterior finish hold up against {city}'s weather swings over time.",
@@ -165,33 +171,33 @@ export const SERVICE_SEED = [
         _key: 'color-finish',
         title: 'Color & Finish',
         body: boldText(
-          'Choose from **hundreds of Sherwin-Williams shades** and the right finish for durability and looks (e.g., satin enamel for kitchens), with optional upgrades like soft-close hardware or glass door inserts.',
+          'Choose from **hundreds of Sherwin-Williams shades** and the right finish for durability and looks.',
         ),
       },
-      { _key: 'typical-timeline', title: 'Typical Timeline', body: boldText('Most kitchens are done in **3–5 days**, instead of the weeks a full cabinet replacement takes.') },
+      { _key: 'typical-timeline', title: 'Typical Timeline', body: boldText('Your estimate will include **how long your kitchen will be out of service**, usually far shorter than a full cabinet replacement.') },
       {
         _key: 'cost',
         title: 'Cost',
         body: boldText(
-          'Cabinet painting typically costs **60–80% less** than complete cabinet replacement: new custom cabinets range from $15,000–$40,000 or more, while professional painting generally costs $3,000–$8,000.',
+          'Cabinet painting typically costs **far less** than complete cabinet replacement. Your free estimate gives you a written price for your kitchen.',
         ),
       },
     ],
     warrantyBannerBody: warranty('cabinet'),
     whatWePaint: items([
-      { icon: 'CookingPot', title: 'Kitchen cabinets', description: 'Doors, drawers and frames, sprayed with Sherwin-Williams cabinet enamel.' },
+      { icon: 'CookingPot', title: 'Kitchen cabinets', description: 'Doors, drawers and frames, finished with Sherwin-Williams cabinet enamel.' },
       { icon: 'Bath', title: 'Bathroom vanities', description: 'Vanity doors, drawers and frames, prepped and finished the same way.' },
-      { icon: 'Wrench', title: 'Hardware & upgrades', description: 'Hardware reattached or upgraded, with optional soft-close hardware or glass door inserts.' },
+      { icon: 'Wrench', title: 'Hardware & upgrades', description: 'New knobs and pulls, set straight and level.' },
     ]),
     faqs: faqs([
       [
         'How much does cabinet painting cost?',
-        'Cabinet painting typically costs 60–80% less than replacing your cabinets: new custom cabinets range from $15,000–$40,000 or more, while professional painting generally costs $3,000–$8,000. Your free in-home estimate gives you a written price with a detailed breakdown, with no hidden fees.',
+        'Cabinet painting typically costs far less than replacing your cabinets. Your free in-home estimate gives you a written price with a detailed breakdown, with no hidden fees.',
       ],
-      ['How long does cabinet painting take?', 'Most kitchens are done in 3–5 days.'],
+      ['How long does cabinet painting take?', 'It depends on the size of your kitchen and the work involved. Your estimate will include how long your kitchen will be out of service.'],
       [
         'What do you use on cabinets?',
-        'Two coats of primer (shellac or water-based, depending on your cabinet material) and 2–3 topcoats of Sherwin-Williams cabinet enamel, applied with professional-grade HVLP sprayers, or brushes if you prefer.',
+        "A bonding, stain-blocking primer, then Sherwin-Williams cabinet enamel made for the wear cabinets take. Your estimate will name the exact products and how they're applied.",
       ],
       [
         'Do you take the doors off?',
@@ -304,10 +310,13 @@ type LocationDoc = {
   galleryImages?: { _key: string; alt?: string; serviceType?: string; services?: Ref[]; assetRef?: string }[]
   interiorBefore?: string
   interiorAfter?: string
+  /** Asset refs already in services.interior.transformations (the before/after pairs) */
+  interiorPairRefs?: string[]
   exteriorSub?: { _key: string; title: string; anchor?: string; description?: string; imageRef?: string; imageAlt?: string }[]
   reviews?: { _key: string; reviewerName?: string; serviceTag?: string; services?: Ref[] }[]
 }
 
+const MOJIBAKE_TEST = { test: (v: unknown) => typeof v === 'string' && MOJIBAKE.some(([bad]) => v.includes(bad)), label: 'alt text with mojibake' }
 const ref = (id: string): Ref => ({ _type: 'reference', _ref: id, _key: id.replace(/^service-/, '') })
 const fixMojibake = (text: string) => MOJIBAKE.reduce((out, [bad, good]) => out.split(bad).join(good), text)
 
@@ -399,7 +408,10 @@ function planPhotos(doc: LocationDoc, assets: Map<string, AssetPlan>) {
   for (const side of ['before', 'after'] as const) {
     const asset = assets.get(INTERIOR_PAIR[side].file)!
     const current = side === 'before' ? doc.interiorBefore : doc.interiorAfter
-    if (current === asset.assetId) {
+    // Oct 8: the slider reads before/after pairs; the old fields were cleared once a pair held the photos
+    if (doc.interiorPairRefs?.includes(asset.assetId)) {
+      lines.push(`    ${side}Image: ${asset.filename} is in a before/after pair, no change (old field stays empty)`)
+    } else if (current === asset.assetId) {
       lines.push(`    ${side}Image: already ${asset.filename}, no change`)
     } else {
       set[`services.interior.${side}Image`] = imageField(asset)
@@ -525,39 +537,23 @@ async function main() {
 
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}", ${token ? 'authenticated' : 'no token: drafts not visible'})\n`)
 
-  const existingIds = new Set(await client.fetch<string[]>(`*[_id in $ids]._id`, { ids: SERVICE_SEED.map((d) => d._id) }))
-  console.log('SERVICE DOCUMENTS')
-  for (const doc of SERVICE_SEED) console.log(describeService(doc, existingIds.has(doc._id), existingIds.has(doc._id)) + '\n')
-
-  // "What We Paint" card text: what changes compared with Sanity now
-  const currentCards = await client.fetch<{ _id: string; whatWePaint?: { title: string; description?: string }[] }[]>(
-    `*[_id in $ids]{_id, whatWePaint[]{title, description}}`,
-    { ids: SERVICE_SEED.map((d) => d._id) },
-  )
-  console.log('CARD CHANGES')
-  let cardChanges = 0
-  for (const doc of SERVICE_SEED) {
-    const current = new Map((currentCards.find((c) => c._id === doc._id)?.whatWePaint ?? []).map((card) => [card.title, card.description]))
-    for (const card of doc.whatWePaint) {
-      if (current.get(card.title) === card.description) continue
-      cardChanges++
-      console.log(`  ${doc.title} / ${card.title}:\n    before: ${current.get(card.title) ?? '(none)'}\n    after:  ${card.description}`)
+  const guard = new SafeWrite('seed-services')
+  const tx = client.transaction()
+  const currentServices = await client.fetch<Record<string, unknown>[]>(`*[_id in $ids]`, { ids: SERVICE_SEED.map((d) => d._id) })
+  console.log('SERVICE DOCUMENTS (a new document gets the whole seed; an existing one only its empty fields)')
+  for (const { _id, _type, ...fields } of SERVICE_SEED) {
+    const current = currentServices.find((d) => d._id === _id)
+    if (guard.create(_id, Boolean(current))) {
+      console.log(describeService({ _id, _type, ...fields } as (typeof SERVICE_SEED)[number], false) + '\n')
+      tx.createIfNotExists({ _id, _type, ...fields } as { _id: string; _type: string })
+      continue
     }
-  }
-  if (!cardChanges) console.log('  —')
-
-  const currentHero = await client.fetch<{ _id: string; heroSubtitle?: string; showPageHeader?: boolean; ownerCardVariant?: string }[]>(
-    `*[_id in $ids]{_id, heroSubtitle, showPageHeader, ownerCardVariant}`,
-    { ids: SERVICE_SEED.map((d) => d._id) },
-  )
-  console.log('\nHERO SUBTITLE / REMOVED FIELDS')
-  for (const doc of SERVICE_SEED) {
-    const current = currentHero.find((c) => c._id === doc._id)
-    if (current?.heroSubtitle !== doc.heroSubtitle) console.log(`  ${doc.title} heroSubtitle:\n    before: ${current?.heroSubtitle ?? '(none)'}\n    after:  ${doc.heroSubtitle}`)
-    for (const field of REMOVED_SERVICE_FIELDS) {
-      const value = current?.[field as keyof typeof current]
-      if (value !== undefined) console.log(`  ${doc.title} ${field}: ${JSON.stringify(value)} → (unset)`)
-    }
+    // Removed fields are hidden in Studio and no longer read, so any stored value may go
+    const expect = Object.fromEntries(REMOVED_SERVICE_FIELDS.map((field) => [field, { test: () => true, label: 'removed field' }]))
+    const { set, unset, any } = guard.plan(_id, current, { set: fields, unset: REMOVED_SERVICE_FIELDS, expect })
+    const filled = Object.keys(set)
+    console.log(`  ${_id}: ${filled.length ? `fills ${filled.join(', ')}` : 'no empty fields to fill'}${unset.length ? `; removes ${unset.join(', ')}` : ''}`)
+    if (any) tx.patch(_id, (p) => p.ifRevisionId(String(current!._rev)).set(set).unset(unset))
   }
 
   // Photos: everything listed above, uploaded only if Sanity doesn't already have the same filename + size
@@ -574,7 +570,7 @@ async function main() {
   console.log('')
 
   const docs = await client.fetch<LocationDoc[]>(
-    `*[_type == "location" && slug.current == $slug]{_id, _rev, "interiorBefore": services.interior.beforeImage.asset._ref, "interiorAfter": services.interior.afterImage.asset._ref, "exteriorSub": services.exterior.subServices[]{_key, title, anchor, description, "imageRef": image.asset._ref, "imageAlt": image.alt}, galleryImages[]{_key, alt, serviceType, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, serviceTag, services}}`,
+    `*[_type == "location" && slug.current == $slug]{_id, _rev, "interiorBefore": services.interior.beforeImage.asset._ref, "interiorAfter": services.interior.afterImage.asset._ref, "interiorPairRefs": services.interior.transformations[].before.asset._ref + services.interior.transformations[].after.asset._ref, "exteriorSub": services.exterior.subServices[]{_key, title, anchor, description, "imageRef": image.asset._ref, "imageAlt": image.alt}, galleryImages[]{_key, alt, serviceType, services, "assetRef": asset._ref}, reviews[]{_key, reviewerName, serviceTag, services}}`,
     { slug: LOCATION_SLUG },
   )
   const subFiles = Object.values(SUB_SERVICES).flatMap((plan) => (plan.imageFile ? [plan.imageFile] : []))
@@ -587,51 +583,42 @@ async function main() {
   if (!published) throw new Error(`Location "${LOCATION_SLUG}" not found`)
   const targets = [published, ...docs.filter((d) => d._id.startsWith('drafts.'))]
 
-  const tx = client.transaction()
-  for (const { _id, _type, ...fields } of SERVICE_SEED) {
-    tx.createIfNotExists({ _id, _type, title: fields.title })
-    tx.patch(_id, (p) => p.set(fields).unset(REMOVED_SERVICE_FIELDS))
-  }
+  const rawLocations = await client.fetch<Record<string, unknown>[]>(`*[_id in $ids]`, { ids: targets.map((d) => d._id) })
 
   console.log(`LOCATION "${LOCATION_SLUG}" (only this document${targets.length > 1 ? ' and its draft' : ''} is patched)`)
-  let changes = 0
   for (const doc of targets) {
     const { set, lines, skipped } = planLocation(doc)
     const photoPlan = planPhotos(doc, assets)
     Object.assign(set, photoPlan.set)
     const subPlan = planSubServices(doc, subServiceAssets)
     Object.assign(set, subPlan.set)
-    changes += Object.keys(set).length + photoPlan.insert.length
     console.log(`  ${doc._id}  (rev ${doc._rev})`)
     console.log(photoPlan.lines.join('\n'))
     console.log(subPlan.lines.join('\n'))
     console.log(lines.join('\n'))
     console.log('  Not changed:')
     console.log(skipped.join('\n') || '    —')
-    if (Object.keys(set).length || photoPlan.insert.length) {
-      tx.patch(doc._id, (p) => {
-        let patch = p.ifRevisionId(doc._rev)
-        if (Object.keys(set).length) patch = patch.set(set)
-        // At the start, so a before/after pair is never split by the 8-photo limit
-        if (photoPlan.insert.length) {
-          patch = doc.galleryImages?.length
-            ? patch.insert('before', 'galleryImages[0]', photoPlan.insert)
-            : patch.set({ galleryImages: photoPlan.insert })
-        }
-        return patch
-      })
-    }
+    // New gallery photos go at the start, so a before/after pair is never split by the 8-photo limit.
+    // Adding to a gallery that already has photos counts as changing it (kept unless --force).
+    const raw = rawLocations.find((d) => d._id === doc._id)
+    if (photoPlan.insert.length) set.galleryImages = [...photoPlan.insert, ...((raw?.galleryImages as unknown[]) ?? [])]
+    const expect = Object.fromEntries(Object.keys(set).filter((path) => path.endsWith('.alt')).map((path) => [path, MOJIBAKE_TEST]))
+    const allowed = guard.plan(doc._id, raw, { set, expect })
+    if (allowed.any) tx.patch(doc._id, (p) => p.ifRevisionId(doc._rev).set(allowed.set))
   }
-  console.log(`\n  ${changes} field change(s) on the location${targets.length > 1 ? ' + draft' : ''}; ${SERVICE_SEED.length} service doc(s) created or updated.`)
+  guard.report()
+  const changes = guard.changes.length
 
-  if (DRY_RUN) {
-    console.log('\nDry run complete. No changes written.')
+  if (DRY_RUN || !changes) {
+    console.log(DRY_RUN ? '\nDry run complete. No changes written.' : '\nNothing to do.')
     return
   }
+  await guard.confirm(DRY_RUN)
   // Uploads can't be part of a transaction: upload first (Sanity de-duplicates identical files)
-  // and check each lands on the id the patches already reference.
+  // and check each lands on the id the patches already reference. Only files a write still uses.
+  const written = JSON.stringify(guard.changes.map((c) => c.next))
   for (const asset of assets.values()) {
-    if (!asset.upload) continue
+    if (!asset.upload || !written.includes(asset.assetId)) continue
     const doc = await client.assets.upload('image', asset.upload.buffer, { filename: asset.filename })
     if (doc._id !== asset.assetId) throw new Error(`Uploaded ${asset.filename} as ${doc._id}, expected ${asset.assetId}; nothing else written`)
     console.log(`Uploaded ${asset.filename} → ${doc._id}`)

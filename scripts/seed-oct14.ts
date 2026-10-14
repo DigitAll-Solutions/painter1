@@ -11,10 +11,15 @@
  *   --cabinet-wording  every "refinishing" in the cabinet service, Knoxville and the estimate survey
  *                      → "painting" ("What We Refinish" removed, so the heading is "What We Paint")
  *   --surface-copy     Rick's exterior and interior surface copy into the shared surface sections
- *   --surface-photos   Knoxville's Stucco, Trim & Doors, Decks, Fences and cabinet surface photos
+ *   --surface-photos   RETIRED: these AI photos are now every location's default photos
+ *                      (scripts/seed-surface-defaults.ts); re-running it would put them back in
+ *                      Knoxville's own slots, so it writes nothing
  *
  * Photos are read from docs/painter1-knoxville/jpg-oct14/ (gitignored; JPEGs converted from Rick's PNGs).
- * Re-running is a no-op.
+ * Re-running is a no-op. Writes go through scripts/lib/safe-write.ts: content already in Sanity is never
+ * overwritten or removed unless it is exactly what the step replaces (the "labor and materials" line,
+ * text containing "refinish", the Oct 9 placeholder section text); anything else is kept and listed
+ * (--force asks first).
  */
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
@@ -22,6 +27,7 @@ import { pathToFileURL } from 'node:url'
 import { createClient } from '@sanity/client'
 
 import { RICK_OCT14_COPY, type SurfaceCopy } from './data/rick-oct14-surfaces.ts'
+import { retired, SafeWrite, type Expect } from './lib/safe-write.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const LABOR = process.argv.includes('--labor-only')
@@ -45,7 +51,8 @@ const WARRANTY_PAGE_PHOTO = {
   alt: 'A Painter1 owner shaking hands with a homeowner couple across a kitchen island, with freshly painted white cabinets behind them.',
 }
 type Photo = { service: 'exterior' | 'cabinet'; slug: string; file: string; alt: string }
-const SURFACE_PHOTOS: Photo[] = [
+// What --surface-photos wrote on Oct 14 (retired: these are the default photos now). Kept for the record.
+export const SURFACE_PHOTOS: Photo[] = [
   { service: 'exterior', slug: 'stucco', file: 'knoxville-stucco-masked-windows.jpg', alt: 'Painter rolling a warm beige coat onto a cream stucco wall, with the windows masked in plastic and blue tape and the shrubs covered with drop cloths.' },
   { service: 'exterior', slug: 'trim-doors', file: 'knoxville-trim-door-navy.jpg', alt: 'Painter brushing white enamel onto door trim beside a navy front door, with the door hardware wrapped in paper and blue tape.' },
   { service: 'exterior', slug: 'decks', file: 'knoxville-deck-staining.jpg', alt: 'Painter applying cedar-toned stain to a backyard deck with a pad applicator, half the boards stained and half still weathered grey.' },
@@ -111,6 +118,11 @@ export function surfaceBlocks(slug: string, copy: SurfaceCopy): Block[] {
     ...(copy.warrantyNote ? [block('note', boldFirst(copy.warrantyNote, label))] : []),
   ]
 }
+/** The Oct 9 placeholder section text ("We'll walk through the prep, products and colors for your … during your free estimate.") */
+export const OCT9_PLACEHOLDER: Expect = {
+  test: (v) => /^We'll walk through the prep, products and colors for your .+ during your free estimate\.$/.test(plain((v as Block[] | undefined) ?? []).trim()),
+  label: 'the Oct 9 placeholder text',
+}
 export const plain = (blocks: Block[]) => blocks.map((b) => b.children.map((c) => c.text).join('')).join('\n')
 export const show = (blocks: Block[]) =>
   blocks
@@ -138,8 +150,9 @@ async function main() {
   const services = await client.fetch<ServiceDoc[]>(`*[_type == "service" && !(_id in path("drafts.**"))] | order(locationKey){_id, _rev, title, locationKey, warrantyBannerBody, whatWePaint}`)
   const knoxville = await client.fetch<LocationDoc>(`*[_id == "location-knoxville"][0]{_id, _rev, warrantyPageImage, services}`)
 
+  if (PHOTOS) return retired('seed-oct14 --surface-photos', 'these photos are every location’s default photos now (scripts/seed-surface-defaults.ts). Re-running this step would put them back in Knoxville’s own slots.')
   const tx = client.transaction()
-  let changes = 0
+  const guard = new SafeWrite(`seed-oct14${[LABOR && ' --labor-only', CABINET && ' --cabinet-wording', COPY && ' --surface-copy'].filter(Boolean).join('')}`)
   const upload = async (file: string) => {
     const path = `${PHOTO_DIR}/${file}`
     if (!existsSync(path)) throw new Error(`${path} not found: convert Rick's PNGs first (see the report)`)
@@ -154,8 +167,8 @@ async function main() {
     else {
       const ref = await upload(WARRANTY_PAGE_PHOTO.file)
       console.log(`KNOXVILLE ${knoxville._id} (rev ${knoxville._rev}) warrantyPageImage ← ${ref}\n  alt: "${WARRANTY_PAGE_PHOTO.alt}"`)
-      changes++
-      tx.patch(knoxville._id, (p) => p.ifRevisionId(knoxville._rev).set({ warrantyPageImage: { _type: 'image', asset: { _type: 'reference', _ref: ref }, alt: WARRANTY_PAGE_PHOTO.alt } }))
+      const allowed = guard.plan(knoxville._id, knoxville, { set: { warrantyPageImage: { _type: 'image', asset: { _type: 'reference', _ref: ref }, alt: WARRANTY_PAGE_PHOTO.alt } } })
+      if (allowed.any) tx.patch(knoxville._id, (p) => p.ifRevisionId(knoxville._rev).set(allowed.set))
     }
   }
 
@@ -167,8 +180,8 @@ async function main() {
       }
       const next = service.warrantyBannerBody.replace(MATERIALS, LABOR_ONLY)
       console.log(`${service._id} (rev ${service._rev}) warrantyBannerBody\n  - ${service.warrantyBannerBody}\n  + ${next}`)
-      changes++
-      tx.patch(service._id, (p) => p.ifRevisionId(service._rev).set({ warrantyBannerBody: next }))
+      const allowed = guard.plan(service._id, service, { set: { warrantyBannerBody: next }, expect: { warrantyBannerBody: { test: (v) => typeof v === 'string' && v.includes(MATERIALS), label: 'the "labor and materials" line' } } })
+      if (allowed.any) tx.patch(service._id, (p) => p.ifRevisionId(service._rev).set(allowed.set))
     }
     console.log()
   }
@@ -192,8 +205,10 @@ async function main() {
         if (path !== 'whatWePaintTitle' && /refinish/i.test(next)) throw new Error(`Unhandled wording at ${_id} ${path}`)
       }
       if (Object.keys(set).length || unset.length) {
-        changes++
-        tx.patch(_id, (p) => p.ifRevisionId(_rev).set(set).unset(unset))
+        const refinish: Expect = { test: (v) => typeof v === 'string' && /refinish/i.test(v), label: 'text containing "refinish"' }
+        const expect = Object.fromEntries([...Object.keys(set), ...unset].map((path) => [path, refinish]))
+        const allowed = guard.plan(_id, doc, { set, unset, expect })
+        if (allowed.any) tx.patch(_id, (p) => p.ifRevisionId(_rev).set(allowed.set).unset(allowed.unset))
       }
     }
     console.log()
@@ -224,49 +239,19 @@ async function main() {
       }
       console.log(source ? `  ✓ every line matches ${MESSAGES} word for word (only Brick's "10-12" differs, as confirmed)\n` : `  (${MESSAGES} not on this machine: word-for-word check skipped)\n`)
       if (Object.keys(set).length) {
-        changes++
-        tx.patch(service._id, (p) => p.ifRevisionId(service._rev).set(set))
+        const expect = Object.fromEntries(Object.keys(set).map((path) => [path, OCT9_PLACEHOLDER]))
+        const allowed = guard.plan(service._id, service, { set, expect })
+        if (allowed.any) tx.patch(service._id, (p) => p.ifRevisionId(service._rev).set(allowed.set))
       }
     }
   }
 
-  if (PHOTOS) {
-    // One patch on Knoxville for both services
-    const set: Record<string, unknown> = {}
-    for (const group of ['exterior', 'cabinet'] as const) {
-      const service = services.find((s) => s.locationKey === group)!
-      const current = knoxville.services?.[group]?.surfacePhotos ?? []
-      let next = [...current]
-      let changed = false
-      console.log(`KNOXVILLE services.${group}.surfacePhotos (${current.length} now: ${current.map((p) => p.surface).join(', ') || 'none'})`)
-      for (const photo of SURFACE_PHOTOS.filter((p) => p.service === group)) {
-        const item = service.whatWePaint?.find((i) => i.slug?.current === photo.slug)
-        if (!item) throw new Error(`${service._id} has no surface #${photo.slug}`)
-        const existing = current.find((p) => p.surface === item._key)
-        if (existing?.image?.alt === photo.alt) {
-          console.log(`  ${item.title}: already this photo; kept`)
-          continue
-        }
-        const ref = await upload(photo.file)
-        const entry = { _key: `photo-${item._key}`, _type: 'surfacePhoto', surface: item._key, image: { _type: 'image', asset: { _type: 'reference', _ref: ref }, alt: photo.alt } }
-        next = existing ? next.map((p) => (p.surface === item._key ? entry : p)) : [...next, entry]
-        changed = true
-        console.log(`  ${item.title} (key "${item._key}") ${existing ? `replaces ${existing.image?.asset?._ref}` : 'new'}\n    ← ${ref}\n    alt: "${photo.alt}"`)
-      }
-      if (changed) set[`services.${group}.surfacePhotos`] = next
-      console.log()
-    }
-    if (Object.keys(set).length) {
-      changes++
-      tx.patch(knoxville._id, (p) => p.ifRevisionId(knoxville._rev).set(set))
-    }
-  }
-
-  console.log(`${changes} document change(s).`)
-  if (DRY_RUN || !changes) {
+  guard.report()
+  if (DRY_RUN || !guard.changes.length) {
     console.log(DRY_RUN ? 'Dry run complete. No changes written.' : 'Nothing to do.')
     return
   }
+  await guard.confirm(DRY_RUN)
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`Committed transaction ${result.transactionId} (${result.results.length} mutations).`)
 }

@@ -17,7 +17,9 @@
  *                        Cabinets", "Bathroom Vanities", "Cabinet Hardware" (link names unchanged)
  *
  * Photos are read from docs/painter1-knoxville/jpg-oct14/ (gitignored; JPEGs converted from Rick's PNGs).
- * Re-running is a no-op.
+ * Re-running is a no-op. Writes go through scripts/lib/safe-write.ts: a default photo is set only when
+ * empty; the cabinet copy replaces only the Oct 9 placeholder (and the old headings); anything edited
+ * since is kept and listed (--force asks first).
  */
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
@@ -25,7 +27,8 @@ import { pathToFileURL } from 'node:url'
 import { createClient } from '@sanity/client'
 
 import { NEUTRAL, RICK_OCT14_CABINET } from './data/rick-oct14-cabinet.ts'
-import { plain, show, surfaceBlocks, type Block } from './seed-oct14.ts'
+import { SafeWrite } from './lib/safe-write.ts'
+import { OCT9_PLACEHOLDER, plain, show, surfaceBlocks, type Block } from './seed-oct14.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const REMOVE = process.argv.includes('--remove-duplicates')
@@ -68,7 +71,7 @@ async function main() {
   const surface = (group: string, slug: string) => service(group).whatWePaint?.find((i) => i.slug?.current === slug) ?? fail(`${service(group)._id} has no surface #${slug}`)
 
   const tx = client.transaction()
-  let changes = 0
+  const guard = new SafeWrite(`seed-surface-defaults${[REMOVE && ' --remove-duplicates', COPY && ' --cabinet-copy'].filter(Boolean).join('')}`)
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")`)
   console.log(`Mode: ${ADDITIVE ? 'default surface photos (additive)' : [REMOVE && 'remove duplicates', COPY && 'cabinet copy'].filter(Boolean).join(' + ') + ' (post-merge)'}\n`)
 
@@ -100,8 +103,9 @@ async function main() {
       sets.set(doc._id, { ...sets.get(doc._id), [`whatWePaint[_key=="${item._key}"].defaultImage`]: { _type: 'image', asset: { _type: 'reference', _ref: ref }, alt } })
     }
     for (const [id, set] of sets) {
-      changes++
-      tx.patch(id, (p) => p.ifRevisionId(services.find((s) => s._id === id)!._rev).set(set))
+      const doc = services.find((s) => s._id === id)!
+      const allowed = guard.plan(id, doc, { set })
+      if (allowed.any) tx.patch(id, (p) => p.ifRevisionId(doc._rev).set(allowed.set))
     }
     console.log()
   }
@@ -125,11 +129,12 @@ async function main() {
         console.log(`  kept as this location's own: ${kept.map((p) => `#${p.surface}`).join(', ') || 'none'}`)
       }
       if (Object.keys(set).length) {
-        changes++
-        tx.patch(location._id, (p) => p.ifRevisionId(location._rev).set(set))
+        // Only photos that are the same file as the surface's default go (checked above)
+        const allowed = guard.plan(location._id, location, { set, expect: Object.fromEntries(Object.keys(set).map((path) => [path, { test: () => true, label: 'same file as the default' }])) })
+        if (allowed.any) tx.patch(location._id, (p) => p.ifRevisionId(location._rev).set(allowed.set))
       }
     }
-    if (!changes) console.log('No location photo is the same image as its default.')
+    if (!guard.changes.length) console.log('No location photo is the same image as its default.')
     console.log()
   }
 
@@ -159,16 +164,22 @@ async function main() {
     }
     console.log(source ? `  ✓ every line matches ${CABINET_SOURCE} word for word, except the ${NEUTRAL.size} neutral versions of his bracketed "confirm" parts\n` : `  (${CABINET_SOURCE} not on this machine: word-for-word check skipped)\n`)
     if (Object.keys(set).length) {
-      changes++
-      tx.patch(doc._id, (p) => p.ifRevisionId(doc._rev).set(set))
+      // Headings: only the Oct 9 ones; section text: only the Oct 9 placeholder
+      const OLD_TITLES = ['Kitchen cabinets', 'Bathroom vanities', 'Hardware & upgrades']
+      const expect = Object.fromEntries(
+        Object.keys(set).map((path) => [path, path.endsWith('.title') ? { test: (v: unknown) => OLD_TITLES.includes(String(v)), label: 'the Oct 9 heading' } : OCT9_PLACEHOLDER]),
+      )
+      const allowed = guard.plan(doc._id, doc, { set, expect })
+      if (allowed.any) tx.patch(doc._id, (p) => p.ifRevisionId(doc._rev).set(allowed.set))
     }
   }
 
-  console.log(`${changes} document change(s).`)
-  if (DRY_RUN || !changes) {
+  guard.report()
+  if (DRY_RUN || !guard.changes.length) {
     console.log(DRY_RUN ? 'Dry run complete. No changes written.' : 'Nothing to do.')
     return
   }
+  await guard.confirm(DRY_RUN)
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`Committed transaction ${result.transactionId} (${result.results.length} mutations).`)
 }

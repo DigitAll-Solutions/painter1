@@ -61,3 +61,5 @@ next-env.d.ts
 /docs/reference/Painter1-Our-Painting-Services-*.jpg
 # Backups of production values taken before data clean-ups: local only
 /docs/reference/scheduling-urls-backup*.json
+# Full dataset backups (scripts/backup-sanity.ts): include private lead details, local only
+/docs/backups/

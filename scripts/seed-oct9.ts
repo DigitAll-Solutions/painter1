@@ -16,7 +16,10 @@
  *                           and this location's photo
  *   (each with --dry-run first)
  *
- * Re-running is a no-op.
+ * Re-running is a no-op. Writes go through scripts/lib/safe-write.ts: content already in Sanity is never
+ * overwritten or removed unless it is exactly what this step replaces; anything else is kept and listed
+ * (--force asks first). Knoxville's photos are added only while its list is empty: since Oct 14 its
+ * Decks and Fences sections show the shared default photo on purpose.
  */
 import { createReadStream, existsSync } from 'node:fs'
 import { basename } from 'node:path'
@@ -25,6 +28,7 @@ import { pathToFileURL } from 'node:url'
 import { createClient } from '@sanity/client'
 
 import { surfaceSlug } from '../lib/paint-surfaces.ts'
+import { FORCE, SafeWrite } from './lib/safe-write.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const CABINET_SLUG = process.argv.includes('--cabinet-slug')
@@ -117,7 +121,7 @@ async function main() {
   if (drafts.length) throw new Error(`Unpublished drafts exist (${drafts.join(', ')}): publish or discard them in Studio first`)
 
   const tx = client.transaction()
-  let changes = 0
+  const guard = new SafeWrite(`seed-oct9${[CABINET_SLUG && ' --cabinet-slug', REMOVE_SHARED_PHOTOS && ' --remove-shared-photos', REMOVE_SUBSERVICES && ' --remove-subservices'].filter(Boolean).join('')}`)
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")`)
   console.log(`Mode: ${ADDITIVE ? 'surfaces + Knoxville photos (additive)' : [CABINET_SLUG && 'cabinet slug (post-merge)', REMOVE_SHARED_PHOTOS && 'remove shared surface photos (post-merge)', REMOVE_SUBSERVICES && 'remove old sub-sections (post-merge)'].filter(Boolean).join(' + ')}\n`)
 
@@ -142,10 +146,8 @@ async function main() {
         } else lines.push('section text: none found (card text shows)')
         console.log(`  ${item.title} (#${slug})\n    - ${lines.join('\n    - ')}`)
       }
-      if (Object.keys(set).length) {
-        changes++
-        tx.patch(service._id, (p) => p.ifRevisionId(service._rev).set(set))
-      }
+      const allowed = guard.plan(service._id, service, { set })
+      if (allowed.any) tx.patch(service._id, (p) => p.ifRevisionId(service._rev).set(allowed.set))
       console.log()
     }
 
@@ -156,6 +158,9 @@ async function main() {
     const existing = knoxville.services?.exterior?.surfacePhotos ?? []
     const add: SurfacePhoto[] = []
     console.log(`KNOXVILLE ${knoxville._id} (rev ${knoxville._rev}): services.exterior.surfacePhotos (${existing.length} now)`)
+    // Adding to a list that already has photos would change the page (the default photo shows today)
+    const photosAllowed = !existing.length || FORCE
+    if (!photosAllowed) console.log('  already has photos of its own: nothing added (listed under KEPT)')
     for (const photo of KNOXVILLE_PHOTOS) {
       const item = exterior.whatWePaint?.find((i) => (i.slug?.current || surfaceSlug(i.title ?? '')) === photo.slug)
       if (!item) {
@@ -180,7 +185,7 @@ async function main() {
           continue
         }
         // Sanity keeps one asset per file content, so re-running doesn't duplicate it
-        const ref = DRY_RUN ? '(uploaded on apply)' : (await client.assets.upload('image', createReadStream(photo.file), { filename: basename(photo.file).replace(/^\d{4}_\d{2}_/, '') }))._id
+        const ref = DRY_RUN || !photosAllowed ? '(uploaded on apply)' : (await client.assets.upload('image', createReadStream(photo.file), { filename: basename(photo.file).replace(/^\d{4}_\d{2}_/, '') }))._id
         image = { _type: 'image', asset: { _ref: ref }, alt: photo.alt }
       }
       if (!image?.asset?._ref) {
@@ -191,8 +196,9 @@ async function main() {
       console.log(`  ${item.title} (key "${item._key}") ← ${photo.source}\n      ${image.asset._ref}\n      alt: "${image.alt}"`)
     }
     if (add.length) {
-      changes++
-      tx.patch(knoxville._id, (p) => p.ifRevisionId(knoxville._rev).setIfMissing({ 'services.exterior.surfacePhotos': [] }).append('services.exterior.surfacePhotos', add.map((photo) => ({ _type: 'surfacePhoto', ...photo }))))
+      const next = [...existing, ...add.map((photo) => ({ _type: 'surfacePhoto', ...photo }))]
+      const allowed = guard.plan(knoxville._id, knoxville, { set: { 'services.exterior.surfacePhotos': next } })
+      if (allowed.any) tx.patch(knoxville._id, (p) => p.ifRevisionId(knoxville._rev).set(allowed.set))
     }
     console.log()
   }
@@ -202,8 +208,10 @@ async function main() {
     for (const service of services) {
       const withPhoto = (service.whatWePaint ?? []).filter((item) => item.image)
       if (!withPhoto.length) continue
-      changes++
-      tx.patch(service._id, (p) => p.ifRevisionId(service._rev).unset(withPhoto.map((item) => `whatWePaint[_key=="${item._key}"].image`)))
+      const paths = withPhoto.map((item) => `whatWePaint[_key=="${item._key}"].image`)
+      // Read-only in Studio and never shown: the old shared photo may go
+      const allowed = guard.plan(service._id, service, { unset: paths, expect: Object.fromEntries(paths.map((path) => [path, { test: () => true, label: 'old shared photo (not shown)' }])) })
+      if (allowed.any) tx.patch(service._id, (p) => p.ifRevisionId(service._rev).unset(allowed.unset))
       for (const item of withPhoto) console.log(`SERVICE ${service._id} "${item.title}": remove shared photo ${item.image?.asset?._ref}`)
     }
     console.log()
@@ -214,8 +222,9 @@ async function main() {
     if (!cabinet) throw new Error('No cabinet service document')
     if (cabinet.slug === 'cabinet-painting') console.log(`CABINET ${cabinet._id}: slug already "cabinet-painting"`)
     else {
-      changes++
-      tx.patch(cabinet._id, (p) => p.ifRevisionId(cabinet._rev).set({ slug: { _type: 'slug', current: 'cabinet-painting' } }))
+      const doc = { slug: { _type: 'slug', current: cabinet.slug } }
+      const allowed = guard.plan(cabinet._id, doc, { set: { slug: { _type: 'slug', current: 'cabinet-painting' } }, expect: { slug: { test: (v: unknown) => (v as { current?: string })?.current === 'cabinet-refinishing', label: 'cabinet-refinishing' } } })
+      if (allowed.any) tx.patch(cabinet._id, (p) => p.ifRevisionId(cabinet._rev).set(allowed.set))
       console.log(`CABINET ${cabinet._id} (rev ${cabinet._rev}): slug "${cabinet.slug}" → "cabinet-painting"`)
     }
     console.log()
@@ -239,19 +248,21 @@ async function main() {
         if (covered.every((c) => c.ok)) unset.push(`services.${key}.subServices`)
       }
       if (unset.length) {
-        changes++
-        tx.patch(location._id, (p) => p.ifRevisionId(location._rev).unset(unset))
+        // Only when every old section is covered by the surface's own text and photo (checked above)
+        const allowed = guard.plan(location._id, location, { unset, expect: Object.fromEntries(unset.map((path) => [path, { test: () => true, label: 'covered by the surfaces' }])) })
+        if (allowed.any) tx.patch(location._id, (p) => p.ifRevisionId(location._rev).unset(allowed.unset))
         console.log(`  → ${location.slug}: remove ${unset.join(', ')}`)
       }
     }
     console.log()
   }
 
-  console.log(`${changes} document(s) to change.`)
-  if (DRY_RUN || !changes) {
+  guard.report()
+  if (DRY_RUN || !guard.changes.length) {
     console.log(DRY_RUN ? 'Dry run complete. No changes written.' : 'Nothing to do.')
     return
   }
+  await guard.confirm(DRY_RUN)
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`Committed transaction ${result.transactionId} (${result.results.length} mutations).`)
 }

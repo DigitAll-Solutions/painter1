@@ -7,10 +7,14 @@
  *   node --env-file=.env.local scripts/clear-owner-card-variant.ts
  *
  * Published and draft service documents are both cleared. Re-running is a no-op.
+ * Writes go through scripts/lib/safe-write.ts: content already in Sanity is never overwritten or removed
+ * unless it is exactly what this step replaces; anything else is kept and listed (--force asks first).
  */
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 
@@ -28,13 +32,20 @@ async function main() {
 
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")\n`)
   for (const doc of docs) console.log(`  ${doc._id} (/[location]/${doc.slug}) ownerCardVariant: ${JSON.stringify(doc.ownerCardVariant)} → (unset)`)
-  console.log(`\n${docs.length} document(s) to change.`)
-  if (DRY_RUN || !docs.length) {
+  const guard = new SafeWrite('clear-owner-card-variant')
+  const tx = client.transaction()
+  // Hidden in Studio and no longer read: only its two old values are removed
+  const expect = { ownerCardVariant: { test: (v: unknown) => v === 'featured' || v === 'compact', label: 'featured or compact' } }
+  for (const doc of docs) {
+    const allowed = guard.plan(doc._id, doc, { unset: ['ownerCardVariant'], expect })
+    if (allowed.any) tx.patch(doc._id, (p) => p.ifRevisionId(doc._rev).unset(allowed.unset))
+  }
+  guard.report()
+  if (DRY_RUN || !guard.changes.length) {
     console.log(DRY_RUN ? 'Dry run complete. No changes written.' : 'Nothing to do.')
     return
   }
-  const tx = client.transaction()
-  for (const doc of docs) tx.patch(doc._id, (p) => p.ifRevisionId(doc._rev).unset(['ownerCardVariant']))
+  await guard.confirm(DRY_RUN)
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`Committed transaction ${result.transactionId} (${result.results.length} mutations).`)
 }

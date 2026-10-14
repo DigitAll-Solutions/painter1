@@ -8,11 +8,16 @@
  *   node --env-file=.env.local scripts/seed-our-work.ts --dry-run   # print every photo, write nothing
  *   node --env-file=.env.local scripts/seed-our-work.ts             # apply (needs SANITY_API_WRITE_TOKEN)
  *
- * Re-running is safe: photos are matched by asset, so nothing is added twice. No files are uploaded.
+ * Safe to re-run (scripts/lib/safe-write.ts): the gallery is written only while it still matches what this
+ * script produces (then there's nothing to do) or is empty. A gallery changed in Studio since (reordered,
+ * hidden or new photos, edited alt text) is kept and listed; --force overwrites it after confirmation.
+ * Photos are matched by asset, so nothing is added twice. No files are uploaded.
  */
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const LOCATION_SLUG = 'knoxville'
@@ -226,11 +231,15 @@ async function main() {
   const home = shown.filter((g) => g.role !== 'before' && !homeSlider.has(g.asset?._ref)).slice(0, 6)
   console.log(`\nHomepage "Our Work" grid (first 6, no "before" photos, not the homepage slider's brick pair):\n  ${home.map((g) => fileOf.get(g.asset!._ref)).join('\n  ')}`)
 
-  if (DRY_RUN) {
-    console.log('\nDry run complete. No changes written.')
+  const guard = new SafeWrite('seed-our-work')
+  const { set, any } = guard.plan(doc._id, doc, { set: { galleryImages: next } })
+  guard.report()
+  if (DRY_RUN || !any) {
+    console.log(DRY_RUN ? '\nDry run complete. No changes written.' : '\nNothing to do.')
     return
   }
-  const result = await client.patch(doc._id).ifRevisionId(doc._rev).set({ galleryImages: next }).commit({ visibility: 'sync' })
+  await guard.confirm(DRY_RUN)
+  const result = await client.patch(doc._id).ifRevisionId(doc._rev).set(set).commit({ visibility: 'sync' })
   console.log(`\nCommitted ${result._id} rev ${result._rev}.`)
 }
 
