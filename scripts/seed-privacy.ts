@@ -11,11 +11,17 @@
  *
  *   node --env-file=.env.local scripts/seed-privacy.ts --dry-run
  *   node --env-file=.env.local scripts/seed-privacy.ts            # needs SANITY_API_WRITE_TOKEN
+ *
+ * Safe to re-run (scripts/lib/safe-write.ts): the document is created when missing; after that a body
+ * that differs from the live page (edited in Studio) is kept and listed; --force overwrites it after
+ * confirmation.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 import { HTMLElement, NodeType, parse, type Node } from 'node-html-parser'
 
 const DRY_RUN = process.argv.includes('--dry-run')
@@ -255,7 +261,7 @@ async function main() {
   }
   if (!anchors.includes(DO_NOT_SELL_AT)) throw new Error(`#${DO_NOT_SELL_AT} not found on the live page`)
 
-  const existing = await client.fetch<{ _id: string } | null>(`*[_id == $id][0]{_id}`, { id: DOC_ID })
+  const existing = await client.fetch<{ _id: string; _rev: string; title?: string; body?: unknown[]; doNotSellHeading?: string } | null>(`*[_id == $id][0]{_id, _rev, title, body, doNotSellHeading}`, { id: DOC_ID })
   const links = [...new Set(blocks.flatMap((b) => b.markDefs.map((d) => d.href)))]
 
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")`)
@@ -279,15 +285,20 @@ async function main() {
   for (const h of headings) console.log(`    ${h.style}  ${plain(h)}`)
   console.log(`\nUnchanged: location "knoxville".privacyPolicy (legacy import, hidden in Studio, not used by the site).`)
 
-  if (DRY_RUN) {
-    console.log('\nDry run complete. No changes written.')
+  const guard = new SafeWrite('seed-privacy')
+  const tx = client.transaction()
+  if (guard.create(DOC_ID, Boolean(existing))) tx.createIfNotExists({ _id: DOC_ID, _type: 'privacyPolicy', title: 'Privacy Policy', body })
+  else {
+    const { set, unset, any } = guard.plan(DOC_ID, existing, { set: { title: 'Privacy Policy', body }, unset: ['doNotSellHeading'] })
+    if (any) tx.patch(DOC_ID, (p) => p.ifRevisionId(existing!._rev).set(set).unset(unset))
+  }
+  guard.report()
+  if (DRY_RUN || !guard.changes.length) {
+    console.log(DRY_RUN ? '\nDry run complete. No changes written.' : '\nNothing to do.')
     return
   }
-  const result = await client
-    .transaction()
-    .createIfNotExists({ _id: DOC_ID, _type: 'privacyPolicy', title: 'Privacy Policy' })
-    .patch(DOC_ID, (p) => p.set({ title: 'Privacy Policy', body }).unset(['doNotSellHeading']))
-    .commit({ visibility: 'sync' })
+  await guard.confirm(DRY_RUN)
+  const result = await tx.commit({ visibility: 'sync' })
   console.log(`\nCommitted transaction ${result.transactionId}.`)
 }
 

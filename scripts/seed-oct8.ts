@@ -15,10 +15,14 @@
  *   node --env-file=.env.local scripts/seed-oct8.ts --remove-legacy
  *
  * Re-running is a no-op.
+ * Writes go through scripts/lib/safe-write.ts: content already in Sanity is never overwritten or removed
+ * unless it is exactly what this step replaces; anything else is kept and listed (--force asks first).
  */
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 
 // Inlined when lib/warranty.ts was removed (Oct 14); this script has already run
 const CLIENT_TETHER = /@parse\.clienttether\.com$/i
@@ -171,15 +175,14 @@ async function main() {
   if (drafts.length) throw new Error(`Unpublished location drafts exist (${drafts.join(', ')}): publish or discard them in Studio first`)
 
   const tx: Tx = client.transaction()
-  let changes = 0
+  const guard = new SafeWrite(`seed-oct8${REMOVE_LEGACY ? ' --remove-legacy' : ''}`)
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")\n`)
 
   if (REMOVE_LEGACY) console.log('1–2. Skipped (--remove-legacy)')
   else {
     // 1. Warranty terms
-    if (terms) console.log(`1. WARRANTY TERMS ${TERMS_ID}: exists, left as is`)
+    if (!guard.create(TERMS_ID, Boolean(terms))) console.log(`1. WARRANTY TERMS ${TERMS_ID}: exists, left as is`)
     else {
-      changes++
       tx.createIfNotExists(WARRANTY_TERMS)
       console.log(`1. WARRANTY TERMS: CREATE ${TERMS_ID} (public, one for every location)`)
       printTerms()
@@ -198,8 +201,8 @@ async function main() {
       const list = warrantyRecipients(leadList)
       if (!settings || !list.length) console.log('   Nothing to copy: set warranty recipients in Studio')
       else {
-        changes++
-        tx.patch(settingsId, (p) => p.ifRevisionId(settings._rev).set({ warrantyRecipients: list }))
+        const allowed = guard.plan(settingsId, settings, { set: { warrantyRecipients: list } })
+        if (allowed.any) tx.patch(settingsId, (p) => p.ifRevisionId(settings._rev).set(allowed.set))
         console.log(`   warrantyRecipients: (empty) → ${list.length}: ${list.map(mask).join(', ')}`)
       }
     }
@@ -218,17 +221,20 @@ async function main() {
     console.log(`   ${location.name} (${location._id}, rev ${location._rev})`)
     for (const line of lines) console.log(`     ${line}`)
     if (!Object.keys(set).length && !unset.length) continue
-    changes++
     touched++
-    tx.patch(location._id, (p) => (unset.length ? p.ifRevisionId(location._rev).unset(unset) : p.ifRevisionId(location._rev).set(set)))
+    // Old fields go only where pair 1 holds the same photos (checked in pairChanges)
+    const expect = Object.fromEntries(unset.map((path) => [path, { test: () => true, label: 'pair 1 holds the same photo' }]))
+    const allowed = guard.plan(location._id, location, { set, unset, expect })
+    if (allowed.any) tx.patch(location._id, (p) => (allowed.unset.length ? p.ifRevisionId(location._rev).unset(allowed.unset) : p.ifRevisionId(location._rev).set(allowed.set)))
   }
   if (!touched) console.log('   Nothing to change')
 
-  console.log(`\n${changes} document(s) to change.`)
-  if (DRY_RUN || !changes) {
+  guard.report()
+  if (DRY_RUN || !guard.changes.length) {
     console.log(DRY_RUN ? 'Dry run complete. No changes written.' : 'Nothing to do.')
     return
   }
+  await guard.confirm(DRY_RUN)
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`Committed transaction ${result.transactionId} (${result.results.length} mutations).`)
 }

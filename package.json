@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test \"lib/**/*.test.ts\""
+    "test": "node --test \"lib/**/*.test.ts\" \"scripts/**/*.test.ts\""
   },
   "dependencies": {
     "@sanity/image-url": "^2.1.1",

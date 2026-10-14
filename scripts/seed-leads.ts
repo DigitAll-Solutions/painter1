@@ -8,11 +8,17 @@
  *
  *   node --env-file=.env.local scripts/seed-leads.ts --dry-run   # print everything (addresses masked)
  *   node --env-file=.env.local scripts/seed-leads.ts             # apply (needs SANITY_API_WRITE_TOKEN)
+ *
+ * Safe to re-run (scripts/lib/safe-write.ts): only EMPTY fields are filled. The email template, consent
+ * text (since tokenized to {locationName}) and recipients already in Sanity are kept and listed;
+ * --force overwrites them after confirmation.
  */
 import { readdirSync, readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const LOCATION_SLUG = 'knoxville'
@@ -169,7 +175,7 @@ async function main() {
   const drafts = docs.filter((d) => d._id.startsWith('drafts.'))
   const recipientsId = `leads.${location._id}`
   const [existingRecipients, existingSurvey] = await Promise.all([
-    client.fetch<{ leadRecipients?: string[] } | null>(`*[_id == $id][0]{leadRecipients}`, { id: recipientsId }),
+    client.fetch<{ _rev: string; leadRecipients?: string[] } | null>(`*[_id == $id][0]{_rev, leadRecipients}`, { id: recipientsId }),
     client.fetch<Record<string, unknown> | null>(`*[_id == $id][0]`, { id: SURVEY_ID }),
   ])
 
@@ -195,19 +201,25 @@ async function main() {
   console.log(`\nSURVEY ${SURVEY_ID} (public; ${existingSurvey ? 'exists' : 'new'}): ${Object.keys(surveyFill).length} empty field(s) filled from lib/estimate-survey-defaults.json`)
   for (const [key, value] of Object.entries(surveyFill)) console.log(`  ${key}: ${JSON.stringify(value)}`)
 
+  const guard = new SafeWrite('seed-leads')
   const tx = client.transaction()
   for (const doc of [location, ...drafts]) {
-    tx.patch(doc._id, (p) => p.ifRevisionId(doc._rev).set({ leadEmailSubject: subject, leadEmailTemplate: template, leadConfirmationMessage: confirmation, consentBlocks }))
+    const { set, any } = guard.plan(doc._id, doc, { set: { leadEmailSubject: subject, leadEmailTemplate: template, leadConfirmationMessage: confirmation, consentBlocks } })
+    if (any) tx.patch(doc._id, (p) => p.ifRevisionId(doc._rev).set(set))
   }
-  tx.createIfNotExists({ _id: recipientsId, _type: 'leadSettings' })
-  tx.patch(recipientsId, (p) => p.set({ leadRecipients: sendTo }))
-  tx.createIfNotExists({ _id: SURVEY_ID, _type: 'estimateSurvey', title: 'Default survey' })
-  if (Object.keys(surveyFill).length) tx.patch(SURVEY_ID, (p) => p.setIfMissing(surveyFill))
+  if (guard.create(recipientsId, Boolean(existingRecipients))) tx.createIfNotExists({ _id: recipientsId, _type: 'leadSettings' })
+  const recipients = guard.plan(recipientsId, existingRecipients, { set: { leadRecipients: sendTo } })
+  if (recipients.any) tx.patch(recipientsId, (p) => (existingRecipients ? p.ifRevisionId(existingRecipients._rev) : p).set(recipients.set))
+  if (guard.create(SURVEY_ID, Boolean(existingSurvey))) tx.createIfNotExists({ _id: SURVEY_ID, _type: 'estimateSurvey', title: 'Default survey' })
+  const survey = guard.plan(SURVEY_ID, existingSurvey, { set: surveyFill })
+  if (survey.any) tx.patch(SURVEY_ID, (p) => p.setIfMissing(survey.set))
+  guard.report()
 
-  if (DRY_RUN) {
-    console.log('\nDry run complete. No changes written.')
+  if (DRY_RUN || !guard.changes.length) {
+    console.log(DRY_RUN ? '\nDry run complete. No changes written.' : '\nNothing to do.')
     return
   }
+  await guard.confirm(DRY_RUN)
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`\nCommitted transaction ${result.transactionId} (${result.results.length} mutations).`)
 }

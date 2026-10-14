@@ -10,10 +10,14 @@
  *   node --env-file=.env.local scripts/seed-about.ts
  *
  * Re-running is a no-op.
+ * Writes go through scripts/lib/safe-write.ts: content already in Sanity is never overwritten or removed
+ * unless it is exactly what this step replaces; anything else is kept and listed (--force asks first).
  */
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 
 import { memberRole } from '../lib/about.ts'
 
@@ -72,13 +76,15 @@ async function main() {
   console.log('  - other team members customers meet (reviews name "Charlie", who seems to handle estimates and sales): name, role, headshot')
   console.log('  - for "Why I built a team": a paragraph from Keith on why he added a project manager, and what he still checks himself')
 
-  const changes = Object.keys(set).length
-  console.log(`\n${changes} field(s) to change.`)
-  if (DRY_RUN || !changes) {
+  const guard = new SafeWrite('seed-about')
+  const allowed = guard.plan(doc._id, doc, { set })
+  guard.report()
+  if (DRY_RUN || !allowed.any) {
     console.log(DRY_RUN ? 'Dry run complete. No changes written.' : 'Nothing to do.')
     return
   }
-  const result = await client.patch(doc._id).ifRevisionId(doc._rev).set(set).commit({ visibility: 'sync' })
+  await guard.confirm(DRY_RUN)
+  const result = await client.patch(doc._id).ifRevisionId(doc._rev).set(allowed.set).commit({ visibility: 'sync' })
   console.log(`Committed: ${doc._id} now rev ${result._rev}`)
 }
 

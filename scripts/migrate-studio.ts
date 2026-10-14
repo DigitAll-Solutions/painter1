@@ -17,12 +17,16 @@
  * re-run after deploying; it only touches what still needs changing.
  *
  * Re-running is a no-op. Lead contact details are never printed.
+ * Writes go through scripts/lib/safe-write.ts: content already in Sanity is never overwritten or removed
+ * unless it is exactly what this step replaces; anything else is kept and listed (--force asks first).
  */
 import { createHash } from 'node:crypto'
 import { isDeepStrictEqual } from 'node:util'
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 
 import { consentPlainText, fillConsentBlocks, LOCATION_NAME_TOKEN } from '../lib/consent.ts'
 import type { ConsentBlock } from '../sanity/lib/types.ts'
@@ -74,7 +78,7 @@ async function main() {
   if (drafts.length) throw new Error(`Unpublished drafts exist (${drafts.join(', ')}): publish or discard them in Studio first`)
 
   const tx = client.transaction()
-  let changes = 0
+  const guard = new SafeWrite('migrate-studio')
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")\n`)
 
   // 1. Consent placeholder
@@ -103,8 +107,9 @@ async function main() {
     }
     console.log(`     whole blocks identical after filling (marks, links, keys): ${identical ? 'yes' : 'NO'}`)
     if (!identical) throw new Error(`${loc.name}: filled consent differs from the original; not migrating`)
-    tx.patch(loc._id, (p) => p.ifRevisionId(loc._rev).set({ consentBlocks: tokenized }))
-    changes++
+    // Replaces only the blocks read above, verified to fill back to exactly the same text
+    const allowed = guard.plan(loc._id, loc, { set: { consentBlocks: tokenized }, expect: { consentBlocks: { value: blocks } } })
+    if (allowed.any) tx.patch(loc._id, (p) => p.ifRevisionId(loc._rev).set(allowed.set))
   }
 
   // 2. Lead → location reference
@@ -119,8 +124,8 @@ async function main() {
     const target = bySlug.get(lead.location)
     if (!target) throw new Error(`${label}: no location with slug "${lead.location}"`)
     console.log(`   ${label}: "${lead.location}" → reference ${target._id}`)
-    tx.patch(lead._id, (p) => p.ifRevisionId(lead._rev).set({ location: { _type: 'reference', _ref: target._id } }))
-    changes++
+    const allowed = guard.plan(lead._id, lead, { set: { location: { _type: 'reference', _ref: target._id } }, expect: { location: { value: lead.location } } })
+    if (allowed.any) tx.patch(lead._id, (p) => p.ifRevisionId(lead._rev).set(allowed.set))
   }
 
   // 3. Preview fields
@@ -130,11 +135,12 @@ async function main() {
     console.log(`   ${loc.name}: ${ok ? `"${loc.city}, ${loc.state}" — no change needed` : 'MISSING city or state: fill it in Studio (shows under "No state set")'}`)
   }
 
-  console.log(`\n${changes} document(s) to change.`)
-  if (DRY_RUN || !changes) {
+  guard.report()
+  if (DRY_RUN || !guard.changes.length) {
     console.log(DRY_RUN ? 'Dry run complete. No changes written.' : 'Nothing to do.')
     return
   }
+  await guard.confirm(DRY_RUN)
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`Committed transaction ${result.transactionId}.`)
 }

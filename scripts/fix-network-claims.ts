@@ -15,11 +15,16 @@
  *   node --env-file=.env.local scripts/fix-network-claims.ts            # only after Rick confirms
  *
  * These lists render without {tokens}, so the wording uses "we" / "us", not the location name.
- * Re-running is a no-op.
+ * Re-running is a no-op. Knoxville's years stat is changed only while it still shows the old 20 (it's 23
+ * now, set in Studio, so it is kept).
+ * Writes go through scripts/lib/safe-write.ts: content already in Sanity is never overwritten or removed
+ * unless it is exactly what this step replaces; anything else is kept and listed (--force asks first).
  */
 import { pathToFileURL } from 'node:url'
 
 import { createClient } from '@sanity/client'
+
+import { SafeWrite } from './lib/safe-write.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const YEARS = process.argv.find((arg) => arg.startsWith('--years='))?.slice('--years='.length)
@@ -90,15 +95,23 @@ async function main() {
   if (yearsChange) console.log(`    - ${knox.yearsInBusiness}\n    + ${years ?? '(removed: the stat hides)'}`)
   else console.log('    already as proposed')
 
-  const changes = Object.keys(set).length + unset.length + (yearsChange ? 1 : 0)
-  console.log(`\n${changes} field(s) to change.`)
-  if (DRY_RUN || !changes) {
+  const guard = new SafeWrite('fix-network-claims')
+  const tx = client.transaction()
+  // Each term is replaced only while it still holds the exact old wording
+  const expect = Object.fromEntries(TERMS.map(({ field, from }) => [field.replace(/\[(\d+)\]$/, '[$1]'), { value: from }]))
+  const termsPlan = guard.plan('warranty-terms', terms, { set, unset, expect })
+  if (termsPlan.any) tx.patch('warranty-terms', (p) => p.ifRevisionId(terms._rev).set(termsPlan.set).unset(termsPlan.unset))
+  if (yearsChange) {
+    // The old stat was 20 (Painter1's history); anything else was set on purpose
+    const yearsPlan = guard.plan('location-knoxville', knox, years !== undefined ? { set: { yearsInBusiness: years }, expect: { yearsInBusiness: { value: 20 } } } : { unset: ['yearsInBusiness'], expect: { yearsInBusiness: { value: 20 } } })
+    if (yearsPlan.any) tx.patch('location-knoxville', (p) => p.ifRevisionId(knox._rev).set(yearsPlan.set).unset(yearsPlan.unset))
+  }
+  guard.report()
+  if (DRY_RUN || !guard.changes.length) {
     console.log(DRY_RUN ? 'Dry run complete. No changes written.' : 'Nothing to do.')
     return
   }
-  const tx = client.transaction()
-  if (Object.keys(set).length || unset.length) tx.patch('warranty-terms', (p) => p.ifRevisionId(terms._rev).set(set).unset(unset))
-  if (yearsChange) tx.patch('location-knoxville', (p) => (years !== undefined ? p.ifRevisionId(knox._rev).set({ yearsInBusiness: years }) : p.ifRevisionId(knox._rev).unset(['yearsInBusiness'])))
+  await guard.confirm(DRY_RUN)
   const result = await tx.commit({ visibility: 'sync' })
   console.log(`Committed transaction ${result.transactionId} (${result.results.length} mutations).`)
 }
