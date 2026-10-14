@@ -5,6 +5,7 @@ import {altField} from './objects/altField'
 import {LockedSlugInput} from '../components/LockedSlugInput'
 import {slugError, slugify, slugWarning} from '../lib/location-slugs'
 import {US_STATES} from '../lib/us-states'
+import {ringbotId} from '../../lib/ringbot'
 
 const imageWithAlt = (name: string, title?: string) =>
   defineField({
@@ -634,6 +635,16 @@ export const location = defineType({
       },
       initialValue: 'survey',
       hidden: ({document}) => !document?.hasScheduling,
+    }),
+
+    defineField({
+      name: 'webchatId',
+      title: 'Web chat (Ringbot)',
+      type: 'string',
+      group: 'leads',
+      description:
+        'Paste this location’s Ringbot embed code (<script src="https://api.callwidget.co/embed?iID=…">) or just its iID. Each location has its own install: it carries the business name and phone, so never copy another location’s. Empty: no chat button. The chat loads after the visitor first scrolls or taps, so it doesn’t slow the page.',
+      validation: (rule) => rule.custom((value?: string) => (!value?.trim() || ringbotId(value) ? true : 'That isn’t a Ringbot embed code or iID.')),
     }),
 
     // ---------- Warranty ----------
