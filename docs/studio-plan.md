@@ -318,6 +318,7 @@ A "Launch checklist" document view, computed from the document being edited plus
 | From | To | Status | Where |
 |---|---|---|---|
 | `/:location/cabinet-refinishing` | `/:location/cabinet-painting` | **in code now** (308, `next.config.ts`) | slug renamed Oct 9 |
+| `/:location/reviews` and anything under it (2021 site; `/reviews/` too) | `/:location#reviews` (homepage reviews section) | **in code now** (308, `next.config.ts`) | no reviews page (Rick, Oct 14); `/studio` excluded |
 | `/:location/cabinet-painting/` (live WordPress URL) | `/:location/cabinet-painting` | automatic (trailing slash) | same page |
 | `/:location/cabinet-painting-and-refinishing/` (live) | `/:location/cabinet-painting` | add at launch | second live cabinet URL |
 | `/:location/home-siding-painting/` (live) | `/:location/exterior-painting#siding` | add at launch | Siding section |

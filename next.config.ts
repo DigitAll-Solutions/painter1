@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
       { source: "/", destination: "/knoxville", permanent: false },
       // Renamed service pages (308): /knoxville/cabinet-refinishing → /knoxville/cabinet-painting, every location
       ...Object.entries(SERVICE_SLUG_RENAMES).map(([from, to]) => ({ source: `/:location/${from}`, destination: `/:location/${to}`, permanent: true })),
+      // No reviews page (Rick, Oct 14): reviews stay on the homepage. Old /knoxville/reviews(/…) URLs (308)
+      // land on its reviews section, every location; /studio is left alone.
+      { source: "/:location((?!studio(?![^/]))[^/]+)/reviews/:rest*", destination: "/:location#reviews", permanent: true },
     ];
   },
   async rewrites() {

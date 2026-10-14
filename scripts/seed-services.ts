@@ -57,7 +57,6 @@ export const SERVICE_SEED = [
     shortName: 'Interior',
     locationKey: 'interior',
     heroSubtitle: 'Clean lines, protected floors and furniture, and a finish that lasts.',
-    ownerCardVariant: 'compact',
     metaDescription:
       'Interior painting in {city}, {state} by Painter1. Sherwin-Williams paints, full furniture and floor protection, and a 2-year warranty. Free estimate.',
     transformationHeading: 'Real Interiors, Real Results',
@@ -89,7 +88,6 @@ export const SERVICE_SEED = [
     shortName: 'Exterior',
     locationKey: 'exterior',
     heroSubtitle: "Proper prep and Sherwin-Williams paint that holds up to {city}'s weather.",
-    ownerCardVariant: 'featured',
     metaDescription:
       'Exterior painting in {city}, {state} by Painter1. Pressure washing, scraping, caulking and Sherwin-Williams paints, plus a 2-year warranty. Free estimate.',
     transformationHeading: 'Real Exteriors, Real Results',
@@ -145,7 +143,6 @@ export const SERVICE_SEED = [
     slug: { _type: 'slug', current: 'cabinet-painting' },
     shortName: 'Cabinet',
     locationKey: 'cabinet',
-    ownerCardVariant: 'featured',
     heroSubtitle: 'A factory-smooth finish without the cost of new cabinets.',
     metaDescription:
       'Cabinet painting in {city}, {state} by Painter1: Sherwin-Williams cabinet enamel, most kitchens done in 3–5 days, and a 2-year warranty. Free estimate.',
@@ -225,13 +222,12 @@ const SOURCES: Record<string, Record<string, string>> = {
     whatWePaintTitle: 'DRAFTED, needs client approval',
     whatWePaint: 'DRAFTED, needs client approval (each card built from facts on the live page)',
     faqs: 'DRAFTED, needs client approval (answers use only facts from the live page / imported content)',
-    ownerCardVariant: 'choice: featured (photo + "Why {city} Homeowners Call {owner} First"), like Exterior',
   },
 }
 
 // Legacy string tags → service document ids. Cabinet/commercial/general have no service doc yet.
 /** Fields removed from the service schema; the seed clears any stored value */
-const REMOVED_SERVICE_FIELDS = ['showPageHeader']
+const REMOVED_SERVICE_FIELDS = ['showPageHeader', 'ownerCardVariant']
 
 const TAG_TO_SERVICE: Record<string, string> = {
   interior: 'service-interior-painting',
@@ -496,7 +492,7 @@ function describeService(doc: (typeof SERVICE_SEED)[number], exists: boolean, br
   const src = (field: string) => (sources[field] ? `   ⟵ ${sources[field]}` : '')
   const out = [`  ${exists ? 'UPDATE' : 'CREATE'} ${doc._id}  (/[location]/${doc.slug.current})`]
   if (brief) return `${out[0]}  (content unchanged from the previous seed)`
-  out.push(`    title: ${doc.title} | shortName: ${doc.shortName} | locationKey: ${doc.locationKey} | ownerCard: ${doc.ownerCardVariant}${src('ownerCardVariant')}`)
+  out.push(`    title: ${doc.title} | shortName: ${doc.shortName} | locationKey: ${doc.locationKey}`)
   out.push(`    heroSubtitle: ${doc.heroSubtitle}${src('heroSubtitle')}`)
   const filled = doc.metaDescription.replaceAll('{city}', 'Knoxville').replaceAll('{state}', 'TN')
   out.push(`    metaDescription (${filled.length} chars for Knoxville): ${doc.metaDescription}${src('metaDescription')}`)
@@ -550,8 +546,8 @@ async function main() {
   }
   if (!cardChanges) console.log('  —')
 
-  const currentHero = await client.fetch<{ _id: string; heroSubtitle?: string; showPageHeader?: boolean }[]>(
-    `*[_id in $ids]{_id, heroSubtitle, showPageHeader}`,
+  const currentHero = await client.fetch<{ _id: string; heroSubtitle?: string; showPageHeader?: boolean; ownerCardVariant?: string }[]>(
+    `*[_id in $ids]{_id, heroSubtitle, showPageHeader, ownerCardVariant}`,
     { ids: SERVICE_SEED.map((d) => d._id) },
   )
   console.log('\nHERO SUBTITLE / REMOVED FIELDS')
