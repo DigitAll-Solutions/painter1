@@ -6,5 +6,7 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: true, // Set to false if statically generating pages, using ISR or tag-based revalidation
+  // Server-side page rendering only (Studio has its own client): read the API, not the CDN, so a
+  // published change is there as soon as the publish webhook expires the page (lib/revalidate.ts)
+  useCdn: false,
 })

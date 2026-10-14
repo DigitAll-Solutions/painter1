@@ -51,6 +51,7 @@ const plain = (value: unknown) =>
 type Change = { doc: string; path: string; label: string; from: string; to: string; rich?: boolean; outside?: boolean }
 const CABINET = 'service-cabinet-refinishing'
 const EXTERIOR = 'service-exterior-painting'
+const INTERIOR = 'service-interior-painting'
 
 // from: the exact text on the site today (bold markers only matter in `to`)
 export const CHANGES: Change[] = [
@@ -146,6 +147,14 @@ export const CHANGES: Change[] = [
     from: "We paint in temperatures ranging from 35°F to 95°F, using Sherwin-Williams exterior lines formulated to cure properly across that range — so we're not limited to just summer.",
     to: "It depends on the paint: Sherwin-Williams exterior lines are formulated to cure properly across a wide temperature range, so we're not limited to just summer.",
   },
+  {
+    doc: INTERIOR,
+    path: 'faqs[_key=="how-long-does-interior-paint-smell-last"].answer',
+    label: 'Interior FAQ: How long does interior paint smell last?',
+    // "lines we use" promised every location uses them; Sherwin-Williams and low-VOC stay
+    from: 'Sherwin-Williams low-VOC lines we use typically clear within a day or two with normal ventilation.',
+    to: 'Low-VOC Sherwin-Williams paints typically clear within a day or two with normal ventilation.',
+  },
   // Only with --outside-cards
   {
     doc: CABINET,
@@ -177,9 +186,9 @@ export const CHANGES: Change[] = [
 
 async function main() {
   const client = createClient({ projectId: env('NEXT_PUBLIC_SANITY_PROJECT_ID'), dataset: env('NEXT_PUBLIC_SANITY_DATASET'), apiVersion: '2025-01-01', token: env('SANITY_API_WRITE_TOKEN'), useCdn: false, perspective: 'raw' })
-  const drafts = await client.fetch<string[]>(`*[_id in ["drafts.${CABINET}", "drafts.${EXTERIOR}"]]._id`)
+  const drafts = await client.fetch<string[]>(`*[_id in ["drafts.${CABINET}", "drafts.${EXTERIOR}", "drafts.${INTERIOR}"]]._id`)
   if (drafts.length) throw new Error(`Unpublished drafts exist (${drafts.join(', ')}): publish or discard them in Studio first`)
-  const docs = await client.fetch<(Record<string, unknown> & { _id: string; _rev: string })[]>(`*[_id in [$a, $b]]`, { a: CABINET, b: EXTERIOR })
+  const docs = await client.fetch<(Record<string, unknown> & { _id: string; _rev: string })[]>(`*[_id in [$a, $b, $c]]`, { a: CABINET, b: EXTERIOR, c: INTERIOR })
 
   console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")`)
   console.log(`Mode: cards + FAQs${OUTSIDE ? ' + text outside cards and FAQs' : ''} (post-merge)\n`)
