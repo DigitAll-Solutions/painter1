@@ -197,7 +197,6 @@ export type Service = {
   heroSubtitle?: string
   heroImage?: SanityImage
   metaDescription?: string
-  ownerCardVariant?: 'featured' | 'compact'
   transformationHeading?: string
   transformationBody?: string
   processIntro?: string

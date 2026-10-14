@@ -2,18 +2,18 @@ import SanityImage from '../SanityImage'
 import { ownerHeading } from '@/lib/owner-heading'
 import type { Location } from '@/sanity/lib/types'
 
-type Props = { location: Location; variant?: 'featured' | 'compact' }
+type Props = { location: Location }
 
-// Owner card on service pages: H2 "Why {city} Homeowners Call {owner} First" (every variant), then the
-// owner's name line (H3). The quote is only ever the owner's own recorded words (location.ownerQuote);
-// without one the card shows just the name line. Compact: no photo, "Guaranteed by the owner".
-export default function OwnerCard({ location, variant = 'featured' }: Props) {
+// Owner card on service pages, the same on every service (Rick, Oct 14): H2 "Why {city} Homeowners Call
+// {owner} First", the owner photo, then the owner's name line (H3). The quote is only ever the owner's own
+// recorded words (location.ownerQuote); without one the card shows just the name line. No owner photo →
+// the same card, text only. The service's old ownerCardVariant field is ignored.
+export default function OwnerCard({ location }: Props) {
   const heading = ownerHeading(location)
   if (!heading) return null
 
   const fullName = location.ownerName!.trim()
-  const featured = variant === 'featured'
-  const photo = featured ? (location.ownerPhoto ?? location.ownerActionPhoto) : undefined
+  const photo = location.ownerPhoto ?? location.ownerActionPhoto
 
   return (
     <section className="bg-mist py-16 md:py-20">
@@ -39,7 +39,6 @@ export default function OwnerCard({ location, variant = 'featured' }: Props) {
             <h3 className="text-xl font-extrabold tracking-tight text-ink md:text-2xl">
               {fullName} — Owner, {location.name}
             </h3>
-            {!featured && <p className="mt-1 text-sm font-bold tracking-[0.12em] text-cta uppercase">Guaranteed by the owner</p>}
             {location.ownerQuote && (
               <blockquote className="mt-4 text-lg leading-relaxed text-slate-600 italic">&ldquo;{location.ownerQuote}&rdquo;</blockquote>
             )}

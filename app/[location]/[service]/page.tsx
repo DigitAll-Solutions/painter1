@@ -137,7 +137,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
         cta={{ href: getCta(location, service.locationKey).href, label: 'Get My Free Estimate →' }}
       />
 
-      <OwnerCard location={location} variant={service.ownerCardVariant} />
+      <OwnerCard location={location} />
 
       <ServiceProcess location={location} service={service} />
 

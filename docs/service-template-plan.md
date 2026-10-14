@@ -32,7 +32,7 @@ Route `/[location]/[service]` for Interior Painting and Exterior Painting, built
 - `locationKey` — `interior | exterior | cabinet`: which `location.services.*` entry holds this service's per-location data (see D1)
 - `showPageHeader` boolean, default true
 - `metaDescription` text (tokens)
-- `ownerCardVariant` radio: featured | compact
+- `ownerCardVariant` radio: featured | compact (removed Oct 14: every service page uses the featured card; hidden in Studio)
 - Transformation: `transformationHeading` string, `transformationBody` text (tokens)
 - Process: `processIntro` (optional), `prepIntro`, `prepBullets[]`, `materialsBody` (rich text, **bold only**), `materialsBlocks[]` { title, body (bold-only rich text) }
 - Warranty banner: `warrantyBannerBody` text (tokens), see D5
@@ -52,7 +52,7 @@ Route `/[location]/[service]` for Interior Painting and Exterior Painting, built
 |---|---|---|
 | 0 Page header (breadcrumb + H1) | `components/service/ServicePageHeader.tsx` | new, compact. Home → `absoluteUrl('/')` (the root `/` of this app is still the create-next-app starter), City → `/{slug}`, Service (current). H1 `{title} in {City}, {State}`. When `showPageHeader` is false the transformation heading renders as the H1 (exactly one H1 either way). |
 | 1 Transformation | `TransformationSection` refactored to take `heading`, `body`, `before/after`, `headingLevel`, optional CTA; homepage keeps its current output | reuse + refactor. Text-only when the pair is missing. Button "Get My Free Estimate →" → `/{slug}/free-estimate`. |
-| 2 Owner card | `components/service/OwnerCard.tsx` (featured / compact) | new (homepage section is too heavy). Quote only from `ownerQuote`; no quote → card without one. |
+| 2 Owner card | `components/service/OwnerCard.tsx` (one layout since Oct 14: photo, name line, quote; text only without a photo) | new (homepage section is too heavy). Quote only from `ownerQuote`; no quote → card without one. |
 | 3 Process + warranty banner | `ServiceProcess.tsx`, `WarrantyBanner.tsx` | new. Portable text via `next-sanity`'s `PortableText` (strong only). Link uses `getWarrantyHref()`. Link colour: `#B9520A` on #112A52 is **2.89:1 (fails)**, so this link uses the lighter orange already used on navy in the trust strip (`orange-300`, about 8.3:1). |
 | 4 What We Paint | `WhatWePaint.tsx` | new. 4 → 4 cols, 6 → 3 cols, else auto-fit; tablet 2, small mobile 1. White lucide icon on navy rounded square. |
 | 5 Recent Work | `GalleryGrid` gains optional captions + 4-col variant | reuse. Up to 8 tagged images; hidden if fewer than 4. |

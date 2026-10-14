@@ -70,7 +70,8 @@ export const service = defineType({
       title: 'Owner card',
       type: 'string',
       group: 'basics',
-      description: 'Featured: "Why {city} homeowners call {owner} first" heading with the owner photo. Compact: name and "Guaranteed by the owner" only.',
+      description: 'No longer used: every service page shows the same owner card (photo, name line, quote). Hidden; cleared by scripts/clear-owner-card-variant.ts.',
+      hidden: true,
       options: {
         list: [
           {title: 'Featured', value: 'featured'},
@@ -78,7 +79,6 @@ export const service = defineType({
         ],
         layout: 'radio',
       },
-      initialValue: 'featured',
     }),
 
     // Transformation
