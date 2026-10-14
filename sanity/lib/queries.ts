@@ -51,6 +51,9 @@ export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current i
   faqs[]{_key, question, answer}
 }`)
 
+/** Published locations (the About page's "network of N Painter1 locations") */
+export const LOCATION_COUNT_QUERY = defineQuery(`count(*[_type == "location" && defined(slug.current) && !(_id in path("drafts.**"))])`)
+
 export const SERVICE_SLUGS_QUERY = defineQuery(`*[_type == "service" && defined(slug.current)].slug.current`)
 
 // Service _id → locationKey (interior | exterior | cabinet), for the Our Work filters

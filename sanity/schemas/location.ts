@@ -238,18 +238,41 @@ export const location = defineType({
       name: 'teamMembers',
       type: 'array',
       group: 'owner',
-      description: 'Up to two people shown beside the owner (only for "Owner with team").',
+      description:
+        'The people a customer meets besides the owner: estimators, project managers, office (only for "Owner with team"). The About page shows a card for each; the homepage shows the first two. Painting crews aren’t listed here.',
       hidden: ({document}) => document?.franchiseStructure !== 'owner-with-team',
-      validation: (rule) => rule.max(2),
+      validation: (rule) => rule.max(8),
       of: [
         defineArrayMember({
           type: 'object',
           name: 'teamMember',
           fields: [
             defineField({name: 'name', type: 'string', description: 'Full name.', validation: (rule) => rule.required()}),
-            defineField({name: 'jobTitle', type: 'string', description: 'E.g. "Estimator" or "Crew lead".', validation: (rule) => rule.required()}),
+            defineField({name: 'jobTitle', type: 'string', description: 'Their title as shown, e.g. "Estimator" or "Project Manager".', validation: (rule) => rule.required()}),
+            defineField({
+              name: 'role',
+              type: 'string',
+              description: 'What they do in a project: sets the badge on their About page card and on "A named person at every step". Empty: read from the job title.',
+              options: {
+                list: [
+                  {title: 'Owner', value: 'owner'},
+                  {title: 'Estimator', value: 'estimator'},
+                  {title: 'Project Manager', value: 'projectManager'},
+                  {title: 'Office & Scheduling', value: 'office'},
+                  {title: 'Other', value: 'other'},
+                ],
+                layout: 'radio',
+                direction: 'horizontal',
+              },
+            }),
             defineField({name: 'withOwnerSince', title: 'With owner since (year)', type: 'string', description: 'E.g. "2022".', validation: (rule) => rule.regex(/^\d{4}$/, {name: 'year'})}),
-            defineField({name: 'bio', type: 'text', rows: 2, description: 'One or two lines: background, specialty.'}),
+            defineField({
+              name: 'bio',
+              title: 'What they do for you',
+              type: 'text',
+              rows: 2,
+              description: 'One line on what they do for the customer, e.g. "Walks your project with you and writes your itemized estimate." Empty: a standard line for their role.',
+            }),
             defineField({name: 'photo', type: 'image', description: 'Portrait, face centered.', options: {hotspot: true}, fields: [altField]}),
             defineField({name: 'namedInReviews', title: 'Named in Google reviews', type: 'boolean', description: 'Tick when customers mention this person by name.', initialValue: false}),
           ],
@@ -260,7 +283,27 @@ export const location = defineType({
     defineField({name: 'projectsCount', type: 'number', group: 'owner', fieldset: 'stats', description: 'Total projects completed.'}),
     defineField({name: 'interiorProjectsCount', type: 'number', group: 'owner', fieldset: 'stats', description: 'Interior projects (optional).'}),
     defineField({name: 'exteriorProjectsCount', type: 'number', group: 'owner', fieldset: 'stats', description: 'Exterior projects (optional).'}),
-    defineField({name: 'ownerBio', type: 'text', rows: 12, group: 'owner', fieldset: 'notOnSite', description: 'Long owner biography for the About page (not built yet).'}),
+    defineField({
+      name: 'ownerBio',
+      title: 'Owner story (About page)',
+      type: 'text',
+      rows: 12,
+      group: 'owner',
+      description:
+        'The owner’s story in their own words, first person ("I…"), shown as "My story" on the About page. A blank line starts a new paragraph. Usually: background (years in the trade, what they did before Painter1), why they opened this location, local roots, and what they personally check on every job. For a team, also why they built one. Only real facts from the owner: no template bios. Empty: the section is left out.',
+    }),
+    defineField({
+      name: 'licenseNumber',
+      title: 'Contractor license number',
+      type: 'string',
+      group: 'owner',
+      description: 'Shown as "License #…" under "Licensed & insured" on the About page. Only where the state requires one; leave empty otherwise.',
+    }),
+    {
+      ...imageWithAlt('teamPhoto', 'Team photo (About page)'),
+      group: 'owner',
+      description: 'The owner with the estimators and project managers, faces visible (ideally with the truck or at a job site). Shown at the top of the About page for a team. Empty: no photo there.',
+    },
 
     // ---------- Homepage ----------
     defineField({
@@ -317,13 +360,13 @@ export const location = defineType({
         }),
       ],
     }),
-    defineField({name: 'intro', title: 'Welcome text', type: 'text', rows: 6, group: 'content', fieldset: 'notOnSite', description: 'Imported welcome copy, for the About page (not built yet).'}),
+    defineField({name: 'intro', title: 'Welcome text', type: 'text', rows: 6, group: 'content', fieldset: 'notOnSite', description: 'Imported welcome copy from the old site. Not shown: the About page uses the Owner story (Owner & team tab).'}),
     defineField({
       name: 'whyChooseUs',
       type: 'array',
       group: 'content',
       fieldset: 'notOnSite',
-      description: 'Imported list, for the About page (not built yet).',
+      description: 'Imported list from the old site. Not shown on the new pages.',
       of: [defineArrayMember({type: 'string'})],
     }),
     defineField({
@@ -332,7 +375,7 @@ export const location = defineType({
       type: 'array',
       group: 'content',
       fieldset: 'notOnSite',
-      description: 'Sections for the About page (not built yet).',
+      description: 'Imported sections of the old About page. Not shown: the About page uses the Owner story (Owner & team tab).',
       of: [
         defineArrayMember({
           type: 'object',
@@ -713,7 +756,7 @@ export const location = defineType({
       group: 'legal',
       description: 'Shown beside the warranty copy on the homepage. Leave blank for the default blue paint fan-deck illustration.',
     },
-    defineField({name: 'warranty', title: 'Warranty terms', type: 'blockContent', group: 'legal', fieldset: 'notOnSite', description: 'Full warranty text for the Warranty page (not built yet).'}),
+    defineField({name: 'warranty', title: 'Warranty terms', type: 'blockContent', group: 'legal', fieldset: 'notOnSite', description: 'Old imported warranty text. Not shown: the warranty page uses Shared → Warranty terms.'}),
     defineField({
       name: 'privacyPolicy',
       type: 'blockContent',

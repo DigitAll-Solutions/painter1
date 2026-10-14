@@ -14,7 +14,7 @@ const SERVICE_ORDER = ['interior', 'exterior', 'cabinet']
 const servicesInOrder = (services: SiteService[]) =>
   [...services].filter((s) => s.slug).sort((a, b) => SERVICE_ORDER.indexOf(a.locationKey ?? '') - SERVICE_ORDER.indexOf(b.locationKey ?? ''))
 
-/** Every page of one location (growth: home, service pages, Our Work, warranty, free estimate, privacy) */
+/** Every page of one location (growth: home, service pages, Our Work, warranty, About, free estimate, privacy) */
 export function locationPages(location: SiteLocation, services: SiteService[]): LivePage[] {
   if (!location.slug) return []
   const base = `/${location.slug}`
@@ -26,6 +26,7 @@ export function locationPages(location: SiteLocation, services: SiteService[]): 
       ? [
           { label: 'Our Work', path: `${base}/our-work` },
           { label: 'Warranty', path: `${base}/warranty` },
+          { label: 'About Us', path: `${base}/about-us` },
         ]
       : []),
     { label: 'Free estimate', path: `${base}/free-estimate` },

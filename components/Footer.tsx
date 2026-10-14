@@ -29,7 +29,7 @@ export default function Footer({ location }: { location: Location }) {
       : [
           { label: 'Our Work', href: `${base}/our-work` },
           { label: 'Warranty', href: `${base}/warranty` },
-          // About Us returns once /<slug>/about-us exists
+          { label: 'About Us', href: `${base}/about-us` },
         ]),
     { label: 'Free Estimate', href: cta.href },
   ]
