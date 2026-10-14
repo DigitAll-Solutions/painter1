@@ -129,7 +129,8 @@ function ProcessStrip({ first, p }: { first: string; p: (typeof pronouns)[keyof 
 }
 
 function TeamStrip({ location, first }: { location: Location; first: string }) {
-  const team = location.teamMembers ?? []
+  // The homepage shows the first two; the About page shows everyone
+  const team = (location.teamMembers ?? []).slice(0, 2)
   if (!team.length) return null
 
   return (
