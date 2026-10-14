@@ -8,7 +8,7 @@ import { fillTokens } from '@/lib/tokens'
 import type { Location, Service } from '@/sanity/lib/types'
 
 const DEFAULT_WARRANTY_BODY =
-  "Every job gets the same written warranty: if paint we applied peels, blisters, or flakes within two years, we'll come back and fix it, labor and materials included."
+  "Every job gets the same written warranty: if paint we applied peels, blisters, or flakes within two years, we'll come back and fix it at no labor charge."
 
 const text: PortableTextComponents = {
   block: { normal: ({ children }) => <p className="mt-3 leading-relaxed text-slate-600">{children}</p> },

@@ -46,7 +46,7 @@ const items = <T extends { title: string }>(list: T[]) => list.map((item) => ({ 
 const faqs = (list: [string, string][]) => list.map(([question, answer]) => ({ _key: keyOf(question), question, answer }))
 
 const warranty = (kind: string) =>
-  `Every ${kind} job gets the same written warranty: if paint we applied peels, blisters, or flakes within two years, we'll come back and fix it, labor and materials included.`
+  `Every ${kind} job gets the same written warranty: if paint we applied peels, blisters, or flakes within two years, we'll come back and fix it at no labor charge.`
 
 export const SERVICE_SEED = [
   {
