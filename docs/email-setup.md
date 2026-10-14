@@ -1,6 +1,6 @@
 # Email setup: Brevo
 
-For Rick. The website sends two kinds of email through Brevo: estimate requests (to each location's lead recipients, including Client Tether) and warranty requests (to the warranty recipients, never Client Tether). Both are plain text. Nothing reaches real recipients until launch: see "Safety switches" below.
+For Rick. The website sends one kind of email through Brevo: estimate requests, to each location's lead recipients (including Client Tether), as plain text. (The warranty request form was removed on Oct 14; the warranty page now offers Call, Text and Email instead.) Nothing reaches real recipients until launch: see "Safety switches" below.
 
 ## 1. Brevo account
 
@@ -50,7 +50,7 @@ Before launch keep `LEAD_TEST_RECIPIENT` set to your own address in every enviro
 ## 5. Free plan limit vs expected volume
 
 - **The free plan allows 300 emails per day** (per Brevo's pricing as reported in 2026 reviews; confirm on your account's plan page).
-- **Brevo counts each recipient.** One estimate request to Knoxville goes to 7 addresses (6 staff + Client Tether), so it uses 7 of the 300. A warranty request to Knoxville uses 6.
+- **Brevo counts each recipient.** One estimate request to Knoxville goes to 7 addresses (6 staff + Client Tether), so it uses 7 of the 300.
 - **That's about 40 estimate requests a day across the whole network** on the free plan. With 30 full locations, an average of 2 requests per location per day is 60 requests ≈ 420 emails, over the limit.
 - **When the limit is hit, emails stop for the rest of the day** (the request is still saved in the Studio, marked "failed").
 - **Recommendation:** start on the free plan while one or two locations are live, and move to a paid plan (no daily cap, billed per month) before most locations launch. Fewer recipients per location also lowers the count.

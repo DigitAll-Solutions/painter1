@@ -4,10 +4,6 @@ import { WORK_FILTERS } from "./lib/our-work-filters";
 import { SERVICE_SLUG_RENAMES } from "./lib/service-slugs";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // Warranty requests carry up to 5 photos, resized in the browser; Vercel caps a request at 4.5 MB
-    serverActions: { bodySizeLimit: "4mb" },
-  },
   async redirects() {
     return [
       // Temporary (307, not cached by search engines) until the franchisor homepage exists at "/"

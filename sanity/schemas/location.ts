@@ -637,7 +637,13 @@ export const location = defineType({
     }),
 
     // ---------- Warranty ----------
-    {...imageWithAlt('warrantyImage'), group: 'legal', description: 'Photo shown beside the warranty banner on the homepage.'},
+    {...imageWithAlt('warrantyImage', 'Homepage warranty: photo'), group: 'legal', description: 'Photo shown beside the warranty banner on the homepage. The warranty page has its own photo (below).'},
+    {
+      ...imageWithAlt('warrantyPageImage', 'Warranty page: photo'),
+      group: 'legal',
+      description:
+        'Photo at the top of this location’s warranty page, beside the 2-year shield. Use one of this location’s own jobs (e.g. the owner with a customer). Empty: the page shows the shield without a photo.',
+    },
     defineField({
       name: 'warrantyEyebrow',
       title: 'Homepage warranty: eyebrow',
@@ -687,7 +693,9 @@ export const location = defineType({
       title: 'Warranty response time',
       type: 'string',
       group: 'legal',
-      description: 'Optional line after "We repair covered areas at no labor charge." on the warranty page, e.g. "We usually reply within two business days." Leave empty to hide.',
+      description: 'No longer shown: the warranty page has no request steps now. Kept only for older data.',
+      readOnly: true,
+      hidden: ({value}) => !value,
     }),
     {
       ...imageWithAlt('warrantyGraphic', 'Homepage warranty: graphic'),

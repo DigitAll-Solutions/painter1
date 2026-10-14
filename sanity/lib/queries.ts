@@ -24,6 +24,7 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
   transformationAfterImage{${image}},
   heroVideo{asset->{url, mimeType}},
   warrantyImage{${image}},
+  warrantyPageImage{${image}},
   warrantyPdf{asset->{url, originalFilename}},
   warrantyGraphic{${image}},
   galleryImages[]{
