@@ -97,9 +97,9 @@ Every full-tier location has an About page at `/<location>/about-us` (basic-tier
 
 ## Web chat (Ringbot)
 
-- **Where:** Location details → **Leads & consent** → **Web chat (Ringbot)**. Paste the location's Ringbot embed code (`<script src="https://api.callwidget.co/embed?iID=…"></script>`) or just its iID. Empty: no chat button.
+- **Where:** Location details → **Leads & consent** → **Web chat (Ringbot)**. Paste the location's Ringbot embed code (`<script src="https://api.callwidget.co/embed?iID=…"></script>`): the field keeps only the iID, and the site builds the script address itself, so nothing else can be loaded. Empty: no chat button.
 - **Each location has its own install.** The ID carries that location's business name and phone number, so never copy another location's code: a visitor would be connected to the wrong office.
-- The chat button appears in the bottom-right corner after the visitor first scrolls or taps (or after 10 seconds), so it never slows the page down. On phones it sits just above the Call / Free Estimate bar.
+- The chat button appears in the bottom-right corner once the page has finished loading and the browser is idle, so it doesn't slow the page down. On phones it sits just above the Call / Free Estimate bar.
 
 ## Online booking
 

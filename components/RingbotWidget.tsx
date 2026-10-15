@@ -4,18 +4,13 @@ import { useEffect } from 'react'
 
 import { ringbotSrc } from '@/lib/ringbot'
 
-// The Ringbot chat bundle is heavy (~180 KB gzipped), so it loads only once the visitor interacts with
-// the page (scroll, tap, key), or after a quiet 10 seconds, never during the page's own load.
-const INTERACTIONS = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const
-const FALLBACK_MS = 10_000
-
+// The Ringbot chat bundle is heavy, so it loads only once the page has finished loading and the browser
+// is idle, never during the page's own load. Only rendered for locations with a valid iID.
 export default function RingbotWidget({ id }: { id: string }) {
   useEffect(() => {
-    let loaded = false
+    const idleApi = typeof window.requestIdleCallback === 'function'
+    let idle: number | undefined
     const load = () => {
-      if (loaded) return
-      loaded = true
-      stop()
       // One install per page session (client-side navigation keeps the layout, and the widget, in place)
       if (document.querySelector('script[data-ringbot]')) return
       const script = document.createElement('script')
@@ -24,13 +19,17 @@ export default function RingbotWidget({ id }: { id: string }) {
       script.dataset.ringbot = ''
       document.body.appendChild(script)
     }
-    const timer = window.setTimeout(() => ('requestIdleCallback' in window ? window.requestIdleCallback(load) : load()), FALLBACK_MS)
-    const stop = () => {
-      window.clearTimeout(timer)
-      for (const event of INTERACTIONS) window.removeEventListener(event, load)
+    const start = () => {
+      idle = idleApi ? window.requestIdleCallback(load, { timeout: 4000 }) : window.setTimeout(load, 2000)
     }
-    for (const event of INTERACTIONS) window.addEventListener(event, load, { once: true, passive: true })
-    return stop
+    if (document.readyState === 'complete') start()
+    else window.addEventListener('load', start, { once: true })
+    return () => {
+      window.removeEventListener('load', start)
+      if (idle === undefined) return
+      if (idleApi) window.cancelIdleCallback(idle)
+      else window.clearTimeout(idle)
+    }
   }, [id])
   return null
 }

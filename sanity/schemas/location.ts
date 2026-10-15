@@ -6,6 +6,7 @@ import {LockedSlugInput} from '../components/LockedSlugInput'
 import {slugError, slugify, slugWarning} from '../lib/location-slugs'
 import {US_STATES} from '../lib/us-states'
 import {ringbotId} from '../../lib/ringbot'
+import {RingbotIdInput} from '../components/RingbotIdInput'
 
 const imageWithAlt = (name: string, title?: string) =>
   defineField({
@@ -637,8 +638,9 @@ export const location = defineType({
       type: 'string',
       group: 'leads',
       description:
-        'Paste this location’s Ringbot embed code (<script src="https://api.callwidget.co/embed?iID=…">) or just its iID. Each location has its own install: it carries the business name and phone, so never copy another location’s. Empty: no chat button. The chat loads after the visitor first scrolls or taps, so it doesn’t slow the page.',
-      validation: (rule) => rule.custom((value?: string) => (!value?.trim() || ringbotId(value) ? true : 'That isn’t a Ringbot embed code or iID.')),
+        'This location’s Ringbot iID. Paste the embed code (<script src="https://api.callwidget.co/embed?iID=…">) and only the iID is kept; the site builds the script address itself. Each location has its own install: it carries the business name and phone, so never copy another location’s. Empty: no chat button. The chat loads once the page has finished loading, so it doesn’t slow it down.',
+      components: {input: RingbotIdInput},
+      validation: (rule) => rule.custom((value?: string) => (!value?.trim() || ringbotId(value) ? true : 'Only the iID: paste the Ringbot embed code or its iID (letters, numbers, + / = _ -).')),
     }),
 
     // ---------- Warranty ----------
