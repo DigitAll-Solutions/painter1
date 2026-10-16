@@ -17,7 +17,7 @@ import {
 import { consentPlainText, fillConsentBlocks } from '@/lib/consent'
 import { ATTRIBUTION_FIELDS, HONEYPOT_FIELD } from '@/lib/estimate-form'
 import { deliveryLabel, resolveDelivery, type Delivery } from '@/lib/lead-delivery'
-import { sendEmail, type EmailResult } from '@/lib/email-send'
+import { emailConfigured, sendEmail, type EmailResult } from '@/lib/email-send'
 import { buildLeadEmail } from '@/lib/lead-email'
 import { tooManyRequests } from '@/lib/rate-limit'
 import { absoluteUrl, siteUrl } from '@/lib/site'
@@ -45,7 +45,7 @@ function sourceUrl(raw: string, slug: string, host: string | null) {
 }
 
 async function sendLeadEmail(delivery: Delivery, body: string, replyTo: string, locationId: string): Promise<EmailResult> {
-  if (!process.env.BREVO_API_KEY) return { status: 'skipped (no BREVO_API_KEY)' }
+  if (!emailConfigured()) return { status: 'skipped (no BREVO_SMTP_USER/BREVO_SMTP_KEY)' }
   if (delivery.kind === 'refused') return { status: `skipped (${delivery.reason})` }
   if (!body) return { status: 'skipped (location has no lead email template)' }
 

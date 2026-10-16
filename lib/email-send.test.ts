@@ -1,10 +1,13 @@
-// node --test: the Brevo request carries the lead email as text only, byte for byte as built (Client
+// node --test: the SMTP relay gets the lead email as one text/plain part, byte for byte as built (Client
 // Tether parses it), and the delivery guard still decides who may receive it.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { afterEach, test } from 'node:test'
 
-import { BREVO_ENDPOINT, brevoPayload, sendEmail } from './email-send.ts'
+import nodemailer from 'nodemailer'
+
+import { checkLeadEml } from './eml.ts'
+import { BREVO_SMTP_HOST, emailConfigured, sendEmail, smtpMessage } from './email-send.ts'
 import { composeDescription, emptyAnswers, type SurveyContent } from './estimate-survey.ts'
 import { resolveDelivery } from './lead-delivery.ts'
 import { buildLeadEmail } from './lead-email.ts'
@@ -35,48 +38,63 @@ const body = buildLeadEmail(TEMPLATE_73, {
 const message = { from: { email: 'leads@painter1.com', name: 'Painter1' }, to: ['staff@example.com', 'x@parse.clienttether.com'], subject: 'New lead', text: body, replyTo: 'jane@example.com' }
 
 const realFetch = globalThis.fetch
+const realCreateTransport = nodemailer.createTransport
 afterEach(() => {
   globalThis.fetch = realFetch
+  nodemailer.createTransport = realCreateTransport
 })
+const SMTP = { BREVO_SMTP_USER: 'user@smtp-brevo.com', BREVO_SMTP_KEY: 'xsmtpsib-test' }
 
-test('Client Tether lead email: textContent is buildLeadEmail output byte for byte, text only', () => {
+test('SMTP relay: the message nodemailer writes is one text/plain part, identical to buildLeadEmail', async () => {
+  // Build the exact bytes that would go to smtp-relay.brevo.com, then read them back like a received .eml
+  const info = await nodemailer.createTransport({ streamTransport: true, buffer: true, newline: 'windows' }).sendMail(smtpMessage(message))
+  const raw = info.message as Buffer
   assert.ok(body.endsWith('knoxville-exterior '), 'template output keeps its trailing space')
-  const payload = brevoPayload(message)
-  assert.equal(payload.textContent, body)
-  assert.ok(!('htmlContent' in payload) && !('templateId' in payload), 'no HTML part: Brevo sends text/plain')
-  // What actually goes over the wire: the JSON body decodes to the same bytes
-  const wire = JSON.parse(JSON.stringify(payload)) as typeof payload
-  assert.deepEqual(Buffer.from(wire.textContent, 'utf8'), Buffer.from(body, 'utf8'))
-  assert.deepEqual(wire.to, [{ email: 'staff@example.com' }, { email: 'x@parse.clienttether.com' }])
-  assert.deepEqual(wire.sender, { name: 'Painter1', email: 'leads@painter1.com' })
-  assert.deepEqual(wire.replyTo, { email: 'jane@example.com' })
+  const check = checkLeadEml(raw, body, TEMPLATE_73)
+  assert.deepEqual(check.problems, [])
+  assert.equal(check.text, body)
+  const wire = raw.toString('latin1')
+  assert.ok(wire.includes('\r\nContent-Type: text/plain; charset=utf-8\r\n'), 'one text/plain part')
+  assert.doesNotMatch(wire, /text\/html|multipart/i)
+  assert.ok(wire.includes('\r\nReply-To: jane@example.com\r\n'))
 })
 
-test('sendEmail posts to Brevo with the api-key header and records the messageId', async () => {
-  let seen: { url: string; init: RequestInit } | undefined
-  globalThis.fetch = (async (url: string, init: RequestInit) => {
-    seen = { url, init }
-    return new Response(JSON.stringify({ messageId: '<abc@smtp-relay.mailin.fr>' }), { status: 201 })
-  }) as typeof fetch
-  const result = await sendEmail(message, 'xkeysib-test')
-  assert.equal(seen?.url, BREVO_ENDPOINT)
-  assert.equal(seen?.init.method, 'POST')
-  assert.equal((seen?.init.headers as Record<string, string>)['api-key'], 'xkeysib-test')
-  assert.equal((JSON.parse(String(seen?.init.body)) as { textContent: string }).textContent, body)
+test('sendEmail uses the SMTP relay when BREVO_SMTP_USER and BREVO_SMTP_KEY are set', async () => {
+  let options: Record<string, unknown> | undefined
+  let mail: ReturnType<typeof smtpMessage> | undefined
+  let fetched = false
+  globalThis.fetch = (async () => ((fetched = true), new Response('{}'))) as typeof fetch
+  nodemailer.createTransport = ((opts: Record<string, unknown>) => {
+    options = opts
+    return { sendMail: async (m: ReturnType<typeof smtpMessage>) => ((mail = m), { messageId: '<id@painter1.com>' }) }
+  }) as unknown as typeof nodemailer.createTransport
+  const result = await sendEmail(message, SMTP)
   assert.equal(result.status, 'sent')
-  assert.equal(result.messageId, '<abc@smtp-relay.mailin.fr>')
+  assert.equal(result.messageId, '<id@painter1.com>')
+  assert.deepEqual(options, { host: BREVO_SMTP_HOST, port: 587, secure: false, requireTLS: true, auth: { user: SMTP.BREVO_SMTP_USER, pass: SMTP.BREVO_SMTP_KEY } })
+  assert.equal(mail?.text, body)
+  assert.ok(!('html' in (mail ?? {})), 'no HTML alternative')
+  assert.equal(fetched, false, 'the Brevo API is never called')
 })
 
-test('sendEmail: Brevo errors are recorded; no key or no sender skips without a request', async () => {
-  let calls = 0
-  globalThis.fetch = (async () => {
-    calls++
-    return new Response(JSON.stringify({ code: 'unauthorized', message: 'Key not found' }), { status: 401 })
-  }) as typeof fetch
-  assert.deepEqual(await sendEmail(message, 'bad-key'), { status: 'failed', error: 'Brevo 401: unauthorized Key not found' })
-  assert.deepEqual(await sendEmail(message, ''), { status: 'skipped (no BREVO_API_KEY)' })
-  assert.deepEqual(await sendEmail({ ...message, from: { email: '', name: 'Painter1' } }, 'xkeysib-test'), { status: 'skipped (LEAD_FROM_EMAIL is not set)' })
-  assert.equal(calls, 1)
+test('SMTP errors are recorded without the key', async () => {
+  nodemailer.createTransport = (() => ({ sendMail: async () => Promise.reject(new Error('Invalid login: 535 5.7.8 Authentication failed')) })) as unknown as typeof nodemailer.createTransport
+  const result = await sendEmail(message, SMTP)
+  assert.deepEqual(result, { status: 'failed', error: 'Invalid login: 535 5.7.8 Authentication failed' })
+  assert.ok(!JSON.stringify(result).includes(SMTP.BREVO_SMTP_KEY))
+})
+
+test('no SMTP credentials (an API key alone is not enough) or no sender: skipped, nothing sent', async () => {
+  let created = 0
+  nodemailer.createTransport = (() => (created++, { sendMail: async () => ({}) })) as unknown as typeof nodemailer.createTransport
+  assert.deepEqual(await sendEmail(message, {}), { status: 'skipped (no BREVO_SMTP_USER/BREVO_SMTP_KEY)' })
+  assert.deepEqual(await sendEmail(message, { BREVO_API_KEY: 'xkeysib-test' }), { status: 'skipped (no BREVO_SMTP_USER/BREVO_SMTP_KEY)' })
+  assert.deepEqual(await sendEmail(message, { BREVO_SMTP_USER: 'user@smtp-brevo.com' }), { status: 'skipped (no BREVO_SMTP_USER/BREVO_SMTP_KEY)' })
+  assert.deepEqual(await sendEmail({ ...message, from: { email: '', name: 'Painter1' } }, SMTP), { status: 'skipped (LEAD_FROM_EMAIL is not set)' })
+  assert.equal(created, 0)
+  assert.equal(emailConfigured({ BREVO_API_KEY: 'xkeysib-test' }), false)
+  assert.equal(emailConfigured({ BREVO_SMTP_KEY: 'k' }), false)
+  assert.equal(emailConfigured(SMTP), true)
 })
 
 test('delivery guard unchanged: test address only, live needs LEAD_SEND_LIVE=true and a sender', () => {
