@@ -42,10 +42,10 @@ test('before/after pairs: every pair counts, and all of their photos leave Recen
   assert.equal(byId(withSurface, 'photos-exterior').detail, '7 tagged, 2 for Recent Work (shows from 3)')
 })
 
-test('booking page: warned only while online scheduling is on without a URL', () => {
+test('booking page: warned only while the main buttons go to the booking page without a URL', () => {
   assert.equal(locationChecklist({}, 1, KEYS).some((i) => i.id === 'booking'), false)
-  assert.equal(byId(locationChecklist({ hasScheduling: true }, 1, KEYS), 'booking').ok, false)
-  assert.equal(byId(locationChecklist({ hasScheduling: true, schedulingUrl: 'https://appointment.painter1.com/knoxville' }, 1, KEYS), 'booking').ok, true)
+  assert.equal(byId(locationChecklist({ bookingTarget: 'booking' }, 1, KEYS), 'booking').ok, false)
+  assert.equal(byId(locationChecklist({ bookingTarget: 'booking', schedulingUrl: 'https://appointment.painter1.com/knoxville' }, 1, KEYS), 'booking').ok, true)
 })
 
 test('Recent Work count excludes hidden photos and the page\'s own slider pair', () => {

@@ -50,7 +50,7 @@ export default async function OurWorkPage({ slug, filter }: { slug: string; filt
   const { city } = tokenValues(location)
   const path = ourWorkPath(location)
   const initialFilter = activeFilter(filter, cards)
-  const estimateHref = getCta(location).href
+  const cta = getCta(location)
 
   const crumbs = [
     { name: 'Home', href: absoluteUrl('/') },
@@ -82,7 +82,7 @@ export default async function OurWorkPage({ slug, filter }: { slug: string; filt
       />
       {cards.length > 0 && <JsonLd data={imageGallerySchema(location, cards, copy.heading)} />}
 
-      <OurWorkHero crumbs={crumbs} title={copy.heading} intro={copy.intro} estimateHref={estimateHref} phone={location.phone} tel={telHref(location.phone)} />
+      <OurWorkHero crumbs={crumbs} title={copy.heading} intro={copy.intro} cta={cta} phone={location.phone} tel={telHref(location.phone)} />
 
       {/* Reserved for a project map (renders nothing yet); reads the same per-photo area / city / geo */}
       <WorkMap

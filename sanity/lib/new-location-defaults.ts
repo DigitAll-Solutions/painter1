@@ -6,7 +6,7 @@ export const NEW_LOCATION_DEFAULTS = {
   heroSubtitleVariant: 'auto',
   franchiseStructure: 'owner-led',
   ownerPronoun: 'he',
-  hasScheduling: false,
+  bookingTarget: 'survey',
   services: {
     interior: {_type: 'serviceDetail', title: 'Interior Painting'},
     exterior: {_type: 'serviceDetail', title: 'Exterior Painting'},

@@ -115,8 +115,8 @@ function OwnerHero({ location, city, owner, first, cta, tel, crumbs }: { locatio
           }
           intro={`When you call ${location.name}, you talk to the owner. ${first || 'The owner'} gives every estimate, checks every finished job and follows up afterward. You'll never be handed off to a salesperson.`}
         >
-          <CtaButton href={cta.href} size="md" className="focus-visible:outline-white">
-            {first ? `Get Your Estimate from ${first}` : cta.label}
+          <CtaButton href={cta.href} booking={cta.booking} size="md" className="focus-visible:outline-white">
+            {first ? `${cta.booking ? 'Schedule Your FREE Estimate with' : 'Get Your Estimate from'} ${first}` : cta.label}
           </CtaButton>
           {tel && (
             <CtaButton href={tel} variant="outline" size="md" className="focus-visible:outline-white">
@@ -169,7 +169,7 @@ function TeamHero({ location, city, owner, people, cta, crumbs }: { location: Lo
           }
           intro={`${owned} Every job has a named person accountable for it, and the owner's standard behind it.`.trim()}
         >
-          <CtaButton href={cta.href} size="md" className="focus-visible:outline-white">
+          <CtaButton href={cta.href} booking={cta.booking} size="md" className="focus-visible:outline-white">
             {cta.label}
           </CtaButton>
           {/* Only when there are team cards to jump to */}

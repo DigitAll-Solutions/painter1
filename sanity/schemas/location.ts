@@ -42,7 +42,7 @@ export const location = defineType({
     {name: 'contact', title: 'Contact', options: {columns: 2}},
     {name: 'area', title: 'Service area'},
     {name: 'stats', title: 'Project counts (homepage owner section and hero subtitle)', options: {columns: 3}},
-    {name: 'scheduling', title: 'Online scheduling', options: {collapsible: true, collapsed: true}},
+    {name: 'scheduling', title: 'Main buttons and booking page', options: {collapsible: true, collapsed: false}},
   ],
   fields: [
     // ---------- Basics ----------
@@ -595,13 +595,23 @@ export const location = defineType({
       group: 'leads',
       description: 'Leave empty to use the default survey (Shared → Estimate survey).',
     }),
+    // One setting drives every main button (Rick, Oct 16): lib/location.ts getCta
     defineField({
-      name: 'hasScheduling',
-      type: 'boolean',
+      name: 'bookingTarget',
+      title: 'Main buttons go to',
+      type: 'string',
       group: 'leads',
       fieldset: 'scheduling',
-      description: 'When on, every CTA says "Schedule Your FREE Estimate" instead of "Get Your FREE Estimate".',
-      initialValue: false,
+      description:
+        'Booking page: the header button, hero, section buttons, service pages, About, warranty and the final band say "Schedule Your FREE Estimate" and open the booking page below. Free estimate survey: they say "Get Your FREE Estimate" and open the survey. The side tab "Free Estimate" always opens the survey. If the booking page is empty, every button goes to the survey.',
+      options: {
+        list: [
+          {title: 'Booking page', value: 'booking'},
+          {title: 'Free estimate survey', value: 'survey'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'survey',
     }),
     defineField({
       name: 'schedulingUrl',
@@ -610,26 +620,14 @@ export const location = defineType({
       group: 'leads',
       fieldset: 'scheduling',
       description:
-        'Booking page on appointment.painter1.com, e.g. https://appointment.painter1.com/knoxville. Shown as "Pick a time now" after a survey request, and used by the setting below. Leave empty until the page is live.',
-      hidden: ({document}) => !document?.hasScheduling,
-      validation: (rule) => rule.uri({scheme: ['https']}),
-    }),
-    defineField({
-      name: 'bookingTarget',
-      title: 'Schedule button goes to',
-      type: 'string',
-      group: 'leads',
-      fieldset: 'scheduling',
-      description: 'Where every "Schedule Your FREE Estimate" button links. "Booking page directly" only applies once the booking page above is set; until then buttons go to the survey.',
-      options: {
-        list: [
-          {title: 'Estimate survey (booking offered at the end)', value: 'survey'},
-          {title: 'Booking page directly', value: 'booking'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'survey',
-      hidden: ({document}) => !document?.hasScheduling,
+        'Booking page on appointment.painter1.com, e.g. https://appointment.painter1.com/knoxville. Used by the main buttons and by "Pick a time now" after a survey request. Leave empty until the page is live: buttons go to the survey until then.',
+      hidden: ({document}) => document?.bookingTarget !== 'booking',
+      validation: (rule) => [
+        rule.uri({scheme: ['https']}),
+        rule.custom((value, {document}) =>
+          document?.bookingTarget === 'booking' && !value ? 'Empty: every button goes to the survey until the booking page is set' : true,
+        ).warning(),
+      ],
     }),
 
     defineField({

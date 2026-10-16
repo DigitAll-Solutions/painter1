@@ -1,11 +1,11 @@
 import { Phone } from 'lucide-react'
 
 import CtaButton from '../CtaButton'
-import { telHref } from '@/lib/location'
+import { telHref, type Cta } from '@/lib/location'
 
-type Props = { serviceTitle: string; phone?: string; estimateHref: string }
+type Props = { serviceTitle: string; phone?: string; cta: Cta }
 
-export default function ServiceCta({ serviceTitle, phone, estimateHref }: Props) {
+export default function ServiceCta({ serviceTitle, phone, cta }: Props) {
   const tel = telHref(phone)
 
   return (
@@ -24,8 +24,8 @@ export default function ServiceCta({ serviceTitle, phone, estimateHref }: Props)
               <Phone className="size-5" aria-hidden /> Call {phone}
             </CtaButton>
           )}
-          <CtaButton href={estimateHref} variant="navy" className="w-full sm:w-auto">
-            Start My Free Estimate →
+          <CtaButton href={cta.href} booking={cta.booking} variant="navy" className="w-full sm:w-auto">
+            {cta.booking ? `${cta.label} →` : 'Start My Free Estimate →'}
           </CtaButton>
         </div>
       </div>

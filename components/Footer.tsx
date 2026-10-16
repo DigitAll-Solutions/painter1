@@ -91,7 +91,7 @@ export default function Footer({ location }: { location: Location }) {
               <SocialIcons links={location.socialLinks} />
             </div>
           </nav>
-          <CtaButton href={cta.href} className="mt-8 w-full py-4 tracking-wide uppercase shadow-lg">
+          <CtaButton href={cta.href} booking={cta.booking} className="mt-8 w-full py-4 tracking-wide uppercase shadow-lg">
             {cta.label}
           </CtaButton>
         </div>

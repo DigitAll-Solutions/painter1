@@ -4,14 +4,17 @@ import Link from '@/components/IntentLink'
 import { useEffect, useState } from 'react'
 import { Menu, Phone, X } from 'lucide-react'
 
-import type { NavLink } from '@/lib/location'
+import { bookingLinkProps } from '@/components/CtaButton'
+import type { Cta, NavLink } from '@/lib/location'
 
 type Props = {
   links: NavLink[]
-  cta: NavLink
+  cta: Cta
   phone?: string
   tel?: string
 }
+
+const ctaClass = 'rounded-lg bg-cta px-6 py-4 text-center text-lg font-bold text-white hover:bg-cta-dark lg:py-3'
 
 // Full-screen sheet on phones, dropdown panel on desktop.
 export default function NavMenu({ links, cta, phone, tel }: Props) {
@@ -61,13 +64,15 @@ export default function NavMenu({ links, cta, phone, tel }: Props) {
                 ))}
               </ul>
               <div className="mt-6 grid gap-3 lg:mt-4">
-                <Link
-                  href={cta.href}
-                  onClick={close}
-                  className="rounded-lg bg-cta px-6 py-4 text-center text-lg font-bold text-white hover:bg-cta-dark lg:py-3"
-                >
-                  {cta.label}
-                </Link>
+                {cta.booking ? (
+                  <a {...bookingLinkProps(cta.href)} onClick={close} className={ctaClass}>
+                    {cta.label}
+                  </a>
+                ) : (
+                  <Link href={cta.href} onClick={close} className={ctaClass}>
+                    {cta.label}
+                  </Link>
+                )}
                 {tel && (
                   <a
                     href={tel}

@@ -133,9 +133,8 @@ export type Location = {
   reviewsCount?: number
   rating?: number
   trustindexWidgetId?: string
-  hasScheduling?: boolean
   schedulingUrl?: string
-  /** Where Schedule CTAs go: the survey (default) or the booking page directly */
+  /** Studio "Main buttons go to": the survey (default) or the booking page (only when schedulingUrl is set) */
   bookingTarget?: 'survey' | 'booking'
   /** Ringbot web chat embed code or iID (this location's own install) */
   webchatId?: string

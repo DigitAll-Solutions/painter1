@@ -18,7 +18,7 @@ type Props = {
   rowLabel?: string
   heading: ReactNode
   body: string
-  cta?: { href: string; label: ReactNode }
+  cta?: { href: string; label: ReactNode; booking?: boolean }
 }
 
 const ROW_SIZES = '(min-width: 1280px) 300px, (min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw'
@@ -37,7 +37,7 @@ export default function TransformationBlock({ before, after, pairs, rowLabel, he
       <span className="mt-5 block h-1.5 w-24 rounded-full bg-brand-orange" aria-hidden />
       <p className="mt-6 text-lg leading-relaxed text-slate-600">{body}</p>
       {cta && (
-        <CtaButton href={cta.href} className="mt-8">
+        <CtaButton href={cta.href} booking={cta.booking} className="mt-8">
           {cta.label}
         </CtaButton>
       )}

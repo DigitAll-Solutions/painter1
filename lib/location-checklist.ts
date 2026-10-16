@@ -47,7 +47,7 @@ export type LocationDoc = {
   trustindexWidgetId?: string
   leadEmailSubject?: string
   leadEmailTemplate?: string
-  hasScheduling?: boolean
+  bookingTarget?: string
   schedulingUrl?: string
   consentBlocks?: { name?: string; body?: Block[] }[]
   metaTitle?: string
@@ -174,14 +174,14 @@ export function locationChecklist(doc: LocationDoc, recipients: number | null, s
     })
   add({ id: 'subject', area: 'Leads & consent', label: 'Lead email subject', level: 'required', ok: has(doc.leadEmailSubject), path: 'leadEmailSubject' })
   add({ id: 'template', area: 'Leads & consent', label: 'Lead email template', level: 'required', ok: has(doc.leadEmailTemplate), path: 'leadEmailTemplate' })
-  if (doc.hasScheduling)
+  if (doc.bookingTarget === 'booking')
     add({
       id: 'booking',
       area: 'Leads & consent',
-      label: 'Booking page (online scheduling is on)',
+      label: 'Booking page (main buttons go to the booking page)',
       level: 'recommended',
       ok: has(doc.schedulingUrl),
-      detail: doc.schedulingUrl ? undefined : 'Buttons go to the survey and "Pick a time now" is hidden until it is set',
+      detail: doc.schedulingUrl ? undefined : 'Every button goes to the survey and "Pick a time now" is hidden until it is set',
       path: 'schedulingUrl',
     })
 
