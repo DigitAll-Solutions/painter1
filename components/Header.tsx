@@ -60,7 +60,7 @@ export default function Header({ location }: { location: Location }) {
 
         <div className="flex items-center gap-2">
           <div className="hidden sm:block">
-            <CtaButton href={cta.href} size="md">
+            <CtaButton href={cta.href} booking={cta.booking} size="md">
               {cta.label}
             </CtaButton>
           </div>

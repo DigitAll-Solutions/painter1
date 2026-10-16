@@ -32,7 +32,7 @@ export default function HowItWorks({ location }: { location: Location }) {
         ))}
       </ol>
       <div className="mt-12 text-center">
-        <CtaButton href={cta.href} className="w-full sm:w-auto">
+        <CtaButton href={cta.href} booking={cta.booking} className="w-full sm:w-auto">
           {cta.label}
         </CtaButton>
       </div>

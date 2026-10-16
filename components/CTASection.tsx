@@ -26,7 +26,7 @@ export default function CTASection({
         <div className="mx-auto flex max-w-4xl flex-col items-center px-4 py-16 text-center md:py-24">
           <h2 className="text-4xl font-extrabold tracking-tight text-balance md:text-6xl">{title}</h2>
           {subtitle && <p className="mt-5 text-lg font-medium md:text-xl">{subtitle}</p>}
-          <CtaButton href={cta.href} variant="white" className="mt-9 w-full sm:w-auto">
+          <CtaButton href={cta.href} booking={cta.booking} variant="white" className="mt-9 w-full sm:w-auto">
             {cta.label} Today!
           </CtaButton>
           {tel && (

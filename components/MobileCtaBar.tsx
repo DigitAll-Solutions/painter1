@@ -1,12 +1,12 @@
 import Link from '@/components/IntentLink'
 import { CalendarCheck, Phone } from 'lucide-react'
 
-import { getCta, telHref } from '@/lib/location'
+import { estimateHref, telHref } from '@/lib/location'
 import type { Location } from '@/sanity/lib/types'
 
-// Always-visible call + estimate buttons on phones, where the header CTA is hidden.
+// Always-visible call + estimate buttons on phones: the phone version of the side tab (FloatingCta), so it
+// always goes to the free-estimate survey.
 export default function MobileCtaBar({ location }: { location: Location }) {
-  const cta = getCta(location)
   const tel = telHref(location.phone)
 
   return (
@@ -17,7 +17,7 @@ export default function MobileCtaBar({ location }: { location: Location }) {
         </a>
       )}
       <Link
-        href={cta.href}
+        href={estimateHref(location)}
         className={`flex items-center justify-center gap-2 rounded-lg bg-cta py-3 font-bold text-white ${tel ? 'ml-1' : 'col-span-2'}`}
       >
         <CalendarCheck className="size-5" aria-hidden /> Free Estimate

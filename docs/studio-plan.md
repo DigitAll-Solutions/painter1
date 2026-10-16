@@ -73,7 +73,7 @@ None of them has a document, a route or a query. Almost none of their fields has
 
 **Fields no page reads:**
 - **About-page fields** (`ownerBio`, `whyChooseUs`, `aboutSections`): the About page isn't built yet.
-- **`schedulingUrl`:** `hasScheduling` only changes the CTA label.
+- **`schedulingUrl`:** used when `bookingTarget` ("Main buttons go to") is "booking" (Oct 16: `hasScheduling` removed; one setting drives every main button).
 - **`privacyPolicy`:** a hidden legacy field.
 - **`galleryImages[].serviceType`, `reviews[].serviceTag`:** hidden legacy tags.
 
@@ -182,7 +182,7 @@ A "Launch checklist" document view, computed from the document being edited plus
 ### 2.5 "New location" flow
 
 1. **Start:** Locations → state (or "All locations") → **New location**: an initial-value template that pre-fills:
-   - `locationType: growth`, the owner defaults that exist today, `heroSubtitleVariant: auto`, `hasScheduling: false`;
+   - `locationType: growth`, the owner defaults that exist today, `heroSubtitleVariant: auto`, `bookingTarget: survey`;
    - service titles "Interior Painting", "Exterior Painting", "Cabinet Refinishing";
    - Knoxville's lead email **subject and template** (they contain nothing Knoxville-specific; only `{inputs.*}` placeholders) and confirmation message;
    - the two **consent blocks** written with a `{locationName}` placeholder (S1).

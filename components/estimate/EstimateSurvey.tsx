@@ -211,7 +211,7 @@ export default function EstimateSurvey({ slug, state, city, phone, tel, survey, 
         <NextSteps title={survey.nextStepsTitle} items={survey.nextSteps} />
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           {bookingUrl && (
-            <CtaButton href={bookingUrl} className="w-full sm:w-auto">
+            <CtaButton href={bookingUrl} booking className="w-full sm:w-auto">
               <CalendarCheck className="size-5" aria-hidden /> Pick a time now
             </CtaButton>
           )}

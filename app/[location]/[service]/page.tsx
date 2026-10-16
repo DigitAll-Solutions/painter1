@@ -71,6 +71,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
   const { city } = tokenValues(location)
   const detail = location.services?.[service.locationKey]
 
+  const cta = getCta(location, service.locationKey)
   const crumbs: Crumb[] = [
     { name: 'Home', href: absoluteUrl('/') },
     { name: city, href: `/${location.slug}` },
@@ -123,7 +124,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
         title={`${service.title} in ${cityName(location)}`}
         subtitle={service.heroSubtitle ? fill(service.heroSubtitle) : undefined}
         image={heroImage}
-        estimateHref={getCta(location, service.locationKey).href}
+        cta={cta}
         phone={location.phone}
         tel={telHref(location.phone)}
       />
@@ -133,7 +134,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
         rowLabel={`${service.shortName} before and after projects in ${city}`}
         heading={fill(service.transformationHeading || service.title)}
         body={transformationBody}
-        cta={{ href: getCta(location, service.locationKey).href, label: 'Get My Free Estimate →' }}
+        cta={{ ...cta, label: cta.booking ? `${cta.label} →` : 'Get My Free Estimate →' }}
       />
 
       <OwnerCard location={location} />
@@ -151,7 +152,7 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
 
       <ServiceFaq faqs={faqs} title={`${service.shortName} Painting FAQ`} />
 
-      <ServiceCta serviceTitle={service.title} phone={location.phone} estimateHref={getCta(location, service.locationKey).href} />
+      <ServiceCta serviceTitle={service.title} phone={location.phone} cta={cta} />
     </>
   )
 }

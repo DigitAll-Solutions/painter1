@@ -85,8 +85,8 @@ export default function OwnerSection({ location }: { location: Location }) {
                 </figcaption>
               </figure>
             )}
-            <CtaButton href={cta.href} className="mt-7 self-start">
-              {withTeam ? `Get My Estimate from ${first}'s Team` : `Book My Estimate with ${first}`}
+            <CtaButton href={cta.href} booking={cta.booking} className="mt-7 self-start">
+              {cta.booking ? (withTeam ? `Schedule with ${first}'s Team` : `Schedule My FREE Estimate with ${first}`) : withTeam ? `Get My Estimate from ${first}'s Team` : `Book My Estimate with ${first}`}
             </CtaButton>
           </div>
         </div>

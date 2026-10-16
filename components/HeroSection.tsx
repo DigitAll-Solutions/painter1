@@ -57,7 +57,9 @@ export default function HeroSection({ location, headline, subheadline, image, ho
         {sub && <p className="mt-5 max-w-2xl text-lg text-white/90 md:text-xl">{sub}</p>}
 
         <div className="mt-8 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
-          <CtaButton href={cta.href}>{cta.label}</CtaButton>
+          <CtaButton href={cta.href} booking={cta.booking}>
+            {cta.label}
+          </CtaButton>
           {tel && (
             <a
               href={tel}

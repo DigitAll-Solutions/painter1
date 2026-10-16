@@ -2,21 +2,38 @@ import type { Location } from '@/sanity/lib/types'
 
 export type NavLink = { label: string; href: string }
 
-type CtaLocation = Pick<Location, 'slug' | 'hasScheduling' | 'schedulingUrl' | 'bookingTarget'>
+type CtaLocation = Pick<Location, 'slug' | 'schedulingUrl' | 'bookingTarget'>
 
-/** The location's online booking page, when scheduling is on and the URL is set (https only) */
-export const bookingUrl = (location: CtaLocation) =>
-  location.hasScheduling && location.schedulingUrl?.startsWith('https://') ? location.schedulingUrl : undefined
-
-// Every CTA on a location site points at its free-estimate survey, or straight at the booking page
-// when the location has scheduling, chose "Booking page directly" and the booking URL is set.
-// `service` (interior | exterior | cabinet) preselects the survey's first question.
-export function getCta(location: CtaLocation, service?: string) {
-  const booking = location.bookingTarget === 'booking' ? bookingUrl(location) : undefined
-  return {
-    label: location.hasScheduling ? 'Schedule Your FREE Estimate' : 'Get Your FREE Estimate',
-    href: booking ?? `/${location.slug}/free-estimate${service ? `?service=${encodeURIComponent(service)}` : ''}`,
+/**
+ * The location's online booking page: only when Studio's "Main buttons go to" is "Booking page" and
+ * the URL is a valid https address. Otherwise undefined, and every button falls back to the survey,
+ * so nothing ever links to an empty or broken URL.
+ */
+export function bookingUrl(location: CtaLocation): string | undefined {
+  const raw = location.schedulingUrl?.trim()
+  if (location.bookingTarget !== 'booking' || !raw) return undefined
+  try {
+    return new URL(raw).protocol === 'https:' ? raw : undefined
+  } catch {
+    return undefined
   }
+}
+
+/** The free-estimate survey; `service` (interior | exterior | cabinet) preselects its first question */
+export const estimateHref = (location: Pick<Location, 'slug'>, service?: string) =>
+  `/${location.slug}/free-estimate${service ? `?service=${encodeURIComponent(service)}` : ''}`
+
+export type Cta = { label: string; href: string; booking: boolean }
+
+// The main CTAs (header, hero, section buttons, service pages, About, warranty, final band) go straight
+// to the booking page when the location books online, else to the survey. The floating side tab and the
+// phone bar always go to the survey (estimateHref). Booking links carry the visitor's UTM / click IDs
+// (components/BookingParams.tsx).
+export function getCta(location: CtaLocation, service?: string): Cta {
+  const booking = bookingUrl(location)
+  return booking
+    ? { label: 'Schedule Your FREE Estimate', href: booking, booking: true }
+    : { label: 'Get Your FREE Estimate', href: estimateHref(location, service), booking: false }
 }
 
 // Anchor on the free-estimate section (CTASection) at the bottom of the location homepage
@@ -63,7 +80,7 @@ export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | '
 }
 
 /** Footer "Our Services" column: service pages, Our Work, Warranty and About for full tier; Free Estimate for all */
-export function footerLinks(location: Pick<Location, 'slug' | 'locationType' | 'services' | 'hasScheduling' | 'schedulingUrl' | 'bookingTarget'>): NavLink[] {
+export function footerLinks(location: Pick<Location, 'slug' | 'locationType' | 'services'>): NavLink[] {
   const base = `/${location.slug}`
   const full = location.locationType !== 'maintenance'
   const services = full
@@ -81,7 +98,7 @@ export function footerLinks(location: Pick<Location, 'slug' | 'locationType' | '
           ...(hasAboutPage(location) ? [{ label: 'About Us', href: `${base}/about-us` }] : []),
         ]
       : []),
-    { label: 'Free Estimate', href: getCta(location).href },
+    { label: 'Free Estimate', href: estimateHref(location) },
   ]
 }
 
