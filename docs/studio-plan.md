@@ -219,6 +219,7 @@ A "Launch checklist" document view, computed from the document being edited plus
 - **Preview deployments:** only add a CORS pattern scoped to this project's preview URLs, never `https://*.vercel.app` with credentials.
 - **Invite the client team** with the roles agreed in S3–S4. Remove or downgrade anyone who no longer needs access.
 - **Rotate the editor write token** if it was ever shared outside Vercel and `.env.local`.
+- **Lead email (each location):** follow `docs/email-setup.md` section 8. Run `scripts/brevo-blocklist.ts <location>` and confirm no lead recipient is on Brevo's transactional blocklist (for Knoxville: Keith's team and the Client Tether parse address). Then run one test request through `scripts/check-lead-eml.ts`.
 
 ## 3. Decisions (agreed)
 
