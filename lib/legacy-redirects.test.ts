@@ -45,6 +45,7 @@ test('Knoxville: every confirmed old URL goes to its new page, permanently', () 
     ['/knoxville/services/business', '/knoxville'],
     ['/knoxville/blog', '/knoxville'],
     ['/knoxville/blog/how-to-pick-paint', '/knoxville'],
+    ['/knoxville/locations', '/knoxville'],
     ['/knoxville/professional-painting-services-gaw-1', '/knoxville/free-estimate'],
     ['/knoxville/professional-painting-services-gaw-1/thank-you', '/knoxville/free-estimate'],
     ['/knoxville/reviews', '/knoxville#reviews'],
@@ -55,21 +56,21 @@ test('Knoxville: every confirmed old URL goes to its new page, permanently', () 
 
 test('never matches the other locations still on WordPress', () => {
   for (const slug of ['atlanta', 'miami', 'north-georgia', 'knoxville-north', 'knox']) {
-    for (const page of ['home-siding-painting', 'brick-painting', 'cabinet-refinishing', 'reviews', 'reviews/x', 'contact', 'estimate', 'services', 'blog', 'painters-alcoa-ga', 'cities-we-serve', 'residential-painting', 'professional-painting-services-gaw-1', 'maryville']) {
+    for (const page of ['home-siding-painting', 'brick-painting', 'cabinet-refinishing', 'reviews', 'reviews/x', 'contact', 'estimate', 'services', 'blog', 'painters-alcoa-ga', 'cities-we-serve', 'residential-painting', 'professional-painting-services-gaw-1', 'maryville', 'locations']) {
       assert.equal(resolve(`/${slug}/${page}`), undefined, `/${slug}/${page}`)
     }
   }
 })
 
-test('never matches our own pages, the Studio, the API or #4 items still to confirm', () => {
+test('never matches our own pages, the Studio, the API, /schedule (a route) or #4 items still to confirm', () => {
   const ours = ['/knoxville', '/knoxville/exterior-painting', '/knoxville/interior-painting', '/knoxville/cabinet-painting', '/knoxville/free-estimate', '/knoxville/our-work', '/knoxville/about-us', '/knoxville/warranty', '/knoxville/privacy-policy', '/studio', '/studio/structure', '/api/revalidate', '/sitemap.xml']
-  const later = ['/knoxville/commercial-painting', '/knoxville/masonry-coating-and-waterproofing', '/knoxville/concrete-staining', '/knoxville/popcorn-ceiling-removal', '/knoxville/wallpaper-removal', '/knoxville/schedule', '/knoxville/locations']
+  const later = ['/knoxville/commercial-painting', '/knoxville/masonry-coating-and-waterproofing', '/knoxville/concrete-staining', '/knoxville/popcorn-ceiling-removal', '/knoxville/wallpaper-removal', '/knoxville/schedule']
   for (const path of [...ours, ...later]) assert.equal(resolve(path), undefined, path)
 })
 
 test('every rule is permanent and scoped to the live locations; none when no location is live', () => {
   const rules = legacyRedirects()
-  assert.equal(rules.length, 17)
+  assert.equal(rules.length, 18)
   for (const rule of rules) {
     assert.equal(rule.permanent, true)
     assert.ok(rule.source.startsWith(`/:location(${LIVE_LOCATIONS.join('|')})/`) || rule.source.startsWith('/knoxville/'), rule.source)
