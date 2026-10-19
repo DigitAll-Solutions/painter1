@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { bookingUrl, estimateHref, footerLinks, getCta } from './location.ts'
+import { bookingUrl, estimateHref, footerLinks, getCta, scheduleTarget } from './location.ts'
 
 const BOOK = 'https://schedule.painter1.com/knoxville'
 const knoxville = { slug: 'knoxville' }
@@ -43,4 +43,14 @@ test('side tab, phone bar and the footer "Free Estimate" link always go to the s
   const location = { ...knoxville, bookingTarget: 'booking' as const, schedulingUrl: BOOK, locationType: 'growth' as const }
   assert.equal(estimateHref(location), '/knoxville/free-estimate')
   assert.equal(footerLinks(location).find((link) => link.label === 'Free Estimate')?.href, '/knoxville/free-estimate')
+})
+
+test('/<location>/schedule: the booking page when one is set (UTMs kept), else the survey (query kept)', () => {
+  const search = '?utm_source=google&utm_medium=cpc&gclid=G1&ref=x'
+  assert.equal(scheduleTarget({ slug: 'knoxville', schedulingUrl: BOOK }, search), `${BOOK}?utm_source=google&utm_medium=cpc&gclid=G1`)
+  assert.equal(scheduleTarget({ slug: 'knoxville', schedulingUrl: BOOK }), BOOK)
+  for (const schedulingUrl of [undefined, '', '  ', 'http://schedule.painter1.com/knoxville', 'not a url']) {
+    assert.equal(scheduleTarget({ slug: 'knoxville', schedulingUrl }, search), `/knoxville/free-estimate${search}`)
+  }
+  assert.equal(scheduleTarget({ slug: 'knoxville' }), '/knoxville/free-estimate')
 })

@@ -99,13 +99,13 @@ No `redirects()` in `next.config.ts` and no middleware/proxy. **Recommended mech
 | `/knoxville/wallpaper-removal/` | `/knoxville/interior-painting` | closest match; confirm |
 | `/knoxville/residential-painting/` | `/knoxville` | it's a hub of interior + exterior |
 | `/knoxville/commercial-painting/` | `/knoxville` | **no commercial page in the new sitemap**; confirm (or add a service doc later) |
-| `/knoxville/schedule/` | `/knoxville/schedule` if the booking page is built, otherwise `/knoxville/free-estimate` | depends on the scheduling feature |
+| `/knoxville/schedule/` | the booking page (schedule.painter1.com/knoxville) when set in Studio, otherwise `/knoxville/free-estimate` | in code (307, Oct 19) |
 
 **Linked from every live page (not in the manifest), 10 city landing pages:** `/knoxville/painters-{alcoa,clinton,farragut,lenoir-city,louisville,maryville,oak-ridge,oliver-springs,powell,seymour}-tn/` → `/knoxville` (one rule: `/:location/painters-:city` → `/:location`). **SEO risk:** these are local-search pages with no template in the new sitemap; ×44 locations. Confirm with the client before launch.
 
 **Older URLs seen in the Internet Archive** (may still have backlinks; confirm against Search Console/GA landing-page reports in Phase 2):
 - **2024 city pages** `/knoxville/{alcoa,clinton,farragut,gatlinburg,lenoir-city,maryville,oak-ridge,pigeon-forge}/` → `/knoxville`.
-- **2021 site** `/knoxville/contact`, `/knoxville/estimate` → `/knoxville/free-estimate`; `/knoxville/reviews` → `/knoxville#reviews` (in code, 308; no reviews page, Oct 14); `/knoxville/services`, `/knoxville/services/business` → `/knoxville`; `/knoxville/cities-we-serve/…` (15 pages) → `/knoxville`; `/knoxville/blog` → `/knoxville` (no blog in scope); `/knoxville/locations` → the corporate locations directory (no route yet).
+- **2021 site** `/knoxville/contact`, `/knoxville/estimate` → `/knoxville/free-estimate`; `/knoxville/reviews` → `/knoxville#reviews` (in code, 308; no reviews page, Oct 14); `/knoxville/services`, `/knoxville/services/business` → `/knoxville`; `/knoxville/cities-we-serve/…` (15 pages) → `/knoxville`; `/knoxville/blog` → `/knoxville` (no blog in scope); `/knoxville/locations` → `/knoxville` (in code, Oct 19).
 - **Google Ads landing page** `/knoxville/professional-painting-services-gaw-1/` and `/…/thank-you/` → `/knoxville/free-estimate`. Ads final URLs should be updated before switch-over (estimate plan L10).
 
 ### 4b. Documented data schema / CMS setup (brief §5 deliverable) — ❌ missing

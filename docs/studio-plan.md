@@ -344,6 +344,7 @@ Steps 1–2 are done (applied Oct 2026; the script was removed in the Oct 14 cle
 | `/:location/services` and anything under it | `/:location` | **in code** | 2021 site |
 | `/:location/blog` and anything under it | `/:location` | **in code** | no blog in scope |
 | `/:location/professional-painting-services-gaw-1/` (+ `/thank-you/`) | `/:location/free-estimate` | **in code** | Google Ads landing page; update the Ads final URLs before the switch |
-| `/:location/commercial-painting/`, `masonry-coating-and-waterproofing`, `concrete-staining`, `popcorn-ceiling-removal`, `wallpaper-removal`, `schedule` | ? | **waiting for Rick** | targets to confirm (go-live list #4) |
-| `/knoxville/locations` | the corporate locations directory | **waiting** | no route yet; under the go-live plan it would stay on WordPress |
+| `/:location/schedule/` | the location's **booking page** when Studio has one (valid https), otherwise `/:location/free-estimate`; UTM tags and click IDs kept | **in code** (**307**, temporary) | a route, not a config redirect (`app/[location]/schedule/route.ts`): the target follows Studio, so it must not be cached forever |
+| `/:location/locations/` | `/:location` | **in code** | Oct 19 |
+| `/:location/commercial-painting/`, `masonry-coating-and-waterproofing`, `concrete-staining`, `popcorn-ceiling-removal`, `wallpaper-removal` | ? | **waiting for Rick** | targets to confirm (go-live list #4) |
 | `/` | `/knoxville` (307, temporary) | **in code; remove at go-live** | painter1.com's homepage stays WordPress (docs/go-live-plan.md) |

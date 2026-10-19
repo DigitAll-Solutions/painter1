@@ -3,6 +3,7 @@
 // WordPress locations (docs/go-live-plan.md), a rule like /:location/brick-painting would otherwise also
 // catch /atlanta/brick-painting/ and send it to a page that doesn't exist. Add a slug here only on the
 // day that location moves. URL tables: docs/scope-audit.md §4a; list: docs/studio-plan.md §7.
+// /<location>/schedule depends on Studio data, so it's a route instead: app/[location]/schedule/route.ts.
 // Tested in legacy-redirects.test.ts (with Next's own path matcher) and on a local server.
 import { SERVICE_SLUG_RENAMES } from './service-slugs.ts'
 
@@ -34,6 +35,8 @@ const PAGE_MOVES: [from: string, to: string][] = [
   ['estimate', '/free-estimate'],
   ['services/:rest*', ''],
   ['blog/:rest*', ''],
+  // The location's old "locations" page (Oct 19: to the location homepage, not the corporate directory)
+  ['locations', ''],
   // Google Ads landing page and its thank-you page (update the Ads final URLs before the switch)
   ['professional-painting-services-gaw-1/:rest*', '/free-estimate'],
 ]

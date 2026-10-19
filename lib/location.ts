@@ -1,5 +1,7 @@
 import type { Location } from '@/sanity/lib/types'
 
+import { withAttribution } from './booking-params.ts'
+
 export type NavLink = { label: string; href: string }
 
 type CtaLocation = Pick<Location, 'slug' | 'schedulingUrl' | 'bookingTarget'>
@@ -10,8 +12,13 @@ type CtaLocation = Pick<Location, 'slug' | 'schedulingUrl' | 'bookingTarget'>
  * so nothing ever links to an empty or broken URL.
  */
 export function bookingUrl(location: CtaLocation): string | undefined {
-  const raw = location.schedulingUrl?.trim()
-  if (location.bookingTarget !== 'booking' || !raw) return undefined
+  return location.bookingTarget === 'booking' ? httpsUrl(location.schedulingUrl) : undefined
+}
+
+/** The value when it's a valid https URL, else undefined */
+function httpsUrl(value?: string | null): string | undefined {
+  const raw = value?.trim()
+  if (!raw) return undefined
   try {
     return new URL(raw).protocol === 'https:' ? raw : undefined
   } catch {
@@ -22,6 +29,16 @@ export function bookingUrl(location: CtaLocation): string | undefined {
 /** The free-estimate survey; `service` (interior | exterior | cabinet) preselects its first question */
 export const estimateHref = (location: Pick<Location, 'slug'>, service?: string) =>
   `/${location.slug}/free-estimate${service ? `?service=${encodeURIComponent(service)}` : ''}`
+
+/**
+ * Where the old WordPress URL /<location>/schedule/ goes (app/[location]/schedule/route.ts): the
+ * location's booking page whenever one is set (valid https), else the survey. The visitor's UTM tags
+ * and click IDs come along; the survey also keeps the rest of the query string.
+ */
+export function scheduleTarget(location: Pick<Location, 'slug' | 'schedulingUrl'>, search = ''): string {
+  const booking = httpsUrl(location.schedulingUrl)
+  return booking ? withAttribution(booking, search) : `${estimateHref(location)}${search}`
+}
 
 export type Cta = { label: string; href: string; booking: boolean }
 
