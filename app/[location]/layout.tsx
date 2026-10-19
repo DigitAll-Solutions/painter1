@@ -12,7 +12,8 @@ import RingbotWidget from '@/components/RingbotWidget'
 import { ringbotId } from '@/lib/ringbot'
 import { getLocation, getLocationSlugs } from '@/sanity/lib/fetch'
 
-export const revalidate = 60
+// Same fallback as sanity/lib/fetch.ts: the publish webhook is the main update path
+export const revalidate = 3600
 
 export async function generateStaticParams() {
   const slugs = await getLocationSlugs()
