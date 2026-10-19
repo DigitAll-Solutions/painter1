@@ -68,14 +68,16 @@ Client Tether reads the estimate email line by line, so its text must arrive exa
 
 **Open and click tracking can't be switched off in the account.** Brevo has no setting for transactional email tracking. Brevo support turns it off case by case, on request: write to them from the account (Help → Contact us), say these are transactional notifications read by a parser, and ask for open and click tracking to be disabled for transactional email. Sources: [Brevo community: no option to disable tracking](https://community.brevo.com/t/no-way-to-disable-by-option-tracking-in-transactional-e-mail/201), [Brevo community: SMTP relay and text/html](https://community.brevo.com/t/brevo-transactional-emails-simple-smtp-relay-forces-content-type-of-text-html/672).
 
-**SMTP relay.** The website sends one `text/plain` part and nothing else (no HTML version). Some users report that Brevo's relay also converts text emails to HTML, so the relay is checked with a real test before launch (below). If Brevo changes it there too, the remaining choices are Brevo support (tracking off) or another sending service.
+**SMTP relay (tested Oct 16, 2026): Brevo converts it too.** The website sends one `text/plain` part and nothing else, and Brevo still delivered it as `text/html` with `<br/>` line breaks and a tracking image. So, with Brevo, Client Tether receives an HTML email whichever way the site sends.
+
+**Decision (Oct 19): keep Brevo.** Fluent Forms may well send HTML to Client Tether today too, so the real test is whether Client Tether reads the fields correctly: one test lead to the Client Tether parse address on launch day (section 8). Only if that fails do we switch to Postmark (text-only sends, tracking off by default). The site sends through Brevo's SMTP relay (merged in PR #33); the `lead-email-smtp` branch is merged and can be deleted.
 
 Also:
 
 - **Don't use a Brevo template** for these emails, and don't add a header/footer or unsubscribe block to transactional email: any of them would change the text.
 - **Encoding isn't a change:** on the way, every line ends with CR LF, the message ends with a line break, and long or accented lines are encoded (quoted-printable, the trailing space as `=20`). Email programs and Client Tether decode it back to the same text.
 
-**Test (every time something changes in Brevo, and before launch):**
+**Inspect a received email (optional):** with Brevo the check below fails on the HTML part, which is expected (see above). It's still the quickest way to see exactly what arrived: the structure, tracking images, List-Unsubscribe and SPF/DKIM/DMARC. With Postmark it should pass.
 
 1. With `LEAD_TEST_RECIPIENT` set to your address, submit one estimate request.
 2. Save the email as a file: in Gmail, ⋮ → **Download message** (or **Show original** → **Download original**). Don't copy it from the screen: that can drop the trailing space.
@@ -99,9 +101,14 @@ Also:
 
 For each location going live:
 
-1. `BREVO_SMTP_USER`, `BREVO_SMTP_KEY`, `LEAD_FROM_EMAIL` are set in Vercel Production (section 3).
-2. One test request with `LEAD_TEST_RECIPIENT` set passes `scripts/check-lead-eml.ts` (section 6).
-3. **Check the blocklist:** `scripts/brevo-blocklist.ts <location>` shows every lead recipient as "ok". For Knoxville that's **Keith's team** and the **Client Tether parse address**. Remove any blocked address (section 7) before going live.
+1. **Vercel Production** has `BREVO_SMTP_USER`, `BREVO_SMTP_KEY` and `LEAD_FROM_EMAIL` (section 3). Without the SMTP pair, leads are saved but their email is "skipped".
+2. **Check the blocklist:** `scripts/brevo-blocklist.ts <location>` shows every lead recipient as "ok". For Knoxville that's **Keith's team** and the **Client Tether parse address**. Remove any blocked address (section 7) before going live.
+3. **Client Tether test, before going live (Knoxville: `keith@parse.clienttether.com` only):**
+   1. In Vercel Production set `LEAD_TEST_RECIPIENT` to the location's Client Tether parse address (nothing else), keep `LEAD_SEND_LIVE` unset, and redeploy. In test mode the email goes **only** to that address, and its subject starts with `[TEST]`.
+   2. Submit one estimate request on the live page with an obviously fake name ("Client Tether Test").
+   3. **Rick or Keith confirm in Client Tether** that the lead appeared and that every field landed in the right place: name, email, phone, address, city, state, zip, the message, and the source fields from the `PARSER:` line (channel and drill-downs). Ask them to check the `[TEST]` subject doesn't stop Client Tether from picking it up; if it does, repeat with live mode for one request.
+   4. **Fields right:** keep Brevo; continue with step 4. **Fields wrong or missing:** don't go live with Brevo; switch the sender to **Postmark** (text-only, tracking off), then repeat this test.
+   5. Delete the test lead in Client Tether and in the Studio.
 4. Tell the recipients not to click "Unsubscribe" or "Report spam" on lead emails.
-5. Empty `LEAD_TEST_RECIPIENT`, set `LEAD_SEND_LIVE=true`, redeploy, and send one real request: confirm it reaches the staff and appears in Client Tether with its source fields.
+5. **Go live:** empty `LEAD_TEST_RECIPIENT`, set `LEAD_SEND_LIVE=true`, redeploy. The first real request should reach the staff and Client Tether.
 6. A week after launch, run the blocklist check again.

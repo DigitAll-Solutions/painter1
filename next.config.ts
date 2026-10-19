@@ -1,18 +1,16 @@
 import type { NextConfig } from "next";
 
 import { WORK_FILTERS } from "./lib/our-work-filters";
-import { SERVICE_SLUG_RENAMES } from "./lib/service-slugs";
+import { legacyRedirects } from "./lib/legacy-redirects";
 
 const nextConfig: NextConfig = {
   async redirects() {
     return [
       // Temporary (307, not cached by search engines) until the franchisor homepage exists at "/"
       { source: "/", destination: "/knoxville", permanent: false },
-      // Renamed service pages (308): /knoxville/cabinet-refinishing → /knoxville/cabinet-painting, every location
-      ...Object.entries(SERVICE_SLUG_RENAMES).map(([from, to]) => ({ source: `/:location/${from}`, destination: `/:location/${to}`, permanent: true })),
-      // No reviews page (Rick, Oct 14): reviews stay on the homepage. Old /knoxville/reviews(/…) URLs (308)
-      // land on its reviews section, every location; /studio is left alone.
-      { source: "/:location((?!studio(?![^/]))[^/]+)/reviews/:rest*", destination: "/:location#reviews", permanent: true },
+      // Old WordPress URLs of the locations live on this site (308), scoped to those locations only, so
+      // they never catch the other locations still on WordPress: lib/legacy-redirects.ts
+      ...legacyRedirects(),
     ];
   },
   async rewrites() {

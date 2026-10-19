@@ -5,7 +5,7 @@ import { test } from 'node:test'
 
 import { pickAttribution, withAttribution } from './booking-params.ts'
 
-const BOOK = 'https://appointment.painter1.com/knoxville'
+const BOOK = 'https://schedule.painter1.com/knoxville'
 
 test('the current page\'s UTMs and click IDs are added; other params are not', () => {
   const search = '?utm_source=google&utm_medium=cpc&utm_campaign=fall+sale&gclid=abc123&service=exterior&fbclid='

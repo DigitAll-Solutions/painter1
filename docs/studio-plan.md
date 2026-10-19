@@ -225,7 +225,8 @@ A "Launch checklist" document view, computed from the document being edited plus
 - **CORS origins (Manage → API → CORS origins):** `https://painter1.vercel.app` and `http://localhost:3000` (credentials allowed) today; add the production domain at go-live (first bullet above). Our project tokens can't read this list, so check it by eye.
 - **Lead cleanup cron:** set `CRON_SECRET` in Vercel (Production), redeploy, then check Vercel → Settings → Cron Jobs shows `/api/cron/cleanup-leads` daily and its first run logs `[lead-cleanup]` counts.
 - **Rotate the editor write token** if it was ever shared outside Vercel and `.env.local`.
-- **Lead email (each location):** follow `docs/email-setup.md` section 8. Run `scripts/brevo-blocklist.ts <location>` and confirm no lead recipient is on Brevo's transactional blocklist (for Knoxville: Keith's team and the Client Tether parse address). Then run one test request through `scripts/check-lead-eml.ts`.
+- **Lead email (each location):** follow `docs/email-setup.md` section 8: Brevo blocklist check (Keith's team and the Client Tether parse address), then **one TEST lead only to the Client Tether parse address** (Knoxville: `keith@parse.clienttether.com`), and Rick or Keith confirm every field landed right in Client Tether. Only if it fails: switch to Postmark.
+- **Domain switch:** follow `docs/go-live-plan.md` (runbook and rollback).
 
 ## 3. Decisions (agreed)
 
@@ -322,16 +323,27 @@ Steps 1–2 are done (applied Oct 2026; the script was removed in the Oct 14 cle
 - **Confirm the list with the client first:** some may simply be missing from the CSV (north-georgia certainly is; see §6).
 - **Until `/locations` exists** (corporate pages, docs/corp-pages-plan.md), the redirects need a temporary target. Agree that target with the client.
 - **Also redirect at launch:** basic-tier locations' old service, About, Our Work and warranty URLs (these pages don't exist for the basic tier) to the location's home page.
-- **Go-live redirects for renamed and merged pages** (every location; `:location` = the location slug). The full live-URL table is in `docs/scope-audit.md`.
+- **Go-live redirects for old WordPress URLs** (`lib/legacy-redirects.ts`, all **308 permanent**). Every rule is **scoped to the live locations** (`LIVE_LOCATIONS`, today only `knoxville`), so while painter1.com still serves the other WordPress locations no rule can catch their URLs (`/atlanta/brick-painting/` is never touched). Add a slug to `LIVE_LOCATIONS` only on the day that location moves. WordPress URLs end with `/`: Next.js first 308s `/x/` to `/x`, then the rule applies (2 hops, both permanent). Tested in `lib/legacy-redirects.test.ts` and on a local server. Full live-URL table: `docs/scope-audit.md` §4a.
 
-| From | To | Status | Where |
+| From (`:location` = a live location) | To | Status | Note |
 |---|---|---|---|
-| `/:location/cabinet-refinishing` | `/:location/cabinet-painting` | **in code now** (308, `next.config.ts`) | slug renamed Oct 9 |
-| `/:location/reviews` and anything under it (2021 site; `/reviews/` too) | `/:location#reviews` (homepage reviews section) | **in code now** (308, `next.config.ts`) | no reviews page (Rick, Oct 14); `/studio` excluded |
-| `/:location/cabinet-painting/` (live WordPress URL) | `/:location/cabinet-painting` | automatic (trailing slash) | same page |
-| `/:location/cabinet-painting-and-refinishing/` (live) | `/:location/cabinet-painting` | add at launch | second live cabinet URL |
-| `/:location/home-siding-painting/` (live) | `/:location/exterior-painting#siding` | add at launch | Siding section |
-| `/:location/stucco-painting/` (live) | `/:location/exterior-painting#stucco` | add at launch | Stucco section |
-| `/:location/brick-painting/` (live) | `/:location/exterior-painting#brick` | add at launch | Brick section |
-| `/:location/deck-painting-and-staining/` (live) | `/:location/exterior-painting#decks` | add at launch | Decks section |
-| `/:location/fence-painting-and-staining/` (live) | `/:location/exterior-painting#fences` | add at launch | Fences section |
+| `/:location/cabinet-refinishing` | `/:location/cabinet-painting` | **in code** | slug renamed Oct 9 |
+| `/:location/reviews` and anything under it | `/:location#reviews` | **in code** | no reviews page (Rick, Oct 14) |
+| `/:location/cabinet-painting/` | `/:location/cabinet-painting` | automatic (trailing slash) | same page |
+| `/:location/cabinet-painting-and-refinishing/` | `/:location/cabinet-painting` | **in code** | second live cabinet URL |
+| `/:location/home-siding-painting/` | `/:location/exterior-painting#siding` | **in code** | Siding section |
+| `/:location/stucco-painting/` | `/:location/exterior-painting#stucco` | **in code** | Stucco section |
+| `/:location/brick-painting/` | `/:location/exterior-painting#brick` | **in code** | Brick section |
+| `/:location/deck-painting-and-staining/` | `/:location/exterior-painting#decks` | **in code** | Decks section |
+| `/:location/fence-painting-and-staining/` | `/:location/exterior-painting#fences` | **in code** | Fences section |
+| `/:location/residential-painting/` | `/:location` | **in code** | hub of interior + exterior |
+| `/:location/painters-<city>-<state>/` (e.g. `painters-alcoa-tn`) | `/:location` | **in code** | city landing pages; their local content isn't migrated (SEO note in scope-audit) |
+| `/:location/cities-we-serve/…` | `/:location` | **in code** | 2021 site |
+| `/knoxville/{alcoa,clinton,farragut,gatlinburg,lenoir-city,maryville,oak-ridge,pigeon-forge}/` | `/knoxville` | **in code** | Knoxville's 2024 city pages (Knoxville only) |
+| `/:location/contact`, `/:location/estimate` | `/:location/free-estimate` | **in code** | 2021 site |
+| `/:location/services` and anything under it | `/:location` | **in code** | 2021 site |
+| `/:location/blog` and anything under it | `/:location` | **in code** | no blog in scope |
+| `/:location/professional-painting-services-gaw-1/` (+ `/thank-you/`) | `/:location/free-estimate` | **in code** | Google Ads landing page; update the Ads final URLs before the switch |
+| `/:location/commercial-painting/`, `masonry-coating-and-waterproofing`, `concrete-staining`, `popcorn-ceiling-removal`, `wallpaper-removal`, `schedule` | ? | **waiting for Rick** | targets to confirm (go-live list #4) |
+| `/knoxville/locations` | the corporate locations directory | **waiting** | no route yet; under the go-live plan it would stay on WordPress |
+| `/` | `/knoxville` (307, temporary) | **in code; remove at go-live** | painter1.com's homepage stays WordPress (docs/go-live-plan.md) |

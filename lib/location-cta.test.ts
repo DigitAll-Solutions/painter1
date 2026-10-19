@@ -5,7 +5,7 @@ import { test } from 'node:test'
 
 import { bookingUrl, estimateHref, footerLinks, getCta } from './location.ts'
 
-const BOOK = 'https://appointment.painter1.com/knoxville'
+const BOOK = 'https://schedule.painter1.com/knoxville'
 const knoxville = { slug: 'knoxville' }
 
 test('booking on with a booking page: main CTAs go straight to it, labelled "Schedule Your FREE Estimate"', () => {
@@ -26,7 +26,7 @@ test('booking on but the booking page empty (Knoxville today): everything goes t
 })
 
 test('booking on with an unusable URL (http, not a URL): survey', () => {
-  for (const schedulingUrl of ['http://appointment.painter1.com/knoxville', 'appointment.painter1.com/knoxville', 'javascript:alert(1)']) {
+  for (const schedulingUrl of ['http://schedule.painter1.com/knoxville', 'schedule.painter1.com/knoxville', 'javascript:alert(1)']) {
     assert.equal(getCta({ ...knoxville, bookingTarget: 'booking', schedulingUrl }).href, '/knoxville/free-estimate')
   }
 })
