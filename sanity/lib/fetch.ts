@@ -9,8 +9,10 @@ import type { SurveyContent } from '@/lib/estimate-survey'
 import { TAGS } from '@/lib/revalidate'
 import { publicServiceSlug, storedServiceSlugs } from '@/lib/service-slugs'
 
-// Fallback: data is refreshed at least every 60 s even without the publish webhook (app/api/revalidate)
-const revalidate = 60
+// Fallback only: the publish webhook (app/api/revalidate) refreshes pages right away. Without it data is
+// refreshed at least hourly. Kept at an hour so server reads stay well inside Sanity's Free plan quota
+// (250k API requests a month; useCdn is off).
+const revalidate = 3600
 
 export const getLocation = cache(async (slug: string) =>
   client.fetch<Location | null>(LOCATION_QUERY, { slug }, { next: { revalidate, tags: [TAGS.location(slug)] } }),

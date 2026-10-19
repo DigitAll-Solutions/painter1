@@ -2,7 +2,7 @@ import { createClient, type SanityClient } from 'next-sanity'
 
 import { apiVersion, dataset, projectId } from '../env'
 
-// Token-authenticated clients for the free-estimate server action only. Never import these from a
+// Token-authenticated clients for the free-estimate server action and the lead cleanup cron only. Never import these from a
 // component: the tokens are server-side env vars. Return null when the token isn't configured.
 const withToken = (token: string | undefined): SanityClient | null =>
   token ? createClient({ projectId, dataset, apiVersion, token, useCdn: false, perspective: 'published' }) : null

@@ -11,6 +11,7 @@ For the Painter1 team who edits the website. The Studio is at **/studio** on the
   - **Viewer:** read-only, and can still read leads.
   - **Administrator:** for the agency and the account owner only (members, settings, URLs).
 - **Lead recipients** (the addresses that receive estimate emails) are kept out of the public website data, but every Studio member can see them.
+- **Leads are kept 90 days.** Every day the site deletes estimate requests that are **more than 90 days old and whose email was sent**: by then they are in the recipients' inboxes and in Client Tether. Requests whose email failed, was skipped or was a test are **kept**, so someone can follow them up; delete those by hand once handled. Lead recipients and all other content are never deleted. (Developers: `app/api/cron/cleanup-leads`, `lib/lead-cleanup.ts`; a manual run is `node --env-file=.env.local scripts/cleanup-leads.ts --dry-run`.)
 
 ## How the Studio is organized
 
@@ -141,7 +142,7 @@ When a document is published, a Sanity webhook calls the site's `/api/revalidate
 - **A location:** that location's pages (also under its old slug if the slug changed).
 - **A service, the warranty terms, the privacy policy or the estimate survey:** those pages on every location.
 
-The next visit then shows the change (in our test, about 4 seconds after publishing). Without the webhook, pages still refresh within about 60 seconds. Lead documents and lead settings aren't on any page, so the webhook ignores them.
+The next visit then shows the change (in our test, about 4 seconds after publishing). Without the webhook, pages still refresh within about an hour (a fallback kept long on purpose, to stay inside Sanity's Free plan API quota). Lead documents and lead settings aren't on any page, so the webhook ignores them.
 
 **Set it up once** (needs project admin access; the site needs no change):
 

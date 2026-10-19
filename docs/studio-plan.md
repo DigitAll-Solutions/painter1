@@ -211,13 +211,19 @@ A "Launch checklist" document view, computed from the document being edited plus
 
 - **Built-in roles are dataset-wide.** Limiting someone to one location, or hiding leads from a role, needs custom roles / content-resource permissions, which Sanity sells only on its Enterprise plan. With the brief's "franchisees won't edit", built-in roles are enough (S4).
 - **The "private" lead documents** (dot IDs) are hidden from the public API, not from project members. Every member, Viewers included, can read leads in the Studio.
-- **Plan limits:** seat counts, available roles and SSO depend on the project's plan. Confirm under Manage → Plan before inviting the team; I couldn't read the plan with our token.
+- **Lead retention:** leads older than 90 days whose email was sent are deleted daily (Vercel Cron → `/api/cron/cleanup-leads`, rule in `lib/lead-cleanup.ts`). Failed, skipped, pending and test leads are kept and counted. Recipient docs (`leads.<location id>`) and other types are never touched. This keeps personal data no longer than needed and keeps the dataset under the Free plan's 10k documents.
+- **Plan limits (checked Oct 19, trial ending):** on the **Free** plan people can only be **Administrator** or **Viewer** (20 seats); Editor and Contributor need **Growth** ($15 per seat per month, per seat, no minimum term). API tokens keep working on Free (editor and viewer robots). Source: sanity.io/pricing and the roles reference.
 
 ### 2.7 Launch checklist additions (go-live)
 
 - **Register the Studio** for `https://www.painter1.com` (Manage → Studios), and add `https://www.painter1.com` to **CORS origins with credentials allowed**. Add `https://painter1.com` too if the apex domain serves pages; keep `https://painter1.vercel.app` and `http://localhost:3000`.
 - **Preview deployments:** only add a CORS pattern scoped to this project's preview URLs, never `https://*.vercel.app` with credentials.
-- **Invite the client team** with the roles agreed in S3–S4. Remove or downgrade anyone who no longer needs access.
+- **Roles decision (Free plan):** Free offers only Administrator and Viewer. Decide before inviting Rick's team: (a) stay on Free and make the one or two trusted editors **Administrators** (they can also change members, tokens, webhooks and datasets, and the "slug read-only for non-administrators" lock no longer protects anything), or (b) buy **Growth seats** only for them, so they can be **Editors** / **Contributors** as agreed in S3.
+- **Invite the client team** with the roles decided above (S3–S4). Remove or downgrade anyone who no longer needs access.
+- **Sanity usage (Manage → Usage), monthly after launch:** API requests (Free cap 250k a month, hard stop), API CDN requests (1M), bandwidth (100 GB) and documents (10k). Free plans are blocked, not billed, at the cap; Sanity emails at 80% and 100%.
+- **Webhooks (Manage → API → Webhooks):** exactly one, "Refresh site on publish" (Free allows 2 GROQ-powered webhooks). Point it at the production domain at go-live.
+- **CORS origins (Manage → API → CORS origins):** `https://painter1.vercel.app` and `http://localhost:3000` (credentials allowed) today; add the production domain at go-live (first bullet above). Our project tokens can't read this list, so check it by eye.
+- **Lead cleanup cron:** set `CRON_SECRET` in Vercel (Production), redeploy, then check Vercel → Settings → Cron Jobs shows `/api/cron/cleanup-leads` daily and its first run logs `[lead-cleanup]` counts.
 - **Rotate the editor write token** if it was ever shared outside Vercel and `.env.local`.
 - **Lead email (each location):** follow `docs/email-setup.md` section 8. Run `scripts/brevo-blocklist.ts <location>` and confirm no lead recipient is on Brevo's transactional blocklist (for Knoxville: Keith's team and the Client Tether parse address). Then run one test request through `scripts/check-lead-eml.ts`.
 

@@ -50,7 +50,7 @@ Every location should get all 10 (brief §3; proposal "Page Templates (10)"); 9 
 | **Service + Review schema** | — | ✅ service pages: `Service` (provider = LocalBusiness), tagged `Review`s, `BreadcrumbList`, `FAQPage` | ✅ done | |
 | **Sitemap** | — | ✅ `app/sitemap.ts`: location homepages + service pages | 🟡 partial | Will need the 7 missing page types added as they're built |
 | **Canonicals** | — | ✅ homepage and service pages | ✅ done | `robots.ts` ✅ (disallows `/studio`) |
-| Static generation ("no server-side rendering", proposal) | — | ✅ SSG + ISR (60s revalidate), `generateStaticParams` per location | ✅ done | The estimate form adds a server action, which is expected |
+| Static generation ("no server-side rendering", proposal) | — | ✅ SSG + ISR (publish webhook; 1 h fallback revalidate), `generateStaticParams` per location | ✅ done | The estimate form adds a server action, which is expected |
 | next/image "or equivalent" | — | ✅ `components/SanityImage.tsx` (Sanity CDN srcset, `auto=format`, lazy, preload for LCP); logos use `next/image` | ✅ done | Tell the client this is the "equivalent" the brief allows (it avoids optimising every image twice) |
 
 ## 3. Performance (proposal: "sub-2 second mobile load … verified via PageSpeed Insights")
