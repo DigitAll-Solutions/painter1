@@ -1,4 +1,4 @@
-// Booking links (appointment.painter1.com) carry the visitor's campaign source, so Attributer and GA4 on
+// Booking links (schedule.painter1.com) carry the visitor's campaign source, so Attributer and GA4 on
 // the booking page still see where the visit came from. Tested in booking-params.test.ts; applied on
 // click by components/BookingParams.tsx.
 

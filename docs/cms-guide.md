@@ -109,7 +109,7 @@ Every full-tier location has an About page at `/<location>/about-us` (basic-tier
   - **Booking page** (locations that book online): the header button, hero, section buttons, service pages, About, warranty and the final band say **"Schedule Your FREE Estimate"** and open the booking page in the same tab. The visitor's campaign source (utm_… and ad click IDs) goes along, so the booking page still sees where the visit came from.
   - **Free estimate survey** (the default): every button says "Get Your FREE Estimate" and opens the survey.
 - **The side tab "Free Estimate"** (and the Free Estimate button in the phone bar) always opens the survey, whichever is picked.
-- **Booking page:** the location's page on appointment.painter1.com, e.g. `https://appointment.painter1.com/knoxville`. It shows when "Booking page" is picked. **While it's empty, every button goes to the survey**, so nothing ever links to an empty page; the launch checklist flags it.
+- **Booking page:** the location's page on schedule.painter1.com, e.g. `https://schedule.painter1.com/knoxville`. It shows when "Booking page" is picked. **While it's empty, every button goes to the survey**, so nothing ever links to an empty page; the launch checklist flags it.
 - **After a survey request**, booking locations also get **Pick a time now** on the thank-you screen.
 
 ## Warranty page

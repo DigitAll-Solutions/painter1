@@ -18,7 +18,7 @@ export default function CtaButton({ variant = 'orange', size = 'lg', className =
   const sizing = size === 'lg' ? 'px-6 py-3.5 text-lg' : 'px-5 py-2.5 text-base'
   const classes = `inline-flex items-center justify-center gap-2 rounded-xl font-bold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${sizing} ${variants[variant]} ${className}`
   if (booking && typeof props.href === 'string') {
-    // Another site (appointment.painter1.com): a plain link, no prefetch
+    // Another site (schedule.painter1.com): a plain link, no prefetch
     const { href, children } = props
     return (
       <a {...bookingLinkProps(href)} className={classes}>

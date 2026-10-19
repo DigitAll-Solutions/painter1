@@ -3,7 +3,7 @@
  * CTA, and the old hasScheduling switch is gone from the schema. For Knoxville:
  *   - bookingTarget → "booking" (Rick: Knoxville books online)
  *   - hasScheduling removed (it only changed the button label; the field no longer exists)
- *   - schedulingUrl left as it is (empty until appointment.painter1.com/knoxville is live), so every
+ *   - schedulingUrl left as it is (empty until schedule.painter1.com/knoxville is live), so every
  *     button keeps going to the survey until Rick fills it in
  * The published document and its draft (if any) are both updated.
  *

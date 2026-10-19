@@ -620,7 +620,7 @@ export const location = defineType({
       group: 'leads',
       fieldset: 'scheduling',
       description:
-        'Booking page on appointment.painter1.com, e.g. https://appointment.painter1.com/knoxville. Used by the main buttons and by "Pick a time now" after a survey request. Leave empty until the page is live: buttons go to the survey until then.',
+        'Booking page on schedule.painter1.com, e.g. https://schedule.painter1.com/knoxville. Used by the main buttons and by "Pick a time now" after a survey request. Leave empty until the page is live: buttons go to the survey until then.',
       hidden: ({document}) => document?.bookingTarget !== 'booking',
       validation: (rule) => [
         rule.uri({scheme: ['https']}),
