@@ -1,10 +1,11 @@
 import { homepageReviews, reviewSchema } from './reviews'
+import { cityOrPlace, cityStateOrPlace } from './place'
 import { absoluteUrl } from './site'
 import { urlFor } from '@/sanity/lib/image'
 import type { Location, Review } from '@/sanity/lib/types'
 
-export const cityName = (location: Location) =>
-  [location.address?.city, location.address?.state].filter(Boolean).join(', ') || location.name
+/** "Knoxville, TN"; without an address yet, the place part of the name ("Upstate SC"), never the full name */
+export const cityName = (location: Location) => cityStateOrPlace(location)
 
 const MAX_DESCRIPTION = 160
 
@@ -76,7 +77,7 @@ export function serviceSchema({ location, name, path, description, reviews }: { 
     serviceType: name,
     url: absoluteUrl(path),
     description,
-    areaServed: { '@type': 'City', name: location.address?.city ?? location.name },
+    areaServed: location.address?.city?.trim() ? { '@type': 'City', name: location.address.city.trim() } : { '@type': 'Place', name: cityOrPlace(location) },
     provider: businessNode(location),
     review: reviews.length ? reviews.map(reviewSchema) : undefined,
   }

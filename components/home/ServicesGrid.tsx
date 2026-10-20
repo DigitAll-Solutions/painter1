@@ -5,6 +5,7 @@ import Section, { Accent } from '../Section'
 import SanityImage from '../SanityImage'
 import { transformationPairs } from '@/lib/gallery'
 import { servicePages } from '@/lib/location'
+import { cityOrPlace } from '@/lib/place'
 import type { Location, SanityImage as SanityImageType, ServiceDetail } from '@/sanity/lib/types'
 
 // Without a before/after pair, use the sharpest photo the service has
@@ -44,7 +45,7 @@ function CardMedia({ before, after, fallback }: { before?: SanityImageType; afte
 
 export default function ServicesGrid({ location }: { location: Location }) {
   const linkable = location.locationType !== 'maintenance'
-  const city = location.address?.city ?? location.name
+  const city = cityOrPlace(location)
   const estimates = location.franchiseStructure === 'owner-led' ? 'owner-led' : 'local'
   const services = servicePages.flatMap(({ key, path }) => {
     const service = location.services?.[key]

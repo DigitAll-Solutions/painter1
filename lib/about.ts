@@ -4,6 +4,7 @@
 import type { Location, Review, TeamMember } from '@/sanity/lib/types'
 
 import { hasAboutPage } from './location.ts'
+import { cityOrPlace } from './place.ts'
 
 export const ABOUT_PATH = 'about-us' // the live site's URL (/knoxville/about-us/)
 
@@ -164,7 +165,7 @@ const fit = (limit: number, ...options: string[]) => options.find((o) => o.lengt
 
 export function aboutMeta(location: Pick<Location, 'name' | 'ownerName' | 'address'>, variant: AboutVariant) {
   const owner = location.ownerName?.trim()
-  const city = location.address?.city?.trim() || location.name
+  const city = cityOrPlace(location)
   const title =
     variant === 'team'
       ? fit(60, owner ? `About ${location.name} | ${owner} and Team` : `About ${location.name} | Our Team`, `About ${location.name}`)
@@ -179,7 +180,7 @@ export function aboutMeta(location: Pick<Location, 'name' | 'ownerName' | 'addre
         )
       : fit(
           160,
-          `Meet ${owner || 'the owner'}, owner of ${location.name}, who gives every estimate, checks every finished job and stands behind the 2-year workmanship warranty.`,
+          `Meet ${owner ? `${owner}, owner of ${location.name},` : `the owner of ${location.name},`} who gives every estimate, checks every finished job and stands behind the 2-year workmanship warranty.`,
           `Meet ${owner || 'the owner'} of ${location.name}: every estimate, every finished job and the 2-year warranty, handled by the owner.`,
           `Meet the owner of Painter1 in ${city}.`,
         )

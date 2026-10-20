@@ -1,4 +1,5 @@
 import TransformationBlock from '../TransformationBlock'
+import { cityOrPlace } from '@/lib/place'
 import type { Location } from '@/sanity/lib/types'
 
 const DEFAULT_BODY =
@@ -9,7 +10,7 @@ export default function TransformationSection({ location }: { location: Location
   const after = location.transformationAfterImage
   if (!before || !after) return null
 
-  const city = location.address?.city ?? location.name
+  const city = cityOrPlace(location)
   const body = (location.transformationBody || DEFAULT_BODY).replace(/\[city\]/gi, city)
 
   return <TransformationBlock before={before} after={after} heading="Our Painting Services in Action" body={body} />

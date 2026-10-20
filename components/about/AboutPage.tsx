@@ -7,6 +7,7 @@ import SanityImage from '@/components/SanityImage'
 import { Accent } from '@/components/Section'
 import { aboutPeople, aboutReviews, aboutVariant, ownerSteps, ROLE_LABEL, storyParagraphs, teamSteps, teamStoryHeading, tenure, type Person, type Step } from '@/lib/about'
 import { getCta, getWarrantyHref, telHref } from '@/lib/location'
+import { cityOrPlace } from '@/lib/place'
 import type { Location, Review } from '@/sanity/lib/types'
 
 const TEAM_ANCHOR = 'team'
@@ -19,7 +20,7 @@ const h2 = 'mt-2 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl
  */
 export default function AboutPage({ location }: { location: Location }) {
   const variant = aboutVariant(location)
-  const city = location.address?.city?.trim() || location.name
+  const city = cityOrPlace(location)
   const owner = location.ownerName?.trim()
   const first = owner?.split(/\s+/)[0] ?? ''
   const people = aboutPeople(location)
