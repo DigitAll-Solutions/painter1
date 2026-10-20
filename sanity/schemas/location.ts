@@ -171,7 +171,7 @@ export const location = defineType({
       name: 'ownerPronoun',
       type: 'string',
       group: 'owner',
-      description: 'Used in the "Why homeowners call…" copy (e.g. "He does every estimate himself").',
+      description: 'Used in the "Why homeowners call…" copy (e.g. "He does every estimate himself"). Leave empty to use the owner\'s first name instead ("Keith does every estimate personally"); never guessed.',
       options: {
         list: [
           {title: 'He / his', value: 'he'},
@@ -180,7 +180,6 @@ export const location = defineType({
         ],
         layout: 'radio',
       },
-      initialValue: 'he',
     }),
     defineField({
       name: 'ownerSinceYear',

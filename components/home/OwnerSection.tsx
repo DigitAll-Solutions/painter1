@@ -4,14 +4,9 @@ import { ArrowRight, BadgeCheck, ClipboardList, HardHat, House, PaintRoller, Rul
 import CtaButton from '../CtaButton'
 import SanityImage from '../SanityImage'
 import { getCta, getWarrantyHref } from '@/lib/location'
+import { ownerBody, onSiteStep } from '@/lib/owner-copy'
 import { ownerHeading } from '@/lib/owner-heading'
 import type { Location, TeamMember } from '@/sanity/lib/types'
-
-const pronouns = {
-  he: { Subj: 'He', subj: 'he', poss: 'his', does: 'does', runs: 'runs', is: 'is', reviews: 'reviews', himself: 'himself' },
-  she: { Subj: 'She', subj: 'she', poss: 'her', does: 'does', runs: 'runs', is: 'is', reviews: 'reviews', himself: 'herself' },
-  they: { Subj: 'They', subj: 'they', poss: 'their', does: 'do', runs: 'run', is: 'are', reviews: 'review', himself: 'themselves' },
-}
 
 const initials = (name: string) =>
   name
@@ -27,21 +22,13 @@ export default function OwnerSection({ location }: { location: Location }) {
 
   const fullName = location.ownerName!.trim()
   const { first, city } = heading
-  const p = pronouns[location.ownerPronoun ?? 'he']
   const withTeam = location.franchiseStructure === 'owner-with-team'
   const cta = getCta(location)
   const photo = location.ownerActionPhoto ?? location.ownerPhoto
   const caption = location.ownerActionPhoto?.caption
   const since = location.ownerSinceYear
-
-  const opened = `${first} opened ${location.name}${since ? ` in ${since}` : ''}${
-    location.ownerBackground ? ` after ${location.ownerBackground}` : ''
-  }.`
-  const body = withTeam
-    ? `${opened} ${p.Subj} or one of ${p.poss} project leads walks every estimate in person, and ${p.subj} personally ${p.reviews} every job before it closes.${
-        location.ownerPersonalLine ? ` ${location.ownerPersonalLine}` : ''
-      }`
-    : `${opened} ${p.Subj} ${p.does} every estimate ${p.himself}, ${p.runs} every job ${p.himself}, and ${p.is} the one who walks it with you at the end.`
+  // Pronoun from Studio, or the owner's first name and neutral wording when none is set (lib/owner-copy.ts)
+  const body = ownerBody(location, first)
 
   return (
     <section className="bg-mist py-16 md:py-24">
@@ -91,7 +78,7 @@ export default function OwnerSection({ location }: { location: Location }) {
           </div>
         </div>
 
-        {withTeam ? <TeamStrip location={location} first={first} /> : <ProcessStrip first={first} p={p} />}
+        {withTeam ? <TeamStrip location={location} first={first} /> : <ProcessStrip first={first} pronoun={location.ownerPronoun} />}
 
         <TrustStrip location={location} city={city} />
       </div>
@@ -99,11 +86,11 @@ export default function OwnerSection({ location }: { location: Location }) {
   )
 }
 
-function ProcessStrip({ first, p }: { first: string; p: (typeof pronouns)[keyof typeof pronouns] }) {
+function ProcessStrip({ first, pronoun }: { first: string; pronoun: Location['ownerPronoun'] }) {
   const steps: { icon: LucideIcon; title: string; text: string }[] = [
     { icon: Ruler, title: 'On-site estimate & color consult', text: `${first} measures, checks surfaces, and talks through colors and products.` },
     { icon: ClipboardList, title: 'Written scope & schedule', text: 'Prep plan, products, colors, and start date — in writing before work begins.' },
-    { icon: HardHat, title: 'On-site during the job', text: `${first} checks in with you and the crew — you have ${p.poss} direct number.` },
+    { icon: HardHat, title: 'On-site during the job', text: onSiteStep(pronoun, first) },
     { icon: BadgeCheck, title: 'Final walkthrough & sign-off', text: "The job closes when you're satisfied — backed by the 2-year warranty." },
   ]
 
