@@ -5,13 +5,15 @@
  *     (docs/painter1-knoxville/pages/locations.html), the newest source and one consistent naming;
  *   - "homepage title": the location homepage's <title> in its latest real Internet Archive capture
  *     (docs/reference/live-site/locations/<slug>.html, gitignored), dated below.
- * Rule: the locations page name; else the homepage title's "Painter1 …" name; else the CSV's name
+ * Rule: the locations page name; else the homepage title's "Painter1 …" name; else the CSV's name. Upstate
+ * uses its homepage title's name, and Scottsdale, Bozeman and Miami were checked on the live pages (Oct 20).
+ * Otherwise: the CSV's name
  * (seed-locations falls back to it when a slug isn't here). `note`: where the sources disagree.
  */
 type LiveName = { name: string; source: string; note?: string }
 
 export const LIVE_LOCATION_NAMES: Readonly<Record<string, LiveName>> = {
-  upstate: { name: 'Painter1 of Upstate', source: 'locations page', note: 'homepage title (Jun 2026): "Painter1 of Upstate SC"; CSV: "Painter1 of Upstate SC"' },
+  upstate: { name: 'Painter1 of Upstate SC', source: 'homepage title (Jun 2026); CSV; chosen by the developer (Oct 20)', note: 'locations page: "Painter1 of Upstate"' },
   'utah-county': { name: 'Painter1 of Utah County', source: 'locations page; homepage title (Jan 2026)' },
   columbus: { name: 'Painter1 of Columbus', source: 'locations page', note: 'homepage title (Apr 2026) has no name: "Painters in Columbus, OH"' },
   indianapolis: { name: 'Painter1 of Indianapolis', source: 'locations page', note: 'homepage title (Jan 2026) has no name: "Painters Indianapolis"' },
@@ -44,5 +46,8 @@ export const LIVE_LOCATION_NAMES: Readonly<Record<string, LiveName>> = {
   'central-florida': { name: 'Painter1 of Central Florida', source: 'locations page; homepage title (Apr 2024)' },
   'coastal-carolina': { name: 'Painter1 of Coastal Carolina', source: 'locations page; homepage title (Jun 2026)' },
   portland: { name: 'Painter1 of Portland', source: 'locations page; homepage title (Jan 2026)' },
-  // scottsdale, bozeman, miami: not on the locations page and no real archive capture → the CSV's name
+  // Not on the locations page and no real archive capture; the live pages were checked in a browser (Oct 20)
+  scottsdale: { name: 'Painter1 of Scottsdale', source: 'live page, checked in a browser by the developer (Oct 20); CSV' },
+  bozeman: { name: 'Painter1 of Bozeman', source: 'live page, checked in a browser by the developer (Oct 20); CSV' },
+  miami: { name: 'Painter1 of Miami', source: 'live page, checked in a browser by the developer (Oct 20); CSV' },
 }
