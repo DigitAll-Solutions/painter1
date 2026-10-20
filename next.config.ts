@@ -1,9 +1,17 @@
 import type { NextConfig } from "next";
 
 import { WORK_FILTERS } from "./lib/our-work-filters";
+import { PRODUCTION_HOST_PATTERN } from "./lib/indexing";
 import { legacyRedirects } from "./lib/legacy-redirects";
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      // Never index anything but the production domain: painter1.vercel.app, previews and staging hosts
+      // send X-Robots-Tag noindex (robots.txt disallows them too; lib/indexing.ts)
+      { source: "/:path*", missing: [{ type: "host", value: PRODUCTION_HOST_PATTERN }], headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+    ];
+  },
   async redirects() {
     return [
       // Temporary (307, not cached by search engines) until the franchisor homepage exists at "/"

@@ -10,7 +10,7 @@ For the Painter1 team who edits the website. The Studio is at **/studio** on the
   - **Contributor:** can make changes but can't publish them; an Editor reviews and publishes.
   - **Viewer:** read-only, and can still read leads.
   - **Administrator:** for the agency and the account owner only (members, settings, URLs).
-- **Lead recipients** (the addresses that receive estimate emails) are kept out of the public website data, but every Studio member can see them.
+- **Lead recipients** (the addresses that receive estimate emails) are kept out of the public website data, but every Studio member can see them. **Only the website developer can change them** (the field is read-only for everyone else): send changes to them. A wrong address means leads silently stop reaching the team or Client Tether.
 - **Leads are kept 90 days.** Every day the site deletes estimate requests that are **more than 90 days old and whose email was sent**: by then they are in the recipients' inboxes and in Client Tether. Requests whose email failed, was skipped or was a test are **kept**, so someone can follow them up; delete those by hand once handled. Lead recipients and all other content are never deleted. (Developers: `app/api/cron/cleanup-leads`, `lib/lead-cleanup.ts`; a manual run is `node --env-file=.env.local scripts/cleanup-leads.ts --dry-run`.)
 
 ## How the Studio is organized
@@ -35,7 +35,11 @@ The **Location details** document has these tabs: Basics · Owner & team · Home
 
 ## Adding a location
 
-1. **Create:** Locations → **All locations** (or any state) → create **New location**. It starts with:
+**The locations on Rick's list already exist** (36 created from the list on Oct 20, plus Knoxville), with the right name, URL slug and tier (Growth = every page, Maintenance = homepage, free estimate and privacy only). Open the location instead of creating a new one, and go on from step 2. Their lead recipients are empty: the developer adds them, so no estimate email is sent for a location until then.
+
+**Previewing:** every location can be checked at `https://painter1.vercel.app/<slug>` (e.g. `/upstate`) as soon as it's published. That copy is never indexed by Google, and a location only appears on painter1.com, in the sitemap and in search results once the developer adds it to the live list on its launch day.
+
+1. **Create** (only for a location that isn't on the list yet): Locations → **All locations** (or any state) → create **New location**. It starts with:
    - the standard service titles;
    - the lead email subject and template;
    - the two consent checkboxes.
@@ -43,7 +47,7 @@ The **Location details** document has these tabs: Basics · Owner & team · Home
    - **Name:** "Painter1 of {City}".
    - **City** and **State** (from the list).
    - **URL slug:** click **Generate**, which uses the city. It must match the location's live URL: `painter1.com/maryville` → `maryville`. The Studio warns if it isn't on the client's location list.
-3. **Lead recipients:** open the location's folder → **Lead recipients** and add the addresses that receive estimate requests (Client Tether's address goes here too). Until there's one, estimate requests are saved but nobody is emailed.
+3. **Lead recipients:** send the addresses that should receive estimate requests (including the location's Client Tether parse address) to the developer, who adds them (location folder → **Lead recipients**; read-only for everyone else). Until there's one, estimate requests are saved but nobody is emailed.
 4. **Work down the Launch checklist** until nothing is red, then **Publish**.
 5. **After publishing:** the URL slug is **locked**. Changing a live URL breaks every link to it, so ask an administrator, who will add redirects.
 
