@@ -1,7 +1,8 @@
 /**
  * Creates one location document per row of the client's list (docs/reference/Painter1 URLs.csv,
  * gitignored), so Rick can fill them in the Studio with the right slugs and tiers:
- *   - location-<slug>: name and slug exactly as the live URL, tier (full → growth, basic → maintenance).
+ *   - location-<slug>: slug exactly as the live URL; name as the live site shows it (scripts/lib/location-names.ts;
+ *     the CSV's shorthand only where the live name couldn't be found); tier (full → growth, basic → maintenance).
  *     The list has no phone numbers or addresses, so those stay empty.
  *   - leads.location-<slug>: the private lead recipients document, with no recipients, so estimate
  *     emails for that location are skipped until someone adds them.
@@ -24,6 +25,7 @@ import { createClient } from '@sanity/client'
 import { SLUG_PATTERN } from '../sanity/lib/location-slugs.ts'
 import { NEW_LOCATION_DEFAULTS } from '../sanity/lib/new-location-defaults.ts'
 import { parseCsv, readUrl, URL_CORRECTIONS } from './lib/location-csv.ts'
+import { LIVE_LOCATION_NAMES } from './lib/location-names.ts'
 import { SafeWrite } from './lib/safe-write.ts'
 
 const DRY_RUN = process.argv.includes('--dry-run')
@@ -39,6 +41,9 @@ function env(name: string) {
 }
 
 type Row = { line: number; name: string; slug: string; tier: 'full' | 'basic' }
+
+/** The name to create: the live site's (scripts/lib/location-names.ts), else the CSV's */
+export const locationName = (row: Pick<Row, 'slug' | 'name'>) => LIVE_LOCATION_NAMES[row.slug]?.name ?? row.name
 
 /** The CSV's usable rows, and the ones that can't be mapped cleanly (not created) */
 export function readList(text: string): { rows: Row[]; unmapped: string[] } {
@@ -91,7 +96,7 @@ async function main() {
     const leadsExists = existing.has(leadsId) || existing.has(`drafts.${leadsId}`)
     const created: string[] = []
     if (guard.create(locationId, locationExists)) {
-      tx.createIfNotExists({ ...(WITH_DEFAULTS ? NEW_LOCATION_DEFAULTS : {}), _id: locationId, _type: 'location', name: row.name, slug: { _type: 'slug', current: row.slug }, locationType: row.tier === 'full' ? 'growth' : 'maintenance' })
+      tx.createIfNotExists({ ...(WITH_DEFAULTS ? NEW_LOCATION_DEFAULTS : {}), _id: locationId, _type: 'location', name: locationName(row), slug: { _type: 'slug', current: row.slug }, locationType: row.tier === 'full' ? 'growth' : 'maintenance' })
       created.push(WITH_DEFAULTS ? 'location (+ New-location defaults)' : 'location')
     }
     if (guard.create(leadsId, leadsExists)) {
@@ -99,9 +104,11 @@ async function main() {
       created.push('recipients (empty)')
     }
     const status = created.length ? `create ${created.join(' + ')}` : `SKIPPED (exists${slugTaken.has(row.slug) && slugTaken.get(row.slug) !== locationId ? ` as ${slugTaken.get(row.slug)}` : ''})`
-    table.push(`  ${row.slug.padEnd(22)} ${row.name.padEnd(34)} ${row.tier.padEnd(6)} ${status}`)
+    const live = LIVE_LOCATION_NAMES[row.slug]
+    const note = !created.length ? '' : !live ? '  ← NO LIVE NAME FOUND: CSV name used' : live.note ? `  ← ${live.note}` : live.name !== row.name ? `  ← CSV: "${row.name}"` : ''
+    table.push(`  ${row.slug.padEnd(22)} ${locationName(row).padEnd(36)} ${row.tier.padEnd(6)} ${status}${note}`)
   }
-  console.log(`  ${'slug'.padEnd(22)} ${'name'.padEnd(34)} ${'tier'.padEnd(6)} action`)
+  console.log(`  ${'slug'.padEnd(22)} ${'name (live site)'.padEnd(36)} ${'tier'.padEnd(6)} action`)
   console.log(table.join('\n'))
   console.log(`\nNot mapped (not created): ${unmapped.length ? `\n  ! ${unmapped.join('\n  ! ')}` : 'none'}`)
   guard.report()
