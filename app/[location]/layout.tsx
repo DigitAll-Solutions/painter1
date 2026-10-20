@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { preconnect } from 'react-dom'
 
@@ -9,15 +10,25 @@ import Header from '@/components/Header'
 import HideOnPath from '@/components/HideOnPath'
 import MobileCtaBar from '@/components/MobileCtaBar'
 import RingbotWidget from '@/components/RingbotWidget'
+import { isLiveLocation } from '@/lib/indexing'
 import { ringbotId } from '@/lib/ringbot'
 import { getLocation, getLocationSlugs } from '@/sanity/lib/fetch'
 
 // Same fallback as sanity/lib/fetch.ts: the publish webhook is the main update path
 export const revalidate = 3600
 
+// Only live locations are built ahead; the others (being filled in Studio) render on first visit, so
+// Rick can preview them on painter1.vercel.app/<slug>
 export async function generateStaticParams() {
   const slugs = await getLocationSlugs()
-  return slugs.map((location) => ({ location }))
+  return slugs.filter(isLiveLocation).map((location) => ({ location }))
+}
+
+// A location that isn't live yet is never indexed, whatever the host (lib/indexing.ts). Pages don't set
+// `robots` themselves, so this applies to every page of the location.
+export async function generateMetadata({ params }: LayoutProps<'/[location]'>): Promise<Metadata> {
+  const { location } = await params
+  return isLiveLocation(location) ? {} : { robots: { index: false, follow: false } }
 }
 
 export default async function LocationLayout({ children, params }: LayoutProps<'/[location]'>) {

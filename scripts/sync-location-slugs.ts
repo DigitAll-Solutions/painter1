@@ -14,6 +14,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
 import { SLUG_PATTERN } from '../sanity/lib/location-slugs.ts'
+import { parseCsv, readUrl, URL_CORRECTIONS } from './lib/location-csv.ts'
 
 const CSV = 'docs/reference/Painter1 URLs.csv'
 const EARLIER_CSV = 'docs/reference/Painter1 locations.csv'
@@ -22,45 +23,6 @@ const OUT = 'sanity/lib/known-location-slugs.ts'
 const EXPECTED = 37
 const CHECK = process.argv.includes('--check')
 const PAGES = ['Home Page', 'Free Estimate', 'Service Pages', 'About Page', 'Our Work', 'Warranty'] as const
-
-/** Minimal CSV parser: quoted fields, commas and newlines inside quotes */
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = []
-  let row: string[] = []
-  let field = ''
-  let quoted = false
-  const endRow = () => {
-    row.push(field)
-    rows.push(row)
-    row = []
-    field = ''
-  }
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i]
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') {
-        field += '"'
-        i++
-      } else if (c === '"') quoted = false
-      else field += c
-    } else if (c === '"') quoted = true
-    else if (c === ',') {
-      row.push(field)
-      field = ''
-    } else if (c === '\n' || c === '\r') {
-      if (c === '\r' && text[i + 1] === '\n') i++
-      endRow()
-    } else field += c
-  }
-  if (field || row.length) endRow()
-  return rows.filter((r) => r.some((cell) => cell.trim()))
-}
-
-/** "https://www.painter1.com/knoxville/" → { host, slug } (also "painter1.com/knoxville") */
-function readUrl(raw: string) {
-  const m = raw.trim().match(/^(?:https?:\/\/)?([^/\s]+)\/([^/?#\s]+)\/?$/)
-  return m ? { host: m[1].toLowerCase(), slug: m[2] } : undefined
-}
 
 if (!existsSync(CSV)) {
   console.error(`${CSV} not found. Save the client's list there (it's gitignored), then run this again.`)
@@ -90,7 +52,9 @@ rows.forEach((row, i) => {
     problems.push(`line ${line} "${name}": URL "${rawUrl}" ${url.host === 'painter1.com' ? 'has no "www."' : `uses "${url.host}"`}${/^https:\/\//.test(rawUrl) ? '' : ' and no https://'}`)
   } else if (!/^https:\/\//.test(rawUrl)) problems.push(`line ${line} "${name}": URL "${rawUrl}" has no https://`)
   if (url.slug !== url.slug.toLowerCase()) problems.push(`line ${line} "${name}": uppercase in "${url.slug}"`)
-  const slug = url.slug.toLowerCase()
+  const corrected = URL_CORRECTIONS[name]
+  if (corrected) problems.push(`line ${line} "${name}": URL /${url.slug}/ corrected to /${corrected}/ (scripts/lib/location-csv.ts)`)
+  const slug = corrected ?? url.slug.toLowerCase()
   if (rawName !== name || /\s{2,}/.test(rawName)) problems.push(`line ${line} "${name}": extra spaces in the name ("${rawName}")`)
   if (!/^Painter1 of /.test(name)) problems.push(`line ${line} "${name}": name doesn't follow "Painter1 of …"`)
   if (!SLUG_PATTERN.test(slug)) return problems.push(`line ${line} "${name}": "${slug}" isn't a valid slug`)

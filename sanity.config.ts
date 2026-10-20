@@ -11,6 +11,7 @@ import {structureTool} from 'sanity/structure'
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
 import {apiVersion, dataset, projectId} from './sanity/env'
 import {OPEN_PAGE_TYPES, OpenPageAction} from './sanity/actions/openPage'
+import {canEditLeadRecipients} from './sanity/lib/lead-recipient-editors'
 import {NEW_LOCATION_DEFAULTS} from './sanity/lib/new-location-defaults'
 import {noCreateTypes, schema, singletonTypes} from './sanity/schemas'
 import {defaultDocumentNode, structure} from './sanity/structure'
@@ -34,7 +35,12 @@ export default defineConfig({
   document: {
     actions: (input, context) => {
       // Singletons can only be published, not duplicated or deleted
-      const actions = singletonTypes.has(context.schemaType) ? input.filter(({action}) => action && singletonActions.has(action)) : input
+      const singleton = singletonTypes.has(context.schemaType) ? input.filter(({action}) => action && singletonActions.has(action)) : input
+      // Lead recipients: only the people in lead-recipient-editors.ts can delete, duplicate or unpublish them
+      const actions =
+        context.schemaType === 'leadSettings' && !canEditLeadRecipients(context.currentUser)
+          ? singleton.filter(({action}) => action !== 'delete' && action !== 'duplicate' && action !== 'unpublish')
+          : singleton
       return OPEN_PAGE_TYPES.has(context.schemaType) ? [...actions, OpenPageAction] : actions
     },
   },
