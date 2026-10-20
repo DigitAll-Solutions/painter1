@@ -5,6 +5,7 @@ import HeroVideo from './HeroVideo'
 import OwnerSeal from './OwnerSeal'
 import SanityImage from './SanityImage'
 import { getCta, heroSubtitle, telHref } from '@/lib/location'
+import { cityStateOrPlace } from '@/lib/place'
 import type { Location, SanityImage as SanityImageType } from '@/sanity/lib/types'
 
 type Props = {
@@ -29,7 +30,8 @@ export default function HeroSection({ location, headline, subheadline, image, ho
   const tel = telHref(location.phone)
   const bg = image ?? location.heroImage
   const video = home ? location.heroVideo?.asset?.url : undefined
-  const title = headline ?? location.heroHeadline
+  // The page's only H1: never empty, also before the Studio headline is written (new locations)
+  const title = headline ?? (location.heroHeadline?.trim() || `Professional Painters in ${cityStateOrPlace(location)}`)
   const sub = subheadline ?? (home ? heroSubtitle(location) : undefined)
 
   return (

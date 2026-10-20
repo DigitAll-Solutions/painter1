@@ -1,6 +1,7 @@
 import type { Location } from '@/sanity/lib/types'
 
 import { withAttribution } from './booking-params.ts'
+import { cityOrPlace } from './place.ts'
 
 export type NavLink = { label: string; href: string }
 
@@ -132,7 +133,7 @@ export function heroSubtitle(location: Pick<Location, 'address' | 'name' | 'owne
   const variant = location.heroSubtitleVariant ?? 'auto'
   const { projectsCount, ownerSinceYear } = location
   if (variant !== 'standard' && projectsCount && ownerSinceYear) {
-    const city = location.address?.city ?? location.name
+    const city = cityOrPlace(location)
     return `${city} homeowners have trusted us with ${projectsCount.toLocaleString('en-US')}+ projects since ${ownerSinceYear}.`
   }
   const owner = location.ownerName ? ` by ${location.ownerName}` : ''

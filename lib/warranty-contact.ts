@@ -3,14 +3,16 @@
 // Tested in warranty-contact.test.ts.
 import type { Location, WarrantyTerms } from '@/sanity/lib/types'
 
+import { cityOrPlace, cityStateOrPlace } from './place.ts'
+
 export const CONTACT_ANCHOR = 'warranty-contact'
 const DEFAULT_HEADING = 'Questions About Your Warranty?'
 const DEFAULT_TEXT = 'Reach out to {ownerTeam} by phone, text or email and we’ll help.'
 
 /** Meta description (≤ 160 characters): drops the repeated place, then the location name, when names are long */
 export function warrantyDescription(location: Pick<Location, 'name' | 'address'>) {
-  const city = location.address?.city ?? location.name
-  const place = [location.address?.city, location.address?.state].filter(Boolean).join(', ') || location.name
+  const city = cityOrPlace(location)
+  const place = cityStateOrPlace(location)
   const what = `What the two-year workmanship warranty from Painter1 of ${city} covers`
   const options = [
     `${what} in ${place}, what it requires, and how to reach ${location.name} with questions.`,
