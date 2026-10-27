@@ -25,6 +25,7 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. Nothing here is built
 - **Vercel:**
   - set `NEXT_PUBLIC_SITE_URL=https://www.painter1.com`
   - confirm the team is on a plan that allows commercial use (Pro; Hobby is non-commercial only), and its bandwidth and request allowance
+- **Indexing switches on by itself, by host** (`lib/indexing.ts`): requests to `www.painter1.com` / `painter1.com` get no `X-Robots-Tag` and a crawlable robots.txt with the sitemap, while painter1.vercel.app and every preview keep `X-Robots-Tag: noindex, nofollow` and `Disallow: /`, so nothing to toggle at launch. What decides which locations are indexable and in the sitemap is `LIVE_LOCATIONS` (`lib/legacy-redirects.ts`): add a slug there in the launch PR for that location. To index another host (e.g. a staging domain, not recommended), add it to `PRODUCTION_HOSTS` and `PRODUCTION_HOST_PATTERN`.
 - **WordPress keeps its Knoxville pages, unchanged, until the switch is stable** (at least two weeks). They are the rollback. Only afterwards: drop them from WordPress's sitemap and set them to noindex.
 
 ## Option (a): Vercel in front, WordPress behind an origin hostname
@@ -169,7 +170,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
     - WP admin login
     - one Fluent Form on another location
     - the Knoxville estimate form, and its Client Tether test (`docs/email-setup.md` §8)
-    - `/robots.txt`, `/sitemap.xml`
+    - `/robots.txt` (allows crawling, lists the sitemap), `/sitemap.xml` (only live locations, `www.painter1.com` URLs), and `curl -sI https://www.painter1.com/knoxville` has **no** `X-Robots-Tag`, while `curl -sI https://painter1.vercel.app/knoxville` still has `noindex, nofollow`
 11. Point the Sanity webhook at `https://www.painter1.com/api/revalidate`, publish a small change, and see it live.
 12. Watch for 2 hours: Vercel → Logs and Observability (External Origins: WordPress error rates), and WordPress's own error log.
 
