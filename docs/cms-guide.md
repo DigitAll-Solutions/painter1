@@ -30,14 +30,14 @@ The **Location details** document has these tabs: Basics · Owner & team · Home
   - **Red** items are required: the page breaks or misleads without them.
   - **Amber** items are recommended: the page works, but looks unfinished.
   - Click an item to jump to its field.
-- **Publish** puts your changes on the site within about a minute. Fields marked with an error block publishing; warnings don't.
+- **Publish** puts your changes on the site within a few seconds (see [Publish and send a preview to the owner](#publish-and-send-a-preview-to-the-owner)). Fields marked with an error block publishing; warnings don't.
 - **Open page** (in the document's action menu, or the **Pages** tab) opens the published pages this document feeds, on the same site you're signed into. Unpublished changes aren't there yet.
 
 ## Adding a location
 
 **The locations on Rick's list already exist** (36 created from the list on Oct 20, plus Knoxville), with the right name, URL slug and tier (Growth = every page, Maintenance = homepage, free estimate and privacy only). Open the location instead of creating a new one, and go on from step 2. Their lead recipients are empty: the developer adds them, so no estimate email is sent for a location until then.
 
-**Previewing:** every location can be checked at `https://painter1.vercel.app/<slug>` (e.g. `/upstate`) as soon as it's published. That copy is never indexed by Google, and a location only appears on painter1.com, in the sitemap and in search results once the developer adds it to the live list on its launch day.
+**Previewing:** every location can be checked at `https://painter1.vercel.app/<slug>` (e.g. `/upstate`) as soon as it's published. That copy is never indexed by Google, and a location only appears on painter1.com, in the sitemap and in search results once the developer adds it to the live list on its launch day. To send it to the owner, see [Publish and send a preview to the owner](#publish-and-send-a-preview-to-the-owner).
 
 1. **Create** (only for a location that isn't on the list yet): Locations → **All locations** (or any state) → create **New location**. It starts with:
    - the standard service titles;
@@ -50,6 +50,20 @@ The **Location details** document has these tabs: Basics · Owner & team · Home
 3. **Lead recipients:** send the addresses that should receive estimate requests (including the location's Client Tether parse address) to the developer, who adds them (location folder → **Lead recipients**; read-only for everyone else). Until there's one, estimate requests are saved but nobody is emailed.
 4. **Work down the Launch checklist** until nothing is red, then **Publish**.
 5. **After publishing:** the URL slug is **locked**. Changing a live URL breaks every link to it, so ask an administrator, who will add redirects.
+
+## Publish and send a preview to the owner
+
+When a location is filled in, publish it and send the owner a link so they can check their pages before launch.
+
+1. **Fill the sections:** open the location (Locations → the state → the location → **Location details**) and work through the tabs (Basics · Owner & team · Homepage · Services · Photos · Reviews · Leads & consent · Warranty · SEO). The **Launch checklist** tab shows what's missing: no red items left, and as few amber ones as you can.
+2. **Click Publish** (bottom right). Until you do, your changes are only a draft and nobody else sees them, the preview link included.
+3. **Wait a few seconds** (about 4 in our test), then open or refresh the page. If the old content still shows after a minute, tell the developer: the instant update isn't working, and pages then only catch up within an hour.
+4. **Copy the link:** the location folder → **Live pages** lists every published page of this location, opened on painter1.vercel.app (when you're signed into the Studio at `https://painter1.vercel.app/studio`). Open one and copy the address from the browser.
+5. **Send it to the owner.** The link format is **`https://painter1.vercel.app/<slug>`**, e.g. `https://painter1.vercel.app/upstate`. Inner pages add their path: `/<slug>/about-us`, `/<slug>/interior-painting`, `/<slug>/exterior-painting`, `/<slug>/cabinet-painting`, `/<slug>/our-work`, `/<slug>/warranty`, `/<slug>/free-estimate`.
+
+**Where to find the slug:** the location's **Basics** tab → **URL slug** (e.g. `upstate`). It's the part after `painter1.com/` on the location's current website. **Maintenance** locations only have the homepage, `/<slug>/free-estimate` and `/<slug>/privacy-policy`; their other links show "page not found".
+
+**painter1.com doesn't change until launch.** Publishing only updates the preview copy on painter1.vercel.app, which Google never indexes. The owner's current page on painter1.com stays exactly as it is until the developer moves that location over on its launch day. The free-estimate form on the preview does work, though: a request sent there is saved as a lead in the Studio, so ask the owner to send one only as a test.
 
 ## Consent checkboxes
 

@@ -114,6 +114,15 @@ test('team owner section: "Why I built a team" only when the owner wrote about i
   assert.equal(teamStoryHeading(storyParagraphs('   ')), 'From the owner')
 })
 
+test('team copy ("Meet the team") only when someone besides the owner is listed', async () => {
+  const { hasTeamMembers } = await import('./about.ts')
+  assert.equal(hasTeamMembers(aboutPeople({ ownerName: 'Keith Lane', teamMembers: [member('Jarrod Davenport', 'Project Manager')] })), true)
+  // Owner with team, members not entered yet (or only the owner listed as a member): just the owner's card
+  assert.equal(hasTeamMembers(aboutPeople({ ownerName: 'Ana Ruiz', teamMembers: [] })), false)
+  assert.equal(hasTeamMembers(aboutPeople({ ownerName: 'Ana Ruiz', teamMembers: [member('Ana Ruiz', 'Owner')] })), false)
+  assert.equal(hasTeamMembers([]), false)
+})
+
 test('crew standards are the owner’s, or "our" without an owner name', async () => {
   const { ownerSteps } = await import('./about.ts')
   assert.match(ownerSteps('Keith').find((s) => s.title === 'The painting')!.text, /to Keith's standards/)

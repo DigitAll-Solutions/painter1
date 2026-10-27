@@ -5,7 +5,7 @@ import CTASection from '@/components/CTASection'
 import CtaButton from '@/components/CtaButton'
 import SanityImage from '@/components/SanityImage'
 import { Accent } from '@/components/Section'
-import { aboutPeople, aboutReviews, aboutVariant, ownerSteps, ROLE_LABEL, storyParagraphs, teamSteps, teamStoryHeading, tenure, type Person, type Step } from '@/lib/about'
+import { aboutPeople, aboutReviews, aboutVariant, hasTeamMembers, ownerSteps, ROLE_LABEL, storyParagraphs, teamSteps, teamStoryHeading, tenure, type Person, type Step } from '@/lib/about'
 import { getCta, getWarrantyHref, telHref } from '@/lib/location'
 import { cityOrPlace } from '@/lib/place'
 import type { Location, Review } from '@/sanity/lib/types'
@@ -24,6 +24,7 @@ export default function AboutPage({ location }: { location: Location }) {
   const owner = location.ownerName?.trim()
   const first = owner?.split(/\s+/)[0] ?? ''
   const people = aboutPeople(location)
+  const hasTeam = hasTeamMembers(people)
   const reviews = aboutReviews(location, variant, people)
   const cta = getCta(location)
   const tel = telHref(location.phone)
@@ -34,7 +35,7 @@ export default function AboutPage({ location }: { location: Location }) {
   return (
     <>
       {variant === 'team' ? (
-        <TeamHero location={location} city={city} owner={owner} people={people} cta={cta} crumbs={crumbs} />
+        <TeamHero location={location} city={city} owner={owner} people={people} hasTeam={hasTeam} cta={cta} crumbs={crumbs} />
       ) : (
         <OwnerHero location={location} city={city} owner={owner} first={first} cta={cta} tel={tel} crumbs={crumbs} />
       )}
@@ -45,7 +46,7 @@ export default function AboutPage({ location }: { location: Location }) {
         <OwnerWords owner={owner} first={first} attribution={location.ownerQuoteAttribution} story={story} quote={quote} />
       )}
 
-      {variant === 'team' && <TeamCards people={people} />}
+      {variant === 'team' && <TeamCards people={people} hasTeam={hasTeam} />}
 
       <Steps
         steps={variant === 'team' ? teamSteps(people, first) : ownerSteps(first)}
@@ -68,7 +69,7 @@ export default function AboutPage({ location }: { location: Location }) {
       <StatsAndReviews location={location} city={city} reviews={reviews} />
 
       {variant === 'team' ? (
-        <CTASection location={location} title="Ready to meet the team?" subtitle={people.some((p) => p.role === 'estimator') ? 'Schedule a free on-site estimate with one of our estimators.' : 'Schedule a free on-site estimate.'} />
+        <CTASection location={location} title={hasTeam ? 'Ready to meet the team?' : 'Get your free estimate'} subtitle={people.some((p) => p.role === 'estimator') ? 'Schedule a free on-site estimate with one of our estimators.' : 'Schedule a free on-site estimate.'} />
       ) : (
         <CTASection location={location} title={first ? `Get your estimate from ${first}` : 'Get your free estimate'} subtitle={first ? 'Free, on-site, and with the owner, not a salesperson.' : 'Free, on-site, and no obligation.'} />
       )}
@@ -149,7 +150,7 @@ function OwnerHero({ location, city, owner, first, cta, tel, crumbs }: { locatio
   )
 }
 
-function TeamHero({ location, city, owner, people, cta, crumbs }: { location: Location; city: string; owner?: string; people: Person[]; cta: Cta; crumbs: { name: string; href?: string }[] }) {
+function TeamHero({ location, city, owner, people, hasTeam, cta, crumbs }: { location: Location; city: string; owner?: string; people: Person[]; hasTeam: boolean; cta: Cta; crumbs: { name: string; href?: string }[] }) {
   // Only name the roles this location really has
   const plural = (role: Person['role'], one: string, many: string) => {
     const n = people.filter((p) => p.role === role).length
@@ -173,8 +174,8 @@ function TeamHero({ location, city, owner, people, cta, crumbs }: { location: Lo
           <CtaButton href={cta.href} booking={cta.booking} size="md" className="focus-visible:outline-white">
             {cta.label}
           </CtaButton>
-          {/* Only when there are team cards to jump to */}
-          {people.length > 0 && (
+          {/* Only when there are team cards to jump to, not just the owner's */}
+          {hasTeam && (
             <CtaButton href={`#${TEAM_ANCHOR}`} variant="outline" size="md" className="focus-visible:outline-white">
               Meet the Team <ArrowDown className="size-5" aria-hidden />
             </CtaButton>
@@ -266,15 +267,15 @@ const initials = (name: string) =>
     .join('')
     .toUpperCase()
 
-function TeamCards({ people }: { people: Person[] }) {
+function TeamCards({ people, hasTeam }: { people: Person[]; hasTeam: boolean }) {
   if (!people.length) return null
   return (
     <section id={TEAM_ANCHOR} className="scroll-mt-20 bg-mist py-16 md:scroll-mt-24 md:py-24">
       <div className="mx-auto max-w-7xl px-4">
         <div className="mx-auto mb-10 max-w-3xl text-center md:mb-14">
-          <p className={eyebrow}>Meet the team</p>
+          <p className={eyebrow}>{hasTeam ? 'Meet the team' : 'Meet the owner'}</p>
           <h2 className={h2}>
-            The people you&rsquo;ll <Accent>actually meet</Accent>
+            The {hasTeam ? 'people' : 'person'} you&rsquo;ll <Accent>actually meet</Accent>
           </h2>
         </div>
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
