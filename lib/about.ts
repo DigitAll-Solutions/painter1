@@ -20,6 +20,9 @@ export const aboutPageLocation = <T extends Pick<Location, 'locationType'>>(loca
  */
 export const teamStoryHeading = (teamStory: string[]) => (teamStory.length ? 'Why I built a team instead of doing it all myself' : 'From the owner')
 
+/** Team variant: "Meet the team" copy only when someone besides the owner is listed (the owner's card alone isn't a team) */
+export const hasTeamMembers = (people: Pick<Person, 'isOwner'>[]) => people.some((person) => !person.isOwner)
+
 /** "Owner with team" / "Owner-led" from the location; unset falls back to whether it lists team members */
 export function aboutVariant(location: Pick<Location, 'franchiseStructure' | 'teamMembers'>): AboutVariant {
   if (location.franchiseStructure === 'owner-with-team') return 'team'
