@@ -9,8 +9,9 @@ import type { Location } from '@/sanity/lib/types'
 export default function MobileCtaBar({ location }: { location: Location }) {
   const tel = telHref(location.phone)
 
+  // A landmark (aside), so screen-reader users can find it and no content sits outside a region
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 border-t border-slate-200 bg-white p-2 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] sm:hidden">
+    <aside aria-label="Call or get a free estimate" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 border-t border-slate-200 bg-white p-2 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] sm:hidden">
       {tel && (
         <a href={tel} className="mr-1 flex items-center justify-center gap-2 rounded-lg bg-brand-blue-text py-3 font-bold text-white">
           <Phone className="size-5" aria-hidden /> Call Now
@@ -22,6 +23,6 @@ export default function MobileCtaBar({ location }: { location: Location }) {
       >
         <CalendarCheck className="size-5" aria-hidden /> Free Estimate
       </Link>
-    </div>
+    </aside>
   )
 }
