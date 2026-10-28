@@ -2,29 +2,33 @@ import { defineQuery } from 'next-sanity'
 
 const image = `alt, hotspot, crop, asset->{_id, metadata{lqip, dimensions{width, height, aspectRatio}}}`
 
+// An image field whose file was removed in Studio keeps its alt text ({_type, alt}, no asset): return
+// null for it, so `location.heroImage ? urlFor(...)` and the like never get an image without a file
+const img = (field: string, extra = '') => `"${field}": select(defined(${field}.asset) => ${field}{${extra}${image}})`
+
 const service = `{
   title, summary, cardBullets, transformationBody, metaTitle, metaDescription,
-  heroImage{${image}},
-  transformations[]{_key, title, projectType, area, before{${image}}, after{${image}}},
+  ${img('heroImage')},
+  transformations[]{_key, title, projectType, area, ${img('before')}, ${img('after')}},
   surfacePhotos[defined(surface) && defined(image.asset)]{_key, surface, image{${image}}},
-  images[]{_key, ${image}}
+  images[defined(asset)]{_key, ${image}}
 }`
 
 export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current == $slug][0]{
   ...,
   "slug": slug.current,
-  ownerPhoto{${image}},
-  ownerActionPhoto{caption, ${image}},
-  teamMembers[]{_key, name, jobTitle, withOwnerSince, bio, namedInReviews, photo{${image}}},
-  heroImage{${image}},
-  transformationBeforeImage{${image}},
-  transformationAfterImage{${image}},
+  ${img('ownerPhoto')},
+  ${img('ownerActionPhoto', 'caption, ')},
+  teamMembers[]{_key, name, jobTitle, withOwnerSince, bio, namedInReviews, ${img('photo')}},
+  ${img('heroImage')},
+  ${img('transformationBeforeImage')},
+  ${img('transformationAfterImage')},
   heroVideo{asset->{url, mimeType}},
-  warrantyImage{${image}},
-  warrantyPageImage{${image}},
+  ${img('warrantyImage')},
+  ${img('warrantyPageImage')},
   warrantyPdf{asset->{url, originalFilename}},
-  warrantyGraphic{${image}},
-  galleryImages[]{
+  ${img('warrantyGraphic')},
+  galleryImages[defined(asset)]{
     _key, caption, title, projectType, area, city, "geo": geo{lat, lng}, "services": services[]._ref,
     notLocalProject, commercial, projectId, role, ${image}
   },
@@ -41,10 +45,10 @@ export const LOCATION_SLUGS_QUERY = defineQuery(`*[_type == "location" && define
 // $slugs: the public slug plus any old slug the document may still have (lib/service-slugs.ts)
 export const SERVICE_QUERY = defineQuery(`*[_type == "service" && slug.current in $slugs][0]{
   _id, title, "slug": slug.current, shortName, locationKey, metaDescription,
-  heroSubtitle, heroImage{${image}},
+  heroSubtitle, ${img('heroImage')},
   transformationHeading, transformationBody,
   processIntro, prepIntro, prepBullets, materialsBody, materialsBlocks[]{_key, title, body}, warrantyBannerBody,
-  whatWePaintTitle, whatWePaint[]{_key, icon, title, description, "slug": slug.current, body, defaultImage{${image}}},
+  whatWePaintTitle, whatWePaint[]{_key, icon, title, description, "slug": slug.current, body, ${img('defaultImage')}},
   faqs[]{_key, question, answer}
 }`)
 
