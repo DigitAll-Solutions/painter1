@@ -91,14 +91,14 @@ No `redirects()` in `next.config.ts` and no middleware/proxy. **Recommended mech
 | `/knoxville/brick-painting/` | `/knoxville/exterior-painting#brick` | Brick section (Oct 9) |
 | `/knoxville/deck-painting-and-staining/` | `/knoxville/exterior-painting#decks` | Decks section (Oct 9) |
 | `/knoxville/fence-painting-and-staining/` | `/knoxville/exterior-painting#fences` | Fences section (Oct 9) |
-| `/knoxville/masonry-coating-and-waterproofing/` | `/knoxville/exterior-painting` | closest match; confirm |
-| `/knoxville/concrete-staining/` | `/knoxville/exterior-painting` | closest match; confirm (could be interior floors) |
+| `/knoxville/masonry-coating-and-waterproofing/` | `/knoxville/exterior-painting` | confirmed by Rick, Oct 30 |
+| `/knoxville/concrete-staining/` | `/knoxville/exterior-painting` | confirmed by Rick, Oct 30 |
 | `/knoxville/cabinet-painting/` | `/knoxville/cabinet-painting` | same page (slug renamed Oct 9); only the trailing slash differs, which Next.js redirects itself |
 | `/knoxville/cabinet-painting-and-refinishing/` | `/knoxville/cabinet-painting` | the live page shows Inland Northwest content, but the URL still has rankings |
-| `/knoxville/popcorn-ceiling-removal/` | `/knoxville/interior-painting` | closest match; confirm |
-| `/knoxville/wallpaper-removal/` | `/knoxville/interior-painting` | closest match; confirm |
+| `/knoxville/popcorn-ceiling-removal/` | `/knoxville/interior-painting` | confirmed by Rick, Oct 30 |
+| `/knoxville/wallpaper-removal/` | `/knoxville/interior-painting` | confirmed by Rick, Oct 30 |
 | `/knoxville/residential-painting/` | `/knoxville` | it's a hub of interior + exterior |
-| `/knoxville/commercial-painting/` | `/knoxville` | **no commercial page in the new sitemap**; confirm (or add a service doc later) |
+| `/knoxville/commercial-painting/` | `/knoxville/our-work?service=commercial` | no commercial page (Rick, Oct 30: commercial work comes by referral); lands on the commercial projects |
 | `/knoxville/schedule/` | the booking page (schedule.painter1.com/knoxville) when set in Studio, otherwise `/knoxville/free-estimate` | in code (307, Oct 19) |
 
 **Linked from every live page (not in the manifest), 10 city landing pages:** `/knoxville/painters-{alcoa,clinton,farragut,lenoir-city,louisville,maryville,oak-ridge,oliver-springs,powell,seymour}-tn/` → `/knoxville` (one rule: `/:location/painters-:city` → `/:location`). **SEO risk:** these are local-search pages with no template in the new sitemap; ×44 locations. Confirm with the client before launch.
