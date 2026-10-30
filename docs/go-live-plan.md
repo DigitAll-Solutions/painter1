@@ -1,6 +1,6 @@
 # Go-live plan: Knoxville on the new site, the rest of painter1.com on WordPress
 
-For Rick, his WordPress host and us. Written Oct 19, 2026. Nothing here is built yet: this document compares the options and gives the runbook. The code changes it needs go in a separate launch PR (listed under "Launch PR").
+For Rick, his WordPress host and us. Written Oct 19, 2026. This document compares the options and gives the runbook. Option (a)'s code is in the launch PR (branch `launch-knoxville`, Oct 30); the host's wp-config block, the staging setup and the rehearsal checklist are in `docs/launch-rehearsal.md`.
 
 ## The situation
 
@@ -35,14 +35,7 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. Nothing here is built
 **Rick or the host must:**
 
 1. Serve the same WordPress install at **`wp.painter1.com`** too (a server alias), with its own valid SSL certificate (Let's Encrypt on the host).
-2. Make WordPress **not redirect `wp.painter1.com` to `www`**, and build its links with the visitor's host. Vercel sends the visitor's host in `X-Forwarded-Host` and the protocol in `X-Forwarded-Proto`. Add to `wp-config.php` (above "That's all"):
-   ```php
-   if (!empty($_SERVER['HTTP_X_FORWARDED_HOST']) && $_SERVER['HTTP_X_FORWARDED_HOST'] === 'www.painter1.com') {
-     $_SERVER['HTTP_HOST'] = 'www.painter1.com';
-     $_SERVER['HTTPS'] = 'on';
-   }
-   ```
-   `WP_HOME` and `WP_SITEURL` stay `https://www.painter1.com`.
+2. Make WordPress **not redirect `wp.painter1.com` to `www` for Vercel's requests**, and answer them as the visitor's host. Vercel sends the visitor's host in `X-Forwarded-Host` and the protocol in `X-Forwarded-Proto`. Plain visits to `wp.painter1.com` (no `X-Forwarded-Host`) 301 to `www`, so it never becomes a duplicate site. The `wp-config.php` block (with the loop check and the staging host) is in `docs/launch-rehearsal.md` §1. `WP_HOME` and `WP_SITEURL` stay `https://www.painter1.com`.
 3. **Trust Vercel's visitor-IP headers** (`X-Forwarded-For`, `X-Real-IP`) in security and rate-limit plugins (e.g. Wordfence → Options → "How does Wordfence get IPs": X-Forwarded-For) and in any host firewall. Otherwise every visitor looks like a Vercel IP, and one lockout locks everyone out.
 4. **Optional, later:** accept requests on `wp.painter1.com` only from Vercel, via a secret header ([Vercel: restricting your origin](https://vercel.com/docs/rewrites)).
 
@@ -126,7 +119,7 @@ DNS stays as it is. The WordPress server (nginx or Apache) proxies `/knoxville/�
 
 Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal before anyone touches `www`.
 
-## Launch PR (code for option (a), not built yet)
+## Launch PR (code for option (a); built Oct 30, branch `launch-knoxville`)
 
 1. **WordPress proxy:** an `afterFiles` rewrite in `next.config.ts` that sends every path that is **not** a live location or one of our paths to WordPress, keeping the path and query:
    ```ts
@@ -145,15 +138,15 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 **One to two weeks before**
 1. Host: `wp.painter1.com` live with SSL, the wp-config lines, IP trust in security plugins. Check it the way Vercel will call it: `curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/atlanta/` must answer **200 with no redirect**, and the page's links must be `www.painter1.com`. Without that header, a redirect to `www` is expected and fine.
 2. Find WordPress's sitemap URL and robots.txt rules.
-3. **Merge the launch PR**, with the proxy pointed at `wp.painter1.com`.
-4. **Rehearsal:**
-   - Add `staging.painter1.com` to the Vercel project (CNAME at GoDaddy).
+3. **Rehearsal** (`docs/launch-rehearsal.md`), on the launch PR's branch before merging:
+   - Add `staging.painter1.com` to the Vercel project, on the `launch-knoxville` branch (CNAME at GoDaddy).
    - Through it, check:
      - the WordPress home, 3 other locations, a corporate page and a blog post
      - one form submission on another location (and its email)
      - a WP admin login, an edit and an image upload
      - `/knoxville`, a legacy redirect and the estimate form
    - Fix anything found. Repeat until clean.
+4. **Merge the launch PR.** Harmless before the DNS switch: only the painter1.com hosts proxy WordPress.
 
 **Two days before**
 5. At GoDaddy, **save the current DNS records** (screenshot and export), then lower the TTL of `www` and `@` to 300 s.
