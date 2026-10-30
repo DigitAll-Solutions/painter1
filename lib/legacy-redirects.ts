@@ -25,6 +25,13 @@ const PAGE_MOVES: [from: string, to: string][] = [
   ['brick-painting', '/exterior-painting#brick'],
   ['deck-painting-and-staining', '/exterior-painting#decks'],
   ['fence-painting-and-staining', '/exterior-painting#fences'],
+  // Low-traffic service pages left out of the build (Rick, Oct 30): closest new page
+  ['masonry-coating-and-waterproofing', '/exterior-painting'],
+  ['concrete-staining', '/exterior-painting'],
+  ['popcorn-ceiling-removal', '/interior-painting'],
+  ['wallpaper-removal', '/interior-painting'],
+  // No commercial page (Rick, Oct 30: commercial work comes by referral): the commercial projects
+  ['commercial-painting', '/our-work?service=commercial'],
   // Hub of interior + exterior → the location homepage
   ['residential-painting', ''],
   // City landing pages (painters-alcoa-tn …) and the 2021 "cities we serve" pages → the location homepage
