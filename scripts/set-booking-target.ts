@@ -4,6 +4,7 @@
  *   - 200: "Main buttons go to" (bookingTarget) → "booking", and "Booking page" (schedulingUrl) →
  *     https://schedule.painter1.com/<slug>/. The old hasScheduling switch is removed if still there.
  *   - anything else (404 until the page is up): the location isn't touched and stays on the survey.
+ *   - SURVEY_ONLY locations (Raleigh) aren't checked at all and stay on the survey.
  * The published document and its draft (if any) are both updated. Run it again whenever more booking
  * pages go up.
  *
@@ -24,6 +25,10 @@ const DRY_RUN = process.argv.includes('--dry-run')
 export const SCHEDULE_HOST = 'https://schedule.painter1.com'
 
 export const bookingPageUrl = (slug: string) => `${SCHEDULE_HOST}/${slug}/`
+
+// Stay on the survey even if a booking page answers 200: Raleigh isn't on Rick's booking list ("Painter1
+// w/ SSA" sheet, Nov 3), though an earlier list had it
+const SURVEY_ONLY = new Set(['raleigh'])
 
 function env(name: string) {
   const value = process.env[name]
@@ -67,8 +72,8 @@ async function main() {
   const docs = await client.fetch<Doc[]>(`*[_type == "location"]{_id, _rev, "slug": slug.current, bookingTarget, hasScheduling, schedulingUrl} | order(slug asc)`)
 
   // One check per location, by the published document's slug (a draft-only location isn't live)
-  const slugs = [...new Set(docs.filter((doc) => !doc._id.startsWith('drafts.') && doc.slug).map((doc) => doc.slug as string))]
-  console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")\n`)
+  const slugs = [...new Set(docs.filter((doc) => !doc._id.startsWith('drafts.') && doc.slug && !SURVEY_ONLY.has(doc.slug)).map((doc) => doc.slug as string))]  console.log(`${DRY_RUN ? 'DRY RUN — nothing will be written' : 'APPLYING CHANGES'}  (dataset "${process.env.NEXT_PUBLIC_SANITY_DATASET}")\n`)
+  console.log(`Survey only, not checked: ${[...SURVEY_ONLY].join(', ')}`)
   console.log(`Checking ${slugs.length} booking pages on ${SCHEDULE_HOST} …`)
   const results = await mapLimit(slugs, 6, bookingStatus)
   const statuses = new Map(slugs.map((slug, i) => [slug, results[i]]))
