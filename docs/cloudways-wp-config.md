@@ -1,24 +1,26 @@
-# Cloudways: the wp-config.php change for the new site
+# Cloudways: getting WordPress ready for the new site
 
-**Why:** after launch, www.painter1.com is served by the new site (Vercel). Pages that stay on WordPress are fetched by Vercel from `wp.painter1.com`. This change tells WordPress to answer those requests as www.painter1.com (or staging.painter1.com for the rehearsal) and to send anyone who opens `wp.painter1.com` directly to www. It takes about 10 minutes. The site is unchanged for visitors until DNS is switched on launch day.
+**Why:** after launch, www.painter1.com is served by the new site (Vercel). Pages that stay on WordPress are fetched by Vercel from `wp.painter1.com`. This tells WordPress to answer those requests as www.painter1.com (or staging.painter1.com for the rehearsal), and to send anyone who opens `wp.painter1.com` directly to www.
 
-A typo in wp-config.php takes the whole site down until it is fixed. Follow the backup step first, and keep the file window open until the checks pass.
+It takes about 20 minutes. Visitors see no change until DNS is switched on launch day.
 
-## 1. Get the login details (Cloudways)
+Do the steps in order. A typo in wp-config.php takes the whole site down until it's fixed, so make the backup in step 2 first, and keep the file window open until step 6 passes.
+
+## 1. Logins and domains (Cloudways)
 
 1. Log in at platform.cloudways.com → **Applications** → the painter1.com WordPress app.
 2. **Application Management → Access Details → Application Credentials.** Note the **Public IP**, **Username** and **Password**. If there's no username yet, create one there.
    - Alternative: **Servers → the server → Master Credentials** has a login that works the same way and a **Launch SSH Terminal** button.
-3. While in **Access Details**, look under **Application URL / Domain Management** and note which domains are listed. `wp.painter1.com` must be listed there, as primary or additional, together with `www.painter1.com` and `painter1.com`. If it's missing, add it: **Domain Management → Add Domain → `wp.painter1.com`**.
-4. **SSL Certificate** (same app): the Let's Encrypt certificate must include `wp.painter1.com`. If it doesn't, add it to the domain list there and click **Install Certificate**.
+3. **Domain Management:** `wp.painter1.com` must be listed, together with `www.painter1.com` and `painter1.com`. If it's missing: **Add Domain → `wp.painter1.com`**.
+4. **SSL Certificate:** the certificate must include `wp.painter1.com`. If it doesn't, add it to the domain list there and click **Install Certificate**.
 
-## 2. Open the file and make a backup
+## 2. Open wp-config.php and make a backup
 
 **With FileZilla (SFTP):**
 1. Host `sftp://<Public IP>`, the username and password from step 1, port `22` → Quickconnect.
 2. Open the `public_html` folder. With Master Credentials the path is `applications/<app folder>/public_html`.
-3. Right-click `wp-config.php` → **Download** to your computer. That's your backup: keep it.
-4. Right-click `wp-config.php` → **View/Edit**. It opens in a text editor, and FileZilla uploads it again when you save.
+3. Right-click `wp-config.php` → **Download**. That's your backup: keep it.
+4. Right-click `wp-config.php` → **View/Edit**. FileZilla uploads it again when you save.
 
 **Or with SSH (Launch SSH Terminal):**
 ```sh
@@ -27,9 +29,9 @@ cp wp-config.php wp-config.php.bak-before-vercel
 nano wp-config.php                               # Ctrl+O, Enter to save; Ctrl+X to exit
 ```
 
-Please don't use a plugin to edit wp-config.php. If the edit breaks the site, the plugin breaks with it and you can't undo from WordPress.
+Please don't use a plugin to edit this file. If an edit breaks the site, the plugin breaks with it and you can't undo from WordPress.
 
-## 3. Make the change
+## 3. The wp-config.php change
 
 1. **Remove the lines added earlier for Vercel** (the ones that mention `HTTP_X_FORWARDED_HOST`), if they are there.
 2. **Find the existing `WP_HOME` and `WP_SITEURL` lines**, if they exist, and replace them with these two lines. If they aren't in the file, skip this step.
@@ -66,39 +68,61 @@ Please don't use a plugin to edit wp-config.php. If the edit breaks the site, th
    }
    ```
 4. Save. In FileZilla, confirm the upload when it asks.
-5. Open https://www.painter1.com in a browser. If it shows the site as usual, the file is fine. If it's blank or shows an error, undo now (step 6).
+5. Open https://www.painter1.com in a browser. If it shows the site as usual, the file is fine. If it's blank or shows an error, undo now (step 8).
 
-## 4. Cloudways settings to check
+## 4. The homepage redirect
 
-- **Varnish (Application Settings → General):** Varnish stores pages by the address WordPress was reached at. Every Vercel request reaches `wp.painter1.com`, so a staging page (with staging links) could be stored and later shown to www visitors. **Turn Varnish off while we rehearse on staging.** After the rehearsal, purge it (**Application Settings → Purge**) before turning it back on.
-- **Breeze / other page-cache plugin:** purge it after the rehearsal for the same reason.
-- **Redirects:** Cloudways' primary domain setting doesn't redirect by itself. Redirects come from three places, and we need to know which one sends wp.painter1.com to www today. The first check below shows it:
-  - **Enforce HTTPS** in the SSL tab (http → https). That's fine to keep on.
-  - WordPress itself.
-  - A plugin or `.htaccess` rule. Please tell us if you have any www/non-www or domain redirect rule, for example in **Really Simple Security → Settings**, in a Redirection plugin, or in `.htaccess` in `public_html`.
-- **Country block (Really Simple Security Pro):** leave it on for now. We'll tell you when to turn it off on launch day, because Vercel then does the blocking.
+Our test through the new site found that the homepage (and `/wp-sitemap.xml`) sends visitors to www instead of showing the page. Other pages, like `/atlanta/`, are fine. Through the new site on launch day, that would send www visitors in a circle.
 
-## 5. Verify (any computer in the US: Terminal on a Mac, or Command Prompt on Windows)
+The redirect comes from **inside WordPress** (the response says `X-Redirect-By: WordPress`), not from Cloudways' server settings. **Don't change nginx or `.htaccess` for this.** WordPress, or a plugin, sees the request arrive at `wp.painter1.com` while the site's address is `www.painter1.com`, and sends it to www. The block from step 3 makes those requests arrive as www (or staging), so the redirect should stop by itself. Check 3 in step 6 confirms it.
+
+**Only if check 3 still shows `301` and `location: https://www.painter1.com/`:**
+1. **Tools → Redirection:** look for a redirect with source `/`, a regular expression covering the whole site (like `^/(.*)`), or one that matches on the domain ("URL and server"). Disable it. Don't delete it, so it can be switched back on.
+2. **Xagio SEO → settings:** turn off any "force www", "redirect to main/primary domain" or domain-redirect option. Keep the http → https setting as it is.
+3. Run check 3 again and send us the result, with the name of the setting you changed.
+
+## 5. Turn Varnish off for the rehearsal
+
+Cloudways' Varnish cache stores each page under the address WordPress was reached at. Every request from Vercel reaches `wp.painter1.com`, so a staging page (with staging links) could be shown to www visitors. Cached pages are also served before the country block runs.
+
+1. **Application Management → Application Settings → General → Varnish** → turn it **off**.
+2. If a page-cache plugin is active (Breeze, WP Rocket, W3 Total Cache…), purge it now.
+
+## 6. Check it (any computer in the US: Terminal on a Mac, or Command Prompt on Windows)
 
 ```sh
-# Opened directly: must send you to www (301, Location: https://www.painter1.com/atlanta/)
+# 1. Opened directly: must send you to www (301, Location: https://www.painter1.com/atlanta/)
 curl -sI https://wp.painter1.com/atlanta/
 
-# As Vercel asks: must be the page itself (200) with no Location line
+# 2. As Vercel asks for www: the page itself (200), no Location line
 curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/atlanta/
 
-# As staging: 200, and a line "X-Robots-Tag: noindex, nofollow"
-curl -sI -H "X-Forwarded-Host: staging.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/atlanta/
+# 3. The homepage, as Vercel asks for www: 200, no Location line (this was a 301 to www before step 4)
+curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/
 
-# The www page must not contain staging links: prints 0
+# 4. As staging: 200, and a line "X-Robots-Tag: noindex, nofollow"
+curl -sI -H "X-Forwarded-Host: staging.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/
+
+# 5. The sitemap, as Vercel asks for www: 200 and an XML content type (it was a 404 through staging)
+curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/sitemap_index.xml
+
+# 6. The www page must not contain staging links: prints 0
 curl -s -H "X-Forwarded-Host: www.painter1.com" https://wp.painter1.com/atlanta/ | grep -c staging.painter1.com
 ```
 
-Please send us the output of all four. If the first one already returned a 301 **before** your change, it also shows a line `X-Redirect-By:`. Tell us what it says (e.g. `WordPress` or a plugin name).
+Send us the output of all six. We then run the full test on staging from our side.
 
-## 6. Undo
+If check 5 is still a 404, open **Settings → Permalinks** in WordPress admin and click **Save Changes** without changing anything. That rebuilds the sitemap's address rules. Run check 5 again. If it's still a 404, check that Xagio SEO's sitemap is switched on, and tell us the sitemap address it shows. The live robots.txt points search engines to `sitemap_index.xml`.
 
-- **FileZilla:** upload the `wp-config.php` you downloaded in step 2 over the one on the server.
-- **SSH:** `cp wp-config.php.bak-before-vercel wp-config.php`
+## 7. After the rehearsal (we'll tell you when)
 
-The site is back as it was immediately. Nothing else was changed.
+1. **Purge Varnish:** Application Settings → **Purge**. If a page-cache plugin is active, purge that too.
+2. Turn **Varnish back on**.
+3. **Leave the country block (Really Simple Security Pro) on.** We'll ask you to turn it off on launch day, right after the switch to the new site, so blocking happens in one place.
+
+## 8. Undo
+
+- **wp-config.php:** upload your downloaded copy over the one on the server (FileZilla), or `cp wp-config.php.bak-before-vercel wp-config.php` (SSH).
+- **A Redirection or Xagio SEO setting** (if step 4 changed one): switch it back on in the plugin.
+
+The site is back as it was immediately.
