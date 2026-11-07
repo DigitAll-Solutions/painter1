@@ -77,3 +77,13 @@ jobs:
             done
             echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: WordPress plugins with an API (REST namespaces)
+        run: |
+          set +e
+          {
+            echo '### WordPress REST namespaces (shows SEO, redirect and security plugins)'
+            echo '```'
+            curl -s --max-time 30 "$BASE/wp-json/" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).namespaces.join("\n"))}catch{console.log("(not JSON)")}})'
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
