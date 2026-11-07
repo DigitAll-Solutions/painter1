@@ -64,3 +64,16 @@ jobs:
             echo "links: staging.painter1.com=$staging wp.painter1.com=$wp www.painter1.com=$www"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Raw first response for / and the WordPress sitemap (who redirects, who caches)
+        run: |
+          set +e
+          {
+            echo '### First response, no redirects followed'
+            echo '```'
+            for path in / /sitemap_index.xml /wp-sitemap.xml; do
+              echo "== $path"
+              curl -sI --max-time 30 "$BASE$path" | grep -iE '^(HTTP|location|x-redirect-by|x-robots-tag|x-cache|age|cache-control|x-vercel-cache|x-vercel-id|content-type):?'
+            done
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
