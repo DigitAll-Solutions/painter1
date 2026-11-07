@@ -83,10 +83,19 @@ The redirect comes from **inside WordPress** (the response says `X-Redirect-By: 
 
 ## 5. Turn Varnish off for the rehearsal
 
-Cloudways' Varnish cache stores each page under the address WordPress was reached at. Every request from Vercel reaches `wp.painter1.com`, so a staging page (with staging links) could be shown to www visitors. Cached pages are also served before the country block runs.
+**Why it must be off:** Varnish sits in front of WordPress and stores each page by the address it was reached at (the `Host`) plus the path. It doesn't look at `X-Forwarded-Host`. Every request from the new site reaches `wp.painter1.com`, whether the visitor asked for www or staging, and so does anyone who opens `wp.painter1.com` directly. Varnish keeps all three under the one key `wp.painter1.com/<path>` and hands whichever copy it stored first to everyone. Our Nov 7 test showed exactly that: the same pages answered differently a few seconds apart, and `/sitemap_index.xml` came back as a cached 404 (`x-cache: HIT`).
+
+What that mix-up can do:
+- a staging copy (staging links, `noindex`) shown to www visitors and to Google
+- the "go to www" redirect, meant only for direct visitors, served to the new site, which sends www visitors in a circle
+- cached pages served before WordPress's own checks run, including the country block
+
+The wp-config.php block from step 3 can't fix this. It runs inside WordPress, after Varnish has already answered.
 
 1. **Application Management → Application Settings → General → Varnish** → turn it **off**.
 2. If a page-cache plugin is active (Breeze, WP Rocket, W3 Total Cache…), purge it now.
+
+**Behind the new site, Varnish stays off.** For it to be safe again, its cache key would have to include `X-Forwarded-Host`, and it would have to stop caching redirects. Cloudways' panel only switches Varnish on or off and sets exclusions; the cache key is in their server config, which only Cloudways support could change. It isn't worth it: the new site serves Knoxville itself, and a page-cache plugin such as Breeze still works with Varnish off. Breeze runs inside WordPress after the step 3 block, so it sees the right address (www or staging) and keeps the copies apart.
 
 ## 6. Check it (any computer in the US: Terminal on a Mac, or Command Prompt on Windows)
 
@@ -117,8 +126,9 @@ If check 5 is still a 404, open **Settings → Permalinks** in WordPress admin a
 ## 7. After the rehearsal (we'll tell you when)
 
 1. **Purge Varnish:** Application Settings → **Purge**. If a page-cache plugin is active, purge that too.
-2. Turn **Varnish back on**.
-3. **Leave the country block (Really Simple Security Pro) on.** We'll ask you to turn it off on launch day, right after the switch to the new site, so blocking happens in one place.
+2. Turn **Varnish back on** until launch day. Until then www still goes straight to WordPress, which Varnish keys under `www.painter1.com`, so it doesn't mix with anything.
+3. **On launch day, turn Varnish off again before the switch** (Application Settings → General → Varnish → off, then **Purge**), and leave it off for good. See step 5 for why.
+4. **Leave the country block (Really Simple Security Pro) on.** We'll ask you to turn it off on launch day, right after the switch to the new site, so blocking happens in one place.
 
 ## 8. Undo
 
