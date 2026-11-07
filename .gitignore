@@ -65,3 +65,6 @@ next-env.d.ts
 /docs/backups/
 # Knoxville's imported old-site copy, exported before it was removed from Sanity (M3 reference): local only
 /docs/reference/knoxville-imported-copy.json
+
+# Google Doc-ready copies for Rick (shared by hand, may contain emails)
+/docs/handoff/

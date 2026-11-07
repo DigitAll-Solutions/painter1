@@ -8,13 +8,14 @@ import JsonLd from '@/components/JsonLd'
 import SanityImage from '@/components/SanityImage'
 import EstimateSurvey from '@/components/estimate/EstimateSurvey'
 import { fillConsentBlocks } from '@/lib/consent'
-import { fillTokens } from '@/lib/estimate-survey'
+import { fillTokens, ownerOrTeam } from '@/lib/estimate-survey'
 import { bookingUrl, telHref } from '@/lib/location'
 import { breadcrumbSchema, cityName } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
 import { tokenValues } from '@/lib/tokens'
 import { turnstileSiteKey } from '@/lib/turnstile'
 import { getEstimateSurvey, getLocation } from '@/sanity/lib/fetch'
+import { NEW_LOCATION_DEFAULTS } from '@/sanity/lib/new-location-defaults'
 
 // Consent text sits inside a <label>, so paragraphs render as block spans (valid phrasing content)
 const consentText: PortableTextComponents = {
@@ -48,7 +49,7 @@ export default async function FreeEstimatePage({ params }: PageProps<'/[location
   const { city } = tokenValues(location)
   const ownerFull = location.ownerName ?? location.name
   const owner = location.ownerName?.split(' ')[0] ?? 'our team'
-  const copy = fillTokens(survey, { owner, ownerFull, city })
+  const copy = fillTokens(survey, { owner, ownerFull, ownerOrTeam: ownerOrTeam(location.ownerName, location.teamMembers?.length ?? 0), city })
   const tel = telHref(location.phone)
   // {locationName} in consent text → this location's name (the server action stores the same filled text)
   const consents = fillConsentBlocks(location.consentBlocks ?? [], location.name).map((block) => ({
@@ -92,7 +93,7 @@ export default async function FreeEstimatePage({ params }: PageProps<'/[location
               survey={copy}
               consents={consents}
               ownerCard={ownerCard}
-              confirmationMessage={location.leadConfirmationMessage || 'Thank you for your message. We will get in touch with you shortly'}
+              confirmationMessage={location.leadConfirmationMessage || NEW_LOCATION_DEFAULTS.leadConfirmationMessage}
               bookingUrl={bookingUrl(location)}
               turnstileSiteKey={turnstileSiteKey()}
             />

@@ -207,7 +207,23 @@ export function composeDescription(a: Answers, survey: SurveyContent): string {
   return message ? `${lines.join('\n')}\n\n${message}` : lines.join('\n')
 }
 
-/** Replaces {owner}, {ownerFull}, {city}, {firstName}, {percent} in every string of the survey copy */
+/**
+ * {ownerOrTeam} in the "What happens next" copy: "Keith or the team" when the location lists team members,
+ * "Keith" when it doesn't, "Our team" when there's no owner name (Rick, Nov 2026)
+ */
+export function ownerOrTeam(ownerName: string | undefined | null, teamCount: number): string {
+  const first = ownerName?.trim().split(/\s+/)[0]
+  if (!first) return 'Our team'
+  return teamCount > 0 ? `${first} or the team` : first
+}
+
+/** The success heading: "Thanks, {firstName}!" → "Thanks, Ann!", or "Thanks!" when there's no first name */
+export function successHeading(template: string, firstName: string | undefined | null): string {
+  const name = firstName?.trim()
+  return name ? fillTokens(template, { firstName: name }) : template.replace(/[,\s]*\{firstName\}/g, '').trim()
+}
+
+/** Replaces {owner}, {ownerFull}, {ownerOrTeam}, {city}, {firstName}, {percent} in every string of the survey copy */
 export function fillTokens<T>(value: T, tokens: Record<string, string>): T {
   if (typeof value === 'string') return value.replace(/\{(\w+)\}/g, (match, key: string) => (key in tokens ? tokens[key] : match)) as T
   if (Array.isArray(value)) return value.map((item) => fillTokens(item, tokens)) as T

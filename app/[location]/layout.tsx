@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { preconnect } from 'react-dom'
 
+import AnalyticsClicks from '@/components/AnalyticsClicks'
 import AttributionCapture from '@/components/AttributionCapture'
 import FloatingCta from '@/components/FloatingCta'
 import Footer from '@/components/Footer'
@@ -55,6 +56,8 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
       {/* This location's own Ringbot install, loaded after the first interaction */}
       {webchat && <RingbotWidget id={webchat} />}
       <AttributionCapture />
+      {/* phone_click, booking_click, estimate_cta_click for GTM (docs/analytics.md) */}
+      <AnalyticsClicks slug={location.slug} />
       <GoogleTagManager />
     </>
   )

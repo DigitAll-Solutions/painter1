@@ -1,6 +1,7 @@
-import { House, MailCheck, Phone } from 'lucide-react'
+import { House, Phone } from 'lucide-react'
 
-const ICONS = [Phone, MailCheck, House]
+// Rick's two steps: the call, then the visit
+const ICONS = [Phone, House]
 
 // "What happens next" box on the email step and the success screen
 export default function NextSteps({ title, items }: { title: string; items: string[] }) {
@@ -9,7 +10,7 @@ export default function NextSteps({ title, items }: { title: string; items: stri
       <p className="text-sm font-bold tracking-[0.12em] text-ink uppercase">{title}</p>
       <ol className="mt-3 space-y-3">
         {items.map((item, i) => {
-          const Icon = ICONS[i] ?? Phone
+          const Icon = ICONS[i] ?? House
           return (
             <li key={item} className="flex items-start gap-3 text-slate-700">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-blue/10 text-brand-blue-text">

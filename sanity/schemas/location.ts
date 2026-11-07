@@ -564,7 +564,7 @@ export const location = defineType({
       type: 'string',
       group: 'leads',
       description: 'Shown after a successful request, under "Thanks, {first name}!".',
-      initialValue: 'Thank you for your message. We will get in touch with you shortly',
+      initialValue: 'We received your information. We will get in touch with you shortly.',
     }),
     defineField({
       name: 'consentBlocks',

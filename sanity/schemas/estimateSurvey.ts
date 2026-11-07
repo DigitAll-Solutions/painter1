@@ -1,7 +1,7 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {ListChecks} from 'lucide-react'
 
-const TOKENS = 'Tokens: {owner} (owner first name), {ownerFull} (owner full name), {city}.'
+const TOKENS = 'Tokens: {owner} (owner first name), {ownerFull} (owner full name), {ownerOrTeam} ("Keith or the team", just "Keith" when the location has no team members, "Our team" when there is no owner name), {city}.'
 // description: undefined → the token help; '' → a plain form label
 const text = (name: string, title: string, description?: string, group?: string) =>
   defineField({name, title, type: 'string', group, description: description === '' ? 'Text on the form. Leave empty for the default.' : (description ?? TOKENS)})
@@ -76,7 +76,7 @@ export const estimateSurvey = defineType({
     text('nextLabel', 'Next button', '', 'general'),
     text('backLabel', 'Back button', '', 'general'),
     text('progressLabel', 'Progress text', 'Use {percent} for the number, e.g. "{percent}% complete".', 'general'),
-    text('successHeading', 'Success heading', 'Use {firstName} for the visitor\'s first name.', 'general'),
+    text('successHeading', 'Success heading', 'Use {firstName} for the visitor\'s first name ("Thanks!" when there is none). The text under it is each location\'s Confirmation message (Leads tab).', 'general'),
   ],
   preview: {select: {title: 'title'}, prepare: ({title}) => ({title: title || 'Estimate survey'})},
 })
