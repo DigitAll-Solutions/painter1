@@ -29,7 +29,8 @@ export type EstimateState =
   | { status: 'idle' }
   | { status: 'invalid'; errors: FieldErrors; step: StepKey }
   | { status: 'call-us' }
-  | { status: 'success'; firstName: string }
+  // leadRef: a hash of the lead's id for analytics (generate_lead), never personal data
+  | { status: 'success'; firstName: string; leadRef: string }
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
 
@@ -188,5 +189,5 @@ export async function submitEstimate(_previous: EstimateState, formData: FormDat
     console.error(`[estimate] ${leadId} saved, but recording the email result failed`, error)
   }
 
-  return { status: 'success', firstName: answers.firstName }
+  return { status: 'success', firstName: answers.firstName, leadRef: sha256(leadId).slice(0, 16) }
 }

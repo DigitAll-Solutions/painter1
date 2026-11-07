@@ -12,7 +12,7 @@ export const NEW_LOCATION_DEFAULTS = {
     cabinet: {_type: 'serviceDetail', title: 'Cabinet Painting'},
   },
   leadEmailSubject: "Painter1.com - Get Free Estimate - Form Submission",
-  leadConfirmationMessage: "Thank you for your message. We will get in touch with you shortly",
+  leadConfirmationMessage: "We received your information. We will get in touch with you shortly.",
   // Fluent Forms #73 notification body (Client Tether parses it). Placeholders only, no addresses.
   leadEmailTemplate: "Url:\n{submission.source_url}\n\nGa Gclid: {inputs.gclid}\n\nGa Source: {inputs.utm_source}\n\nGa Medium: {inputs.utm_medium}\n\nGa Campaign: {inputs.utm_campaign}\n\nFirst Name: {inputs.names.first_name}\n\nLast Name: {inputs.names.last_name}\n\nEmail: {inputs.email}\n\nPhone: {inputs.phone}\n\nAddress: {inputs.input_text}\n\nState: {inputs.input_text_2}\n\nCity: {inputs.input_text_1}\n\nZip Code: {inputs.input_text_3}\n\nMessage:\n{inputs.description}\n\n\n\nClient Tether Parsing Data:\nPARSER: {inputs.channel}, {inputs.channeldrilldown1}, {inputs.channeldrilldown2} ",
   consentBlocks: [

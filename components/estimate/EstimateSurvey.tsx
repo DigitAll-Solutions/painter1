@@ -18,6 +18,7 @@ import {
   PRESET_SERVICES,
   SERVICE_KEYS,
   STEP_ORDER,
+  successHeading,
   validateAll,
   validateStep,
   type Answers,
@@ -75,7 +76,7 @@ export default function EstimateSurvey({ slug, state, city, phone, tel, survey, 
   const [pageUrl, setPageUrl] = useState('')
   const [ready, setReady] = useState(false)
   const legends = useRef<Partial<Record<StepKey, HTMLLegendElement | null>>>({})
-  const successHeading = useRef<HTMLHeadingElement>(null)
+  const successHeadingRef = useRef<HTMLHeadingElement>(null)
   /** Focus moves to the step's legend only after the visitor navigates, never on page load */
   const navigated = useRef(false)
 
@@ -146,13 +147,21 @@ export default function EstimateSurvey({ slug, state, city, phone, tel, survey, 
       setStepKey(result.step)
     }
     if (result.status === 'success') {
-      pushDataLayer({ event: 'estimate_submit', service: answers.service ? survey.serviceOptions[answers.service] : '' })
+      // The lead is saved: the conversion event (docs/analytics.md). Never fired for validation errors,
+      // the honeypot or a failed save (those come back as 'invalid' or 'call-us')
+      pushDataLayer({
+        event: 'generate_lead',
+        location_slug: slug,
+        page_path: window.location.pathname,
+        service_type: answers.service ? survey.serviceOptions[answers.service] : '',
+        lead_id: result.leadRef,
+      })
       try {
         sessionStorage.removeItem(storageKey(slug))
       } catch {
         // storage unavailable
       }
-      successHeading.current?.focus()
+      successHeadingRef.current?.focus()
     }
     // answers/survey are read only at the moment the result arrives
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -204,8 +213,8 @@ export default function EstimateSurvey({ slug, state, city, phone, tel, survey, 
   if (result.status === 'success') {
     return (
       <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8" role="status">
-        <h2 ref={successHeading} tabIndex={-1} className="text-2xl font-extrabold tracking-tight text-ink focus:outline-none md:text-3xl">
-          {fillTokens(survey.successHeading, { firstName: result.firstName })}
+        <h2 ref={successHeadingRef} tabIndex={-1} className="text-2xl font-extrabold tracking-tight text-ink focus:outline-none md:text-3xl">
+          {successHeading(survey.successHeading, result.firstName)}
         </h2>
         <p className="mt-3 text-lg text-slate-700">{confirmationMessage}</p>
         <NextSteps title={survey.nextStepsTitle} items={survey.nextSteps} />

@@ -30,9 +30,8 @@
   "emailLabel": "Email",
   "nextStepsTitle": "What happens next",
   "nextSteps": [
-    "{owner} or the team calls to schedule your free estimate",
-    "You get an email confirmation",
-    "We visit your home, free, no obligation"
+    "{ownerOrTeam} calls to schedule your free estimate",
+    "We visit your home or business, free, no obligation"
   ],
   "phoneQuestion": "How should {owner} reach you?",
   "phoneLabel": "Phone",
