@@ -1,0 +1,66 @@
+# Launch rehearsal from a US connection: WordPress refuses some countries, so staging's WordPress pages
+# can't be checked from the team's own machines. Manual only. Read-only GET requests, no secrets.
+name: Staging smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Site to test
+        default: https://staging.painter1.com
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE: ${{ inputs.base || 'https://staging.painter1.com' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Runner country (must be US)
+        run: |
+          country=$(curl -s --max-time 15 https://ipinfo.io/country | tr -d '[:space:]')
+          echo "Runner country: ${country:-unknown}"
+          echo "### Runner country: ${country:-unknown}" >> "$GITHUB_STEP_SUMMARY"
+          [ "$country" = "US" ] || { echo "::error::Runner isn't in the US (${country:-unknown}): re-run the workflow"; exit 1; }
+
+      - name: Smoke test (scripts/smoke-launch.ts)
+        run: |
+          set +e
+          node --no-warnings scripts/smoke-launch.ts "$BASE" | tee smoke.txt
+          status=${PIPESTATUS[0]}
+          { echo '### smoke-launch.ts'; echo '```'; cat smoke.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+        continue-on-error: true
+
+      - name: WordPress page /atlanta/ (headers, redirects, links)
+        run: |
+          set +e
+          url="$BASE/atlanta/"
+          echo "== Headers: $url"
+          curl -sI --max-time 30 "$url" | tee headers.txt
+          echo "== X-Vercel-Id"
+          grep -i '^x-vercel-id' headers.txt || echo "(none)"
+          echo "== Redirect chain"
+          curl -s -o /dev/null -L --max-time 30 -w '%{url_effective} %{http_code} redirects=%{num_redirects}\n' "$url" | tee chain.txt
+          curl -s -L --max-time 30 "$url" -o page.html
+          staging=$(grep -o 'staging\.painter1\.com' page.html | wc -l)
+          wp=$(grep -o 'wp\.painter1\.com' page.html | wc -l)
+          www=$(grep -o 'www\.painter1\.com' page.html | wc -l)
+          echo "== Link counts in the HTML: staging.painter1.com=$staging wp.painter1.com=$wp www.painter1.com=$www"
+          {
+            echo '### /atlanta/'
+            echo '```'
+            grep -iE '^(HTTP|location|x-robots-tag|x-vercel-id|x-vercel-cache|x-cache|x-redirect-by|cache-control|server):?' headers.txt
+            echo "chain: $(cat chain.txt)"
+            echo "links: staging.painter1.com=$staging wp.painter1.com=$wp www.painter1.com=$www"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
