@@ -154,7 +154,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 7. Sanity: CORS origin and Studio host for `https://www.painter1.com`. Vercel: `NEXT_PUBLIC_SITE_URL`, Turnstile keys.
 
 **Launch day (a quiet morning, US Eastern; not a Friday)**
-8. Freeze WordPress edits for the morning (no plugin updates).
+8. Freeze WordPress edits for the morning (no plugin updates). Rick turns **Varnish off** on Cloudways and purges it, and it stays off from now on: behind Vercel it would mix www and direct copies under one `wp.painter1.com` key (`docs/cloudways-wp-config.md`, step 5).
 9. GoDaddy: change `www` (CNAME) and `@` (A) to Vercel's values. Don't touch anything else.
 10. **Within 15 minutes, check over a phone network and a VPN:**
     - `www.painter1.com/knoxville` (new site)
