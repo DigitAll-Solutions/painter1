@@ -4,9 +4,10 @@ The new site sends these events to the GTM dataLayer. They do nothing until GTM 
 for them. This page lists each event, then the exact GTM items to add. Nothing has been changed or
 published in GTM.
 
-The container the site loads is set by `NEXT_PUBLIC_GTM_ID` (today GTM-PVDK2ZFJ, Knoxville's container with
-GA4 G-LYVZ6Q3NQW). Which container the location pages should use is still an open question. The steps
-below work in whichever container that is.
+Each location's pages load that location's own container (Studio → location → "GTM container ID";
+Knoxville: GTM-PVDK2ZFJ, with GA4 G-LYVZ6Q3NQW). Without one, they load the site-wide `NEXT_PUBLIC_GTM_ID`.
+They never load both (`lib/gtm.ts`). Whether the location pages should use the corp container instead is
+still an open question. The steps below work in whichever container that is.
 
 ## Events
 

@@ -1,6 +1,6 @@
 # Go-live plan: Knoxville on the new site, the rest of painter1.com on WordPress
 
-For Rick, his WordPress host and us. Written Oct 19, 2026. Nothing here is built yet: this document compares the options and gives the runbook. The code changes it needs go in a separate launch PR (listed under "Launch PR").
+For Rick, his WordPress host and us. Written Oct 19, 2026. This document compares the options and gives the runbook. Option (a)'s code is in the launch PR (branch `launch-knoxville`, Oct 30); the host's wp-config block, the staging setup and the rehearsal checklist are in `docs/launch-rehearsal.md`.
 
 ## The situation
 
@@ -35,14 +35,7 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. Nothing here is built
 **Rick or the host must:**
 
 1. Serve the same WordPress install at **`wp.painter1.com`** too (a server alias), with its own valid SSL certificate (Let's Encrypt on the host).
-2. Make WordPress **not redirect `wp.painter1.com` to `www`**, and build its links with the visitor's host. Vercel sends the visitor's host in `X-Forwarded-Host` and the protocol in `X-Forwarded-Proto`. Add to `wp-config.php` (above "That's all"):
-   ```php
-   if (!empty($_SERVER['HTTP_X_FORWARDED_HOST']) && $_SERVER['HTTP_X_FORWARDED_HOST'] === 'www.painter1.com') {
-     $_SERVER['HTTP_HOST'] = 'www.painter1.com';
-     $_SERVER['HTTPS'] = 'on';
-   }
-   ```
-   `WP_HOME` and `WP_SITEURL` stay `https://www.painter1.com`.
+2. Make WordPress **not redirect `wp.painter1.com` to `www` for Vercel's requests**, and answer them as the visitor's host. Vercel sends the visitor's host in `X-Forwarded-Host` and the protocol in `X-Forwarded-Proto`. Plain visits to `wp.painter1.com` (no `X-Forwarded-Host`) 301 to `www`, so it never becomes a duplicate site. The `wp-config.php` block (with the loop check and the staging host) is in `docs/launch-rehearsal.md` §1. `WP_HOME` and `WP_SITEURL` stay `https://www.painter1.com`.
 3. **Trust Vercel's visitor-IP headers** (`X-Forwarded-For`, `X-Real-IP`) in security and rate-limit plugins (e.g. Wordfence → Options → "How does Wordfence get IPs": X-Forwarded-For) and in any host firewall. Otherwise every visitor looks like a Vercel IP, and one lockout locks everyone out.
 4. **Optional, later:** accept requests on `wp.painter1.com` only from Vercel, via a secret header ([Vercel: restricting your origin](https://vercel.com/docs/rewrites)).
 
@@ -126,7 +119,7 @@ DNS stays as it is. The WordPress server (nginx or Apache) proxies `/knoxville/�
 
 Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal before anyone touches `www`.
 
-## Launch PR (code for option (a), not built yet)
+## Launch PR (code for option (a); built Oct 30, branch `launch-knoxville`)
 
 1. **WordPress proxy:** an `afterFiles` rewrite in `next.config.ts` that sends every path that is **not** a live location or one of our paths to WordPress, keeping the path and query:
    ```ts
@@ -145,15 +138,15 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 **One to two weeks before**
 1. Host: `wp.painter1.com` live with SSL, the wp-config lines, IP trust in security plugins. Check it the way Vercel will call it: `curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/atlanta/` must answer **200 with no redirect**, and the page's links must be `www.painter1.com`. Without that header, a redirect to `www` is expected and fine.
 2. Find WordPress's sitemap URL and robots.txt rules.
-3. **Merge the launch PR**, with the proxy pointed at `wp.painter1.com`.
-4. **Rehearsal:**
-   - Add `staging.painter1.com` to the Vercel project (CNAME at GoDaddy).
+3. **Rehearsal** (`docs/launch-rehearsal.md`), on the launch PR's branch before merging:
+   - Add `staging.painter1.com` to the Vercel project, on the `launch-knoxville` branch (CNAME at GoDaddy).
    - Through it, check:
      - the WordPress home, 3 other locations, a corporate page and a blog post
      - one form submission on another location (and its email)
      - a WP admin login, an edit and an image upload
      - `/knoxville`, a legacy redirect and the estimate form
    - Fix anything found. Repeat until clean.
+4. **Merge the launch PR.** Harmless before the DNS switch: only the painter1.com hosts proxy WordPress.
 
 **Two days before**
 5. At GoDaddy, **save the current DNS records** (screenshot and export), then lower the TTL of `www` and `@` to 300 s.
@@ -161,7 +154,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 7. Sanity: CORS origin and Studio host for `https://www.painter1.com`. Vercel: `NEXT_PUBLIC_SITE_URL`, Turnstile keys.
 
 **Launch day (a quiet morning, US Eastern; not a Friday)**
-8. Freeze WordPress edits for the morning (no plugin updates).
+8. Freeze WordPress edits for the morning (no plugin updates). Rick turns **Varnish off** on Cloudways and purges it, and it stays off from now on: behind Vercel it would mix www and direct copies under one `wp.painter1.com` key (`docs/cloudways-wp-config.md`, step 5).
 9. GoDaddy: change `www` (CNAME) and `@` (A) to Vercel's values. Don't touch anything else.
 10. **Within 15 minutes, check over a phone network and a VPN:**
     - `www.painter1.com/knoxville` (new site)
@@ -171,16 +164,19 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
     - one Fluent Form on another location
     - the Knoxville estimate form, and its Client Tether test (`docs/email-setup.md` §8)
     - `/robots.txt` (allows crawling, lists the sitemap), `/sitemap.xml` (only live locations, `www.painter1.com` URLs), and `curl -sI https://www.painter1.com/knoxville` has **no** `X-Robots-Tag`, while `curl -sI https://painter1.vercel.app/knoxville` still has `noindex, nofollow`
-11. Point the Sanity webhook at `https://www.painter1.com/api/revalidate`, publish a small change, and see it live.
-12. Watch for 2 hours: Vercel → Logs and Observability (External Origins: WordPress error rates), and WordPress's own error log.
+11. **GTM, Knoxville's container only (GTM-PVDK2ZFJ):** once the Client Tether test lead has arrived, Rick pauses the old **"Click to Call"** and **"Schedule Page btn"** tags and publishes. They now count the same clicks as `phone_click` and `booking_click` (`docs/analytics.md`, step 5). **Never** pause them in the corp container **GTM-5LG3XH7S**, or in any other location's container: the 36 WordPress locations still use them.
+12. Point the Sanity webhook at `https://www.painter1.com/api/revalidate`, publish a small change, and see it live.
+13. **Country block** (`docs/country-block.md`, "On launch day"): switch the country rule ("US only") from **Log** to **Deny** in Vercel → Firewall, then ask Rick to turn off Really Simple Security's country block. In that order, so there's never a moment with no block.
+14. Watch for 2 hours: Vercel → Logs and Observability (External Origins: WordPress error rates), Vercel → Firewall (the "US only" rule), and WordPress's own error log.
 
 **After**
-13. Search Console:
+15. Search Console:
     - submit our sitemap
     - URL-inspect `/knoxville` and two legacy redirects
     - watch coverage for a week
-14. Google Ads: confirm the final URLs.
-15. Two weeks stable: remove Knoxville from WordPress's sitemap, set its old pages to noindex, and raise the DNS TTL back to 1 hour.
+    - Settings → Crawl stats: no rise in 403s after the country block
+16. Google Ads: confirm the final URLs.
+17. Two weeks stable: remove Knoxville from WordPress's sitemap, set its old pages to noindex, and raise the DNS TTL back to 1 hour.
 
 ## Rollback plan
 
@@ -195,6 +191,8 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 2. Tell Rick. Visitors move back within 5–30 minutes (TTL 300 s); some resolvers take longer.
 3. WordPress serves everything again, including its old Knoxville pages.
 4. Point the Sanity webhook back at `painter1.vercel.app`.
+5. If step 13 already ran, ask Rick to turn Really Simple Security's country block back on: WordPress serves visitors directly again.
+6. If step 11 already ran, ask Rick to unpause "Click to Call" and "Schedule Page btn" in GTM-PVDK2ZFJ and publish: Knoxville is on WordPress again.
 
 **Afterwards:** reproduce the problem on `staging.painter1.com`, fix it, and schedule a new launch day.
 

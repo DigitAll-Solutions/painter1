@@ -5,6 +5,7 @@ import {altField} from './objects/altField'
 import {LockedSlugInput} from '../components/LockedSlugInput'
 import {slugError, slugify, slugWarning} from '../lib/location-slugs'
 import {US_STATES} from '../lib/us-states'
+import {gtmId} from '../../lib/gtm'
 import {ringbotId} from '../../lib/ringbot'
 import {RingbotIdInput} from '../components/RingbotIdInput'
 
@@ -638,6 +639,16 @@ export const location = defineType({
         'This location’s Ringbot iID. Paste the embed code (<script src="https://api.callwidget.co/embed?iID=…">) and only the iID is kept; the site builds the script address itself. Each location has its own install: it carries the business name and phone, so never copy another location’s. Empty: no chat button. The chat loads once the page has finished loading, so it doesn’t slow it down.',
       components: {input: RingbotIdInput},
       validation: (rule) => rule.custom((value?: string) => (!value?.trim() || ringbotId(value) ? true : 'Only the iID: paste the Ringbot embed code or its iID (letters, numbers, + / = _ -).')),
+    }),
+
+    defineField({
+      name: 'gtmId',
+      title: 'GTM container ID',
+      type: 'string',
+      group: 'leads',
+      description:
+        'Optional. This location’s own Google Tag Manager container, e.g. GTM-PVDK2ZFJ: only the ID, never the script. Its pages then load this container instead of the site-wide one (never both). Empty: the site-wide container. It loads once the page has finished loading.',
+      validation: (rule) => rule.custom((value?: string) => (!value?.trim() || gtmId(value) ? true : 'Only the container ID: GTM- followed by capital letters and digits, e.g. GTM-PVDK2ZFJ. No script or URL.')),
     }),
 
     // ---------- Warranty ----------

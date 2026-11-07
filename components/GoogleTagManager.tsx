@@ -1,12 +1,11 @@
 import Script from 'next/script'
 
-// Loaded only when NEXT_PUBLIC_GTM_ID is set (e.g. GTM-PVDK2ZFJ, which also loads Attributer).
+// One container per page: the location's own (Studio "GTM container ID") or NEXT_PUBLIC_GTM_ID, resolved
+// and validated by locationGtmId (lib/gtm.ts). GTM-PVDK2ZFJ also loads Attributer.
 // The container pulls in GA4, Facebook, Ads and Attributer (~650 KB of scripts), so it loads once the page
 // has finished loading and the browser is idle (lazyOnload), never during the page's own load. Attributer
 // still fills the survey's channel fields long before anyone can submit it (tested with a real submit).
-export default function GoogleTagManager() {
-  const id = process.env.NEXT_PUBLIC_GTM_ID?.trim()
-  if (!id || !/^GTM-[A-Z0-9]+$/.test(id)) return null
+export default function GoogleTagManager({ id }: { id: string }) {
   return (
     <>
       <Script id="gtm" strategy="lazyOnload">
