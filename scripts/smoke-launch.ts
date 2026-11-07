@@ -15,7 +15,7 @@ import { WORDPRESS_PROXY_HOST_PATTERN } from '../lib/wordpress-proxy.ts'
 
 const base = new URL(process.argv[2] ?? 'https://staging.painter1.com')
 const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
-const headers: Record<string, string> = { 'user-agent': 'Mozilla/5.0 (painter1 launch smoke test)', ...(bypass ? { 'x-vercel-protection-bypass': bypass } : {}) }
+const headers: Record<string, string> = { 'user-agent': 'Mozilla/5.0 (painter1 launch smoke test)', ...(bypass ? { 'x-vercel-protection-bypass': bypass } : {}), ...(process.env.P1_DEV_COOKIE ? { cookie: `p1_dev=${process.env.P1_DEV_COOKIE}` } : {}) }
 const production = isProductionHost(base.host)
 const proxiesWordPress = new RegExp(`^${WORDPRESS_PROXY_HOST_PATTERN}$`).test(base.hostname)
 
@@ -41,10 +41,21 @@ async function follow(path: string) {
   return { res: undefined, hops, url }
 }
 
+/** Follows the 308s (at most 3: the trailing slash comes off first, see proxy.ts) and checks where they end */
 async function redirectsTo(path: string, to: string) {
-  const res = await get(path)
-  const location = res.headers.get('location') ?? ''
-  check(res.status === 308 && new URL(location, base).href === new URL(to, base).href, `${path} → ${to}`, `${res.status} ${location}`)
+  const target = new URL(to, base).href
+  const hops: string[] = []
+  let current = new URL(path, base).href
+  for (let i = 0; i < 3 && current !== target; i++) {
+    const res = await get(current)
+    if (res.status !== 308) {
+      hops.push(String(res.status))
+      break
+    }
+    current = new URL(res.headers.get('location') ?? '', current).href
+    hops.push(`308 ${current.replace(base.origin, '')}`)
+  }
+  check(current === target, `${path} → ${to}`, hops.join(' → '))
 }
 
 // Our pages and the legacy redirects
