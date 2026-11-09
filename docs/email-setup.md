@@ -105,7 +105,7 @@ For each location going live:
 2. **Check the blocklist:** `scripts/brevo-blocklist.ts <location>` shows every lead recipient as "ok". For Knoxville that's **Keith's team** and the **Client Tether parse address**. Remove any blocked address (section 7) before going live.
 3. **Client Tether test, before going live (Knoxville: `keith@parse.clienttether.com` only):**
    1. In Vercel Production set `LEAD_TEST_RECIPIENT` to the location's Client Tether parse address (nothing else), keep `LEAD_SEND_LIVE` unset, and redeploy. In test mode the email goes **only** to that address, and its subject starts with `[TEST]`.
-   2. Submit one estimate request on the live page with an obviously fake name ("Client Tether Test").
+   2. Submit one estimate request on the live page with an obviously fake name ("Client Tether Test"). Land first on a service page with test UTM tags, as in `docs/go-live-plan.md` step 10: the `Ga *` lines and the `PARSER:` channel must be filled, and an empty `PARSER:` line blocks the launch.
    3. **Rick or Keith confirm in Client Tether** that the lead appeared and that every field landed in the right place: name, email, phone, address, city, state, zip, the message, and the source fields from the `PARSER:` line (channel and drill-downs). Ask them to check the `[TEST]` subject doesn't stop Client Tether from picking it up; if it does, repeat with live mode for one request.
    4. **Fields right:** keep Brevo; continue with step 4. **Fields wrong or missing:** don't go live with Brevo; switch the sender to **Postmark** (text-only, tracking off), then repeat this test.
    5. Delete the test lead in Client Tether and in the Studio.
