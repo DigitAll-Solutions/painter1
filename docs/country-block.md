@@ -2,7 +2,7 @@
 
 Rick approved (Nov 7): **United States only**, as a single condition, "Country is not US → Deny". His list of 242 country codes isn't used; one negative condition does the same job and stays short. Vercel Firewall custom rules, project **painter1**. Changes take effect within seconds, with no redeploy, and can be restored from the audit log (**Firewall → ⋯ → View Audit Log → Restore**).
 
-**Status:** rules 1–3 are created now (Nov 7) with rule 3 on **Log**. Rule 3 is switched to **Deny** on launch day (`docs/go-live-plan.md`, step 13).
+**Status:** rules 1–3 are created now (Nov 7) with rule 3 on **Log**. Rule 3 is switched to **Deny** on launch day (`docs/go-live-plan.md`, step 14).
 
 ## US territories and DC (Rick, Nov 9: the 50 states only)
 
@@ -135,7 +135,7 @@ Partly, and not well enough to use:
 
 ## On launch day
 
-In `docs/go-live-plan.md`, step 13:
+In `docs/go-live-plan.md`, step 14:
 1. After DNS points to Vercel and the checks pass, switch rule 3 (all copies, if you used the fallback) from **Log** to **Deny** → **Review Changes → Publish**. Check from India without the cookie: 403. With the cookie, and from the US: 200.
 2. **Then** ask Rick to turn off Really Simple Security Pro's country block, so blocking happens in one place. Behind Vercel, WordPress sees Vercel's servers, not the visitor, so it would block or allow by the wrong country. Doing it in this order means there's no window with no block at all.
 3. When staging is retired, remove `staging.painter1.com` from rule 3 and from the project's domains.
