@@ -6,59 +6,38 @@ For us, Rick and his WordPress host. Written Oct 30, 2026, with the launch PR (b
 
 - **WordPress proxy** (`lib/wordpress-proxy.ts`, `next.config.ts`): on `www.painter1.com`, `painter1.com` and `staging.painter1.com`, every path that isn't a live location (`LIVE_LOCATIONS`: `knoxville`) or one of our paths (`/studio`, `/api`, `/_next`, `/_vercel`, `/sanity-img`, `robots.txt`, `sitemap.xml`, `public/` files) goes to `https://wp.painter1.com`, path, trailing slash and query unchanged. Vercel's CDN never caches those responses (`x-vercel-enable-rewrite-caching: 0`).
   - `painter1.vercel.app`, previews and localhost don't proxy: every Sanity location still renders there, so Rick keeps previewing the ones he is filling in.
-- **Trailing slashes:** `skipTrailingSlashRedirect`, plus `proxy.ts`, which 308s `/knoxville/…/` and `/studio/…/` to the path without the slash. WordPress URLs keep theirs. Old Knoxville URLs with a slash now reach their new page in one hop.
+- **Trailing slashes:** `skipTrailingSlashRedirect`, plus `proxy.ts`, which 308s `/knoxville/…/` and `/studio/…/` to the path without the slash. On WordPress paths, `proxy.ts` instead adds `X-P1-Proxy-Key` and `X-P1-Host` for wp-config.php (§1). WordPress URLs keep theirs. Old Knoxville URLs with a slash now reach their new page in one hop.
 - **`/` → `/knoxville` is gone on painter1.com:** the homepage there is WordPress. It stays on `painter1.vercel.app`, which has no homepage of its own.
 - **robots.txt (production only):** our sitemap and WordPress's Yoast sitemap (`/sitemap_index.xml`), and WordPress's own disallow rules (`/*?*`, `/?*`, `*/page/*`). Ours stays `/sitemap.xml` because WordPress uses `/sitemap_index.xml`. Every other host still gets `Disallow: /`.
 - **GTM per location:** Studio → location → Leads & consent → "GTM container ID" (optional, only `GTM-XXXXXXX`). That location's pages load only it; a location without one loads no GTM. `NEXT_PUBLIC_GTM_ID` (corp, GTM-5LG3XH7S) is for corp pages only. Still on `lazyOnload`. WordPress pages keep whatever they load today.
 
-## 1. The host: wp-config.php (replaces the 4 lines in the go-live plan)
+## 1. The host: wp-config.php
 
-`wp.painter1.com` already resolves to the WordPress server (161.35.184.151). Add this to `wp-config.php` above `/* That's all, stop editing! */`, and **above** any existing `WP_HOME` / `WP_SITEURL` lines. Change those existing lines to `defined('WP_HOME') || define('WP_HOME', 'https://www.painter1.com');` (same for `WP_SITEURL`), so the staging values below can take over on staging requests.
+`wp.painter1.com` already resolves to the WordPress server (161.35.184.151). The wp-config.php block and Rick's steps are in `docs/cloudways-wp-config.md` (step 3); that is the only copy of the block.
 
-```php
-/* Painter1: WordPress behind Vercel. Vercel proxies www/staging.painter1.com to wp.painter1.com and sends
-   the visitor's host in X-Forwarded-Host. */
-$p1_host = isset($_SERVER['HTTP_HOST']) ? strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'])) : '';
-$p1_forwarded = isset($_SERVER['HTTP_X_FORWARDED_HOST']) ? strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_HOST'])[0])) : '';
-if ($p1_host === 'wp.painter1.com') {
-  if ($p1_forwarded === 'www.painter1.com' || $p1_forwarded === 'staging.painter1.com') {
-    // Through Vercel: answer as the host the visitor asked for
-    $_SERVER['HTTP_HOST'] = $p1_forwarded;
-    $_SERVER['HTTPS'] = 'on';
-    $_SERVER['SERVER_PORT'] = 443;
-    if ($p1_forwarded === 'staging.painter1.com') {
-      // Rehearsal: links, login and admin stay on staging, and staging is never indexed
-      define('WP_HOME', 'https://staging.painter1.com');
-      define('WP_SITEURL', 'https://staging.painter1.com');
-      header('X-Robots-Tag: noindex, nofollow');
-    }
-  } elseif (($p1_forwarded === '' || $p1_forwarded === 'wp.painter1.com') && strpos($_SERVER['REQUEST_URI'], '/wp-cron.php') !== 0) {
-    // wp.painter1.com opened directly: a duplicate of the site, so send visitors and search engines to www.
-    // Loop check: requests from Vercel always carry X-Forwarded-Host www/staging.painter1.com, so they
-    // never get here; a request that did would loop www → Vercel → here → www.
-    header('Cache-Control: no-store');
-    header('Location: https://www.painter1.com' . $_SERVER['REQUEST_URI'], true, 301);
-    exit;
-  }
-}
-```
+**How Vercel identifies itself (probe, Nov 9):** Cloudways' nginx overwrites `X-Forwarded-Host`, `X-Forwarded-For` and `X-Real-IP` with its own values: PHP sees `wp.painter1.com` and a Vercel IP there, even on requests from Vercel. So `proxy.ts` adds two headers to every proxied request (`lib/wordpress-proxy.ts`): `X-P1-Proxy-Key`, the `P1_PROXY_KEY` env var (Vercel Production and Preview; not in code), and `X-P1-Host`, the host the visitor asked for. Any `X-P1-*` header a visitor sends is replaced. Checked locally (`next dev` against an echo origin): both reach the origin through the afterFiles rewrite, and neither is in the response. The visitor's IP arrives in Vercel's `X-Vercel-Forwarded-For`, which nginx leaves alone. Vercel also sends `Forwarded` and `X-Vercel-*`.
 
-Vercel documents that external rewrites send `x-forwarded-host` (the host the visitor requested), `x-forwarded-proto`, `x-forwarded-for` and `x-real-ip` ([Vercel: rewrites to external origins](https://vercel.com/docs/rewrites#identifying-the-visitor-at-your-origin)). Checked locally: a rewrite of `/atlanta/our-work?service=interior` reaches the origin unchanged with `X-Forwarded-Host: www.painter1.com`, and so do a POST with cookies and a 6 MB upload.
+**What the block does on `wp.painter1.com`:**
+- **Right key** and `X-P1-Host` www or staging: `HTTP_HOST` = that host, `HTTPS` on, `SERVER_PORT` 443, `REMOTE_ADDR` (and `X-Forwarded-For`, `X-Real-IP`) = the first IP of `X-Vercel-Forwarded-For`. On staging, also `WP_HOME`/`WP_SITEURL` staging and `X-Robots-Tag: noindex`.
+- **From Vercel without the right key** (`X-P1-Host` or `X-Vercel-Id` present): 403, so a missing or wrong `P1_PROXY_KEY` can't make a www → Vercel → wp → www loop.
+- **Anything else** (opened directly): 301 to www, `wp-cron.php` exempt.
+
+**Order:** set `P1_PROXY_KEY` in Vercel and redeploy before the new wp-config.php goes up. Until the block is on the server, WordPress ignores the headers.
+
+**Must check before launch: the visitor's IP in security plugins** (`docs/cloudways-wp-config.md` step 6). Wordfence's firewall can run before wp-config.php ("Extended Protection", `auto_prepend_file`); Really Simple Security's firewall loads at the top of wp-config.php. Both then see Vercel's IP for every visitor, and one block or rate limit would hit everyone.
+- [ ] Wordfence "How does Wordfence get IPs" = REMOTE_ADDR (Rick tells us the old value)
+- [ ] Wordfence protection level known; if Extended, switched to Basic or the IP fixed before the firewall runs (decided with us)
+- [ ] The probe's `auto_prepend_file` / `wordfence_waf_loaded_before_this_file` lines match that
+- [ ] No Vercel/Amazon IP range allowlisted in Wordfence
+- [ ] Really Simple Security: no automatic IP blocking (404 blocking etc.) on in its firewall
+- [ ] After the rehearsal: Wordfence Live Traffic shows our real IP, not a Vercel/Amazon one; no Vercel/Amazon IP in Wordfence's or Really Simple Security's blocked lists
 
 **Also for the host:**
-- **Existing redirect (seen Oct 30):** `https://wp.painter1.com/` already redirects to `https://www.painter1.com/`. That's not from this block or from Vercel; it's set on the server (nginx, a plugin or a setting). For plain visits that's what we want. But it must **not** apply to requests whose `X-Forwarded-Host` is `www.painter1.com` or `staging.painter1.com`, or every proxied request loops (www → Vercel → wp → www). If it's in nginx, the PHP block above never runs for those requests: add the same exception there, or remove it and let the block do the redirect.
-- **Page cache:** the server page cache (responses carry `X-Cache`) must key on `X-Forwarded-Host` for `wp.painter1.com`, or skip caching when it is `staging.painter1.com`. Otherwise a staging page (staging links) can be served to www visitors after launch, and a cached 301 to a Vercel request makes the loop above.
-- **Visitor IPs:** security plugins and the firewall trust `X-Forwarded-For` / `X-Real-IP` from Vercel (go-live plan, option (a) step 3).
-- **Country blocking:** WordPress answers "This website is unavailable in your region" (403) to requests from India, for `www` and `wp` alike (robots.txt excepted). Behind Vercel, the server sees Vercel's IP, so the block must use the visitor IP from those headers. Otherwise it blocks or allows by Vercel's location. Our team must rehearse over a US VPN.
-- **WP cron:** if the host calls `https://wp.painter1.com/wp-cron.php` from a server cron, it keeps working (exempt above).
+- **Page cache:** Varnish keys on `Host` only, so it stays off behind Vercel (`docs/cloudways-wp-config.md` step 5).
+- **Country blocking:** WordPress answers "This website is unavailable in your region" (403) to requests from India, for `www` and `wp` alike (robots.txt excepted). Behind Vercel the country block sees Vercel's (US) IP, so it lets everyone through; it is switched off on launch day (go-live step 14) and blocking moves to Vercel. Our team must rehearse over a US VPN, or with the staging smoke workflow.
+- **WP cron:** if the host calls `https://wp.painter1.com/wp-cron.php` from a server cron, it keeps working (exempt from the 301).
 
-**Host check, from a US connection:**
-```sh
-curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/atlanta/      # 200, no Location
-curl -sI -H "X-Forwarded-Host: staging.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/atlanta/  # 200, X-Robots-Tag: noindex
-curl -sI https://wp.painter1.com/atlanta/                                                                         # 301 → https://www.painter1.com/atlanta/
-curl -s -H "X-Forwarded-Host: www.painter1.com" https://wp.painter1.com/atlanta/ | grep -c staging.painter1.com      # 0, also after staging was visited
-```
+**Host check:** the nine curl checks in `docs/cloudways-wp-config.md` step 7, from a US connection.
 
 ## 2. Staging domain
 
@@ -73,7 +52,7 @@ If Vercel also asks for a TXT record at `_vercel`, add that too, exactly as show
 **Vercel (us), project painter1:**
 1. **Settings → Domains → Add Domain** → `staging.painter1.com` → environment **Preview**, Git branch **`launch-knoxville`** → Save. Copy the CNAME value it shows and send it to Rick. When the record resolves, the domain shows "Valid Configuration" and Vercel issues the certificate.
 2. **Settings → Deployment Protection → Deployment Protection Exceptions** → add `staging.painter1.com`. Standard Protection covers every non-production domain, so without this the staging site asks for a Vercel login. That would stop Rick and his host, and WordPress's own requests.
-3. **Settings → Environment Variables, Preview:** `LEAD_TEST_RECIPIENT` set (leads go only to that address), `LEAD_SEND_LIVE` not `true`. `NEXT_PUBLIC_GTM_ID` = `GTM-5LG3XH7S` (corp). If `TURNSTILE_SITE_KEY` is set for Preview, the Turnstile widget's hostnames in Cloudflare must cover `staging.painter1.com`. Redeploy the branch after any change.
+3. **Settings → Environment Variables, Preview:** `LEAD_TEST_RECIPIENT` set (leads go only to that address), `LEAD_SEND_LIVE` not `true`. `NEXT_PUBLIC_GTM_ID` = `GTM-5LG3XH7S` (corp). `P1_PROXY_KEY` set (the same value as in wp-config.php; §1). If `TURNSTILE_SITE_KEY` is set for Preview, the Turnstile widget's hostnames in Cloudflare must cover `staging.painter1.com`. Redeploy the branch after any change.
 4. Each push to `launch-knoxville` updates staging. Remove the domain after launch.
 
 **Never indexed (confirmed):** `staging.painter1.com` isn't a production host (`lib/indexing.ts`, tested in `indexing.test.ts`). So our pages send `X-Robots-Tag: noindex, nofollow` and robots.txt is `Disallow: /`. Proxied WordPress pages get the same header from Vercel and from wp-config. The `X-Robots-Tag` on proxied pages and the CDN cache bypass come from Vercel's routing. `next start` doesn't apply them to external rewrites, so they're checked on staging (below).

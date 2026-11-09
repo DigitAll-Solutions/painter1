@@ -35,9 +35,8 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. This document compare
 **Rick or the host must:**
 
 1. Serve the same WordPress install at **`wp.painter1.com`** too (a server alias), with its own valid SSL certificate (Let's Encrypt on the host).
-2. Make WordPress **not redirect `wp.painter1.com` to `www` for Vercel's requests**, and answer them as the visitor's host. Vercel sends the visitor's host in `X-Forwarded-Host` and the protocol in `X-Forwarded-Proto`. Plain visits to `wp.painter1.com` (no `X-Forwarded-Host`) 301 to `www`, so it never becomes a duplicate site. The `wp-config.php` block (with the loop check and the staging host) is in `docs/launch-rehearsal.md` §1. `WP_HOME` and `WP_SITEURL` stay `https://www.painter1.com`.
-3. **Trust Vercel's visitor-IP headers** (`X-Forwarded-For`, `X-Real-IP`) in security and rate-limit plugins (e.g. Wordfence → Options → "How does Wordfence get IPs": X-Forwarded-For) and in any host firewall. Otherwise every visitor looks like a Vercel IP, and one lockout locks everyone out.
-4. **Optional, later:** accept requests on `wp.painter1.com` only from Vercel, via a secret header ([Vercel: restricting your origin](https://vercel.com/docs/rewrites)).
+2. Make WordPress **not redirect `wp.painter1.com` to `www` for Vercel's requests**, and answer them as the visitor's host. Cloudways' nginx overwrites `X-Forwarded-Host`/`-For`/`X-Real-IP`, so `proxy.ts` sends its own `X-P1-Proxy-Key` (the `P1_PROXY_KEY` secret, set in Vercel Production and Preview) and `X-P1-Host` (the visitor's host); wp-config.php trusts them only with the right key. Plain visits to `wp.painter1.com` 301 to `www`, so it never becomes a duplicate site. The `wp-config.php` block is in `docs/cloudways-wp-config.md` step 3 (how it works: `docs/launch-rehearsal.md` §1). `WP_HOME` and `WP_SITEURL` stay `https://www.painter1.com`.
+3. **The visitor's IP in security plugins (must check):** the wp-config.php block sets `REMOTE_ADDR` from Vercel's `X-Vercel-Forwarded-For` (the `X-Forwarded-For` nginx passes on holds Vercel's IP). Wordfence → "How does Wordfence get IPs": **REMOTE_ADDR**; its firewall protection level must not run before wp-config.php (Extended) unless the IP is fixed first; no IP blocking in Really Simple Security's firewall. Otherwise every visitor looks like a Vercel IP, and one block or lockout locks everyone out. Details: `docs/cloudways-wp-config.md` step 6.
 
 **DNS at GoDaddy:**
 - **New:** `wp` A → the WordPress server's IP.
@@ -136,7 +135,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 ## Launch-day runbook (option (a))
 
 **One to two weeks before**
-1. Host: `wp.painter1.com` live with SSL, the wp-config lines, IP trust in security plugins. Check it the way Vercel will call it: `curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/atlanta/` must answer **200 with no redirect**, and the page's links must be `www.painter1.com`. Without that header, a redirect to `www` is expected and fine.
+1. Host: `wp.painter1.com` live with SSL, `P1_PROXY_KEY` in Vercel Production and Preview (same value as in wp-config.php), the wp-config block, the security-plugin IP checks (step 3 above). Check it with the curl checks in `docs/cloudways-wp-config.md` step 7: with the key and `X-P1-Host: www.painter1.com`, `/atlanta/` must answer **200 with no redirect** and its links must be `www.painter1.com`; without the key, a 301 to `www` (or a 403 when it looks like Vercel) is expected.
 2. Find WordPress's sitemap URL and robots.txt rules.
 3. **Rehearsal** (`docs/launch-rehearsal.md`), on the launch PR's branch before merging:
    - Add `staging.painter1.com` to the Vercel project, on the `launch-knoxville` branch (CNAME at GoDaddy).
