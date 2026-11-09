@@ -40,6 +40,7 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
   // Every page's hero / LCP image comes from the Sanity image CDN: open that connection with the HTML
   preconnect('https://cdn.sanity.io')
   const webchat = ringbotId(location.webchatId)
+  // Only this location's own container; none if it has none (never the corp NEXT_PUBLIC_GTM_ID)
   const gtm = locationGtmId(location.gtmId)
 
   return (

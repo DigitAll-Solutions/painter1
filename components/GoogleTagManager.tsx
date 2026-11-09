@@ -1,7 +1,8 @@
 import Script from 'next/script'
 
-// One container per page: the location's own (Studio "GTM container ID") or NEXT_PUBLIC_GTM_ID, resolved
-// and validated by locationGtmId (lib/gtm.ts). GTM-PVDK2ZFJ also loads Attributer.
+// One container per page, resolved and validated in lib/gtm.ts: a location page gets only the location's
+// own (Studio "GTM container ID") or none; a corp page gets NEXT_PUBLIC_GTM_ID. Render it in exactly one
+// layout per page: never in app/layout.tsx, which wraps the location pages too. GTM-PVDK2ZFJ also loads Attributer.
 // The container pulls in GA4, Facebook, Ads and Attributer (~650 KB of scripts), so it loads once the page
 // has finished loading and the browser is idle (lazyOnload), never during the page's own load. Attributer
 // still fills the survey's channel fields long before anyone can submit it (tested with a real submit).

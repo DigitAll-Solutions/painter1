@@ -4,18 +4,20 @@ The new site sends these events to the GTM dataLayer. They do nothing until GTM 
 for them. This page lists each event, then the exact GTM items to add. Nothing has been changed or
 published in GTM.
 
-Each location's pages load that location's own container (Studio → location → "GTM container ID";
-Knoxville: GTM-PVDK2ZFJ, with GA4 G-LYVZ6Q3NQW). Without one, they load the site-wide `NEXT_PUBLIC_GTM_ID`.
-They never load both (`lib/gtm.ts`). Rick decided (Nov 9) that location pages load **only their own
-location container**, never the corp container GTM-5LG3XH7S. The steps below go in each location's
-container.
+Every page loads **at most one** container (Rick, Nov 9; `lib/gtm.ts`, tested in `lib/gtm.test.ts`):
 
-**Open: locations without a container** (Bozeman and Marietta, Nov 9). They fall back to
-`NEXT_PUBLIC_GTM_ID`. On Production that is GTM-PVDK2ZFJ, so their pages on painter1.vercel.app load
-**Knoxville's** container today, and their visits and leads would count in Knoxville's GA4. On Preview
-(staging) the variable is unset, so they load no GTM. To match Rick's rule, either unset
-`NEXT_PUBLIC_GTM_ID` on Production (no deploy of code needed, a redeploy picks it up) or drop the
-fallback in `lib/gtm.ts`. Then a location without a container loads no GTM.
+| Page | Container |
+| --- | --- |
+| Location pages (`/<location>/…`) | That location's own (Studio → location → "GTM container ID"; Knoxville: GTM-PVDK2ZFJ, with GA4 G-LYVZ6Q3NQW). **None** if it has no container: no fallback. |
+| Corp pages (anything not under a location) | `NEXT_PUBLIC_GTM_ID`, the corp container **GTM-5LG3XH7S** (Production and Preview). Today Next.js serves no corp page: `/` goes to WordPress (or to /knoxville on other hosts), and `/studio` loads no GTM. |
+| WordPress pages proxied by this site | Their own tags, unchanged |
+
+**Bozeman and Marietta have no tracking** until Rick gives them a container (Nov 9). Their pages load no
+GTM, so they send no GA4 page views, no events, no Ads conversions, and Attributer doesn't fill the
+survey's channel fields. Once Rick has a container ID for one of them, paste it into Studio (location →
+Leads & consent → "GTM container ID") and publish. No code change is needed.
+
+The steps below go in each location's own container.
 
 ## Events
 
