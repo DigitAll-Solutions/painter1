@@ -1,10 +1,12 @@
 # Cloudways: getting WordPress ready for the new site
 
-**Why:** after launch, www.painter1.com is served by the new site (Vercel). Pages that stay on WordPress are fetched by Vercel from `wp.painter1.com`. This tells WordPress to answer those requests as www.painter1.com (or staging.painter1.com for the rehearsal), and to send anyone who opens `wp.painter1.com` directly to www.
+**Why:** after launch, www.painter1.com is served by the new site (Vercel). Pages that stay on WordPress are fetched by Vercel from `wp.painter1.com`. This tells WordPress to answer those requests as www.painter1.com (or staging.painter1.com for the rehearsal), with the visitor's real IP, and to send anyone who opens `wp.painter1.com` directly to www.
+
+**How WordPress knows a request came from Vercel:** Cloudways' nginx replaces the usual `X-Forwarded-Host`, `X-Forwarded-For` and `X-Real-IP` headers with its own values (our Nov 9 probe), so WordPress can't use them. Vercel adds two headers of its own instead: `X-P1-Proxy-Key`, a secret only Vercel and wp-config.php know (Vercel's `P1_PROXY_KEY` setting), and `X-P1-Host`, the address the visitor asked for. The visitor's IP comes in Vercel's `X-Vercel-Forwarded-For`, which nginx leaves alone. wp-config.php trusts all three only when the key matches.
 
 It takes about 20 minutes. Visitors see no change until DNS is switched on launch day.
 
-Do the steps in order. A typo in wp-config.php takes the whole site down until it's fixed, so make the backup in step 2 first, and keep the file window open until step 6 passes.
+Do the steps in order. A typo in wp-config.php takes the whole site down until it's fixed, so make the backup in step 2 first, and keep the file window open until step 7 passes.
 
 ## 1. Logins and domains (Cloudways)
 
@@ -39,51 +41,68 @@ Please don't use a plugin to edit this file. If an edit breaks the site, the plu
    defined('WP_HOME') || define('WP_HOME', 'https://www.painter1.com');
    defined('WP_SITEURL') || define('WP_SITEURL', 'https://www.painter1.com');
    ```
-3. **Paste the block below** directly **above** those two lines. If there were none, paste it just above the line `/* That's all, stop editing! Happy blogging. */`. It must be below the first line `<?php`.
+3. **Paste the block below** directly **above** those two lines. If there were none, paste it just above the line `/* That's all, stop editing! Happy blogging. */`. It must be below the first line `<?php`. Then replace `PASTE_P1_PROXY_KEY_HERE` (the first one, in `$p1_proxy_key = '…';`) with the `P1_PROXY_KEY` value from Vercel, exactly, between the quotes. Leave the second `PASTE_P1_PROXY_KEY_HERE` as it is: it stops the block from trusting anything while the key isn't filled in. Never paste the key in email or chat.
    ```php
-   /* Painter1: WordPress behind Vercel. Vercel proxies www/staging.painter1.com to wp.painter1.com and sends
-      the visitor's host in X-Forwarded-Host. */
-   $p1_host = isset($_SERVER['HTTP_HOST']) ? strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'])) : '';
-   $p1_forwarded = isset($_SERVER['HTTP_X_FORWARDED_HOST']) ? strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_HOST'])[0])) : '';
+   /* Painter1: WordPress behind Vercel (docs/cloudways-wp-config.md in the website repo). Vercel proxies
+      www/staging.painter1.com to wp.painter1.com. Cloudways' nginx overwrites X-Forwarded-Host, X-Forwarded-For
+      and X-Real-IP, so Vercel sends its own headers: X-P1-Proxy-Key (a shared secret, P1_PROXY_KEY in Vercel)
+      and X-P1-Host (the host the visitor asked for). Only a request with the right key is trusted. */
+   $p1_proxy_key = 'PASTE_P1_PROXY_KEY_HERE';
+   $p1_host = isset($_SERVER['HTTP_HOST']) ? strtolower(preg_replace('/:\d+$/', '', (string) $_SERVER['HTTP_HOST'])) : '';
    if ($p1_host === 'wp.painter1.com') {
-     if ($p1_forwarded === 'www.painter1.com' || $p1_forwarded === 'staging.painter1.com') {
-       // Through Vercel: answer as the host the visitor asked for
-       $_SERVER['HTTP_HOST'] = $p1_forwarded;
+     $p1_given = isset($_SERVER['HTTP_X_P1_PROXY_KEY']) ? (string) $_SERVER['HTTP_X_P1_PROXY_KEY'] : '';
+     $p1_valid = strlen($p1_proxy_key) >= 32 && $p1_proxy_key !== 'PASTE_P1_PROXY_KEY_HERE' && hash_equals($p1_proxy_key, $p1_given);
+     $p1_target = isset($_SERVER['HTTP_X_P1_HOST']) ? strtolower(trim((string) $_SERVER['HTTP_X_P1_HOST'])) : '';
+     if ($p1_valid && ($p1_target === 'www.painter1.com' || $p1_target === 'staging.painter1.com')) {
+       // Through Vercel: answer as the host the visitor asked for, over https
+       $_SERVER['HTTP_HOST'] = $p1_target;
        $_SERVER['HTTPS'] = 'on';
        $_SERVER['SERVER_PORT'] = 443;
-       if ($p1_forwarded === 'staging.painter1.com') {
+       // The visitor's IP: the first entry of Vercel's own X-Vercel-Forwarded-For (REMOTE_ADDR is a Vercel IP).
+       // X-Forwarded-For and X-Real-IP get it too, for plugins that read those.
+       $p1_ip = isset($_SERVER['HTTP_X_VERCEL_FORWARDED_FOR']) ? trim(explode(',', (string) $_SERVER['HTTP_X_VERCEL_FORWARDED_FOR'])[0]) : '';
+       if (filter_var($p1_ip, FILTER_VALIDATE_IP)) {
+         $_SERVER['REMOTE_ADDR'] = $p1_ip;
+         $_SERVER['HTTP_X_FORWARDED_FOR'] = $p1_ip;
+         $_SERVER['HTTP_X_REAL_IP'] = $p1_ip;
+       }
+       if ($p1_target === 'staging.painter1.com') {
          // Rehearsal: links, login and admin stay on staging, and staging is never indexed
          define('WP_HOME', 'https://staging.painter1.com');
          define('WP_SITEURL', 'https://staging.painter1.com');
          header('X-Robots-Tag: noindex, nofollow');
        }
-     } elseif (($p1_forwarded === '' || $p1_forwarded === 'wp.painter1.com') && strpos($_SERVER['REQUEST_URI'], '/wp-cron.php') !== 0) {
-       // wp.painter1.com opened directly: a duplicate of the site, so send visitors and search engines to www.
-       // Loop check: requests from Vercel always carry X-Forwarded-Host www/staging.painter1.com, so they
-       // never get here; a request that did would loop www → Vercel → here → www.
+     } elseif (isset($_SERVER['HTTP_X_P1_HOST']) || isset($_SERVER['HTTP_X_VERCEL_ID'])) {
+       // From Vercel but without the right key (P1_PROXY_KEY missing or different from this file's): a 301 to
+       // www would come straight back here (www -> Vercel -> here -> www), so stop with a 403 instead
+       http_response_code(403);
        header('Cache-Control: no-store');
-       header('Location: https://www.painter1.com' . $_SERVER['REQUEST_URI'], true, 301);
+       exit;
+     } elseif (strpos(isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '', '/wp-cron.php') !== 0) {
+       // wp.painter1.com opened directly: a duplicate of the site, so send visitors and search engines to www
+       header('Cache-Control: no-store');
+       header('Location: https://www.painter1.com' . (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/'), true, 301);
        exit;
      }
    }
    ```
 4. Save. In FileZilla, confirm the upload when it asks.
-5. Open https://www.painter1.com in a browser. If it shows the site as usual, the file is fine. If it's blank or shows an error, undo now (step 8).
+5. Open https://www.painter1.com in a browser. If it shows the site as usual, the file is fine. If it's blank or shows an error, undo now (step 9).
 
 ## 4. The homepage redirect
 
 Our test through the new site found that the homepage (and `/wp-sitemap.xml`) sends visitors to www instead of showing the page. Other pages, like `/atlanta/`, are fine. Through the new site on launch day, that would send www visitors in a circle.
 
-The redirect comes from **inside WordPress** (the response says `X-Redirect-By: WordPress`), not from Cloudways' server settings. **Don't change nginx or `.htaccess` for this.** WordPress, or a plugin, sees the request arrive at `wp.painter1.com` while the site's address is `www.painter1.com`, and sends it to www. The block from step 3 makes those requests arrive as www (or staging), so the redirect should stop by itself. Check 3 in step 6 confirms it.
+The redirect comes from **inside WordPress** (the response says `X-Redirect-By: WordPress`), not from Cloudways' server settings. **Don't change nginx or `.htaccess` for this.** WordPress, or a plugin, sees the request arrive at `wp.painter1.com` while the site's address is `www.painter1.com`, and sends it to www. The block from step 3 makes those requests arrive as www (or staging), so the redirect should stop by itself. Check 5 in step 7 confirms it.
 
-**Only if check 3 still shows `301` and `location: https://www.painter1.com/`:**
+**Only if check 5 still shows `301` and `location: https://www.painter1.com/`:**
 1. **Tools → Redirection:** look for a redirect with source `/`, a regular expression covering the whole site (like `^/(.*)`), or one that matches on the domain ("URL and server"). Disable it. Don't delete it, so it can be switched back on.
 2. **Xagio SEO → settings:** turn off any "force www", "redirect to main/primary domain" or domain-redirect option. Keep the http → https setting as it is.
-3. Run check 3 again and send us the result, with the name of the setting you changed.
+3. Run check 5 again and send us the result, with the name of the setting you changed.
 
 ## 5. Turn Varnish off for the rehearsal
 
-**Why it must be off:** Varnish sits in front of WordPress and stores each page by the address it was reached at (the `Host`) plus the path. It doesn't look at `X-Forwarded-Host`. Every request from the new site reaches `wp.painter1.com`, whether the visitor asked for www or staging, and so does anyone who opens `wp.painter1.com` directly. Varnish keeps all three under the one key `wp.painter1.com/<path>` and hands whichever copy it stored first to everyone. Our Nov 7 test showed exactly that: the same pages answered differently a few seconds apart, and `/sitemap_index.xml` came back as a cached 404 (`x-cache: HIT`).
+**Why it must be off:** Varnish sits in front of WordPress and stores each page by the address it was reached at (the `Host`) plus the path. It doesn't look at `X-P1-Host`. Every request from the new site reaches `wp.painter1.com`, whether the visitor asked for www or staging, and so does anyone who opens `wp.painter1.com` directly. Varnish keeps all three under the one key `wp.painter1.com/<path>` and hands whichever copy it stored first to everyone. Our Nov 7 test showed exactly that: the same pages answered differently a few seconds apart, and `/sitemap_index.xml` came back as a cached 404 (`x-cache: HIT`).
 
 What that mix-up can do:
 - a staging copy (staging links, `noindex`) shown to www visitors and to Google
@@ -95,42 +114,72 @@ The wp-config.php block from step 3 can't fix this. It runs inside WordPress, af
 1. **Application Management → Application Settings → General → Varnish** → turn it **off**.
 2. If a page-cache plugin is active (Breeze, WP Rocket, W3 Total Cache…), purge it now.
 
-**Behind the new site, Varnish stays off.** For it to be safe again, its cache key would have to include `X-Forwarded-Host`, and it would have to stop caching redirects. Cloudways' panel only switches Varnish on or off and sets exclusions; the cache key is in their server config, which only Cloudways support could change. It isn't worth it: the new site serves Knoxville itself, and a page-cache plugin such as Breeze still works with Varnish off. Breeze runs inside WordPress after the step 3 block, so it sees the right address (www or staging) and keeps the copies apart.
+**Behind the new site, Varnish stays off.** For it to be safe again, its cache key would have to include `X-P1-Host`, and it would have to stop caching redirects. Cloudways' panel only switches Varnish on or off and sets exclusions; the cache key is in their server config, which only Cloudways support could change. It isn't worth it: the new site serves Knoxville itself, and a page-cache plugin such as Breeze still works with Varnish off. Breeze runs inside WordPress after the step 3 block, so it sees the right address (www or staging) and keeps the copies apart.
 
-## 6. Check it (any computer in the US: Terminal on a Mac, or Command Prompt on Windows)
+## 6. Wordfence and Really Simple Security: the visitor's IP (must check)
+
+**Why:** behind Vercel, every request reaches WordPress from a Vercel server, so PHP's own `REMOTE_ADDR` (and the `X-Forwarded-For` / `X-Real-IP` that nginx fills in) is a Vercel IP, the same few addresses for every visitor. The step 3 block puts the real visitor IP into `REMOTE_ADDR`, `X-Forwarded-For` and `X-Real-IP`, but only from wp-config.php onwards. A security plugin that reads the IP earlier, or from another source, sees Vercel. Then one bad visitor's rate limit or block hits Vercel, which means **everyone**: the whole WordPress part of www goes down for all visitors.
+
+**Wordfence (wp-admin):**
+1. **Wordfence → All Options → General Wordfence Options → "How does Wordfence get IPs"**: set it to **"Use PHP's built-in REMOTE_ADDR"** and save. Don't choose X-Forwarded-For, X-Real-IP or Cloudflare: through Cloudways' nginx those hold Vercel's IP. Note what it was set to before, and tell us.
+2. **Wordfence → Firewall → All Firewall Options → "Protection Level"**: tell us whether it says **Extended Protection** or **Basic WordPress Protection**.
+   - **Basic:** the firewall runs inside WordPress, after wp-config.php, so with step 1 it sees the real visitor IP. Nothing more to do.
+   - **Extended:** the firewall (`wordfence-waf.php`) runs **before** wp-config.php, so it still sees Vercel's IP. Its blocking and rate limiting would then hit every visitor at once. **Don't launch like this.** Either switch it to **Basic** for now (Wordfence's own button on that screen), or we give you a small file that sets the real IP before the firewall runs. We'll decide together from your answer and the probe result.
+3. **Never allowlist Vercel's or Amazon's IP ranges** in Wordfence (Firewall → Allowlisted IP addresses). Every visitor arrives through them, attackers included, so that would switch the firewall off for everyone.
+4. **After the rehearsal:** browse a few staging WordPress pages, then open **Wordfence → Tools → Live Traffic**. The entries must show your own IP (whatismyip.com shows it), not an Amazon/Vercel address. **Wordfence → Firewall → Blocking** (and the "Blocked IPs" list) must not list a Vercel/Amazon address. If one is listed, unblock it and tell us.
+
+**Really Simple Security:**
+1. It loads first (its line at the top of wp-config.php, above the step 3 block), so its firewall sees Vercel's IP. Under **Really Simple Security → Settings → Firewall**, any **automatic IP blocking** (for example blocking IPs that cause too many 404s) must be **off** at launch, or it blocks Vercel, and with it everyone. Tell us which firewall options are on.
+2. **Limit Login Attempts** (Settings → Login Protection), if on: it runs at login, after wp-config.php, so it should see the real IP. After the rehearsal, log in once through staging, then check its list of IPs: it must show your IP, not a Vercel/Amazon one.
+3. **The country block** sees Vercel's IP too, which is always in the US, so it can't block anyone through the new site. It is switched off on launch day anyway (`docs/go-live-plan.md` step 14); blocking then happens on Vercel.
+
+## 7. Check it (any computer in the US: Terminal on a Mac)
+
+Set the key once in the window, then run the checks. On Windows Command Prompt use `set KEY=the-key` and write `%KEY%` wherever `$KEY` appears.
 
 ```sh
+KEY='the P1_PROXY_KEY value'   # the same value as in wp-config.php
+
 # 1. Opened directly: must send you to www (301, Location: https://www.painter1.com/atlanta/)
 curl -sI https://wp.painter1.com/atlanta/
 
-# 2. As Vercel asks for www: the page itself (200), no Location line
-curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/atlanta/
+# 2. Looks like Vercel but has no key: 403 (not a 301, which would send www visitors in a circle)
+curl -sI -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/atlanta/
 
-# 3. The homepage, as Vercel asks for www: 200, no Location line (this was a 301 to www before step 4)
-curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/
+# 3. A wrong key: 403
+curl -sI -H "X-P1-Proxy-Key: wrong" -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/atlanta/
 
-# 4. As staging: 200, and a line "X-Robots-Tag: noindex, nofollow"
-curl -sI -H "X-Forwarded-Host: staging.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/
+# 4. As Vercel asks for www: the page itself (200), no Location line
+curl -sI -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/atlanta/
 
-# 5. The sitemap, as Vercel asks for www: 200 and an XML content type (it was a 404 through staging)
-curl -sI -H "X-Forwarded-Host: www.painter1.com" -H "X-Forwarded-Proto: https" https://wp.painter1.com/sitemap_index.xml
+# 5. The homepage, as Vercel asks for www: 200, no Location line (this was a 301 to www before step 4)
+curl -sI -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/
 
-# 6. The www page must not contain staging links: prints 0
-curl -s -H "X-Forwarded-Host: www.painter1.com" https://wp.painter1.com/atlanta/ | grep -c staging.painter1.com
+# 6. As staging: 200, and a line "X-Robots-Tag: noindex, nofollow"
+curl -sI -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: staging.painter1.com" https://wp.painter1.com/
+
+# 7. The sitemap, as Vercel asks for www: 200 and an XML content type (it was a 404 through staging)
+curl -sI -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/sitemap_index.xml
+
+# 8. The www page must not contain staging links: prints 0
+curl -s -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/atlanta/ | grep -c staging.painter1.com
+
+# 9. Through the new site itself: 200 and "X-Robots-Tag: noindex, nofollow"
+curl -sI https://staging.painter1.com/atlanta/
 ```
 
-Send us the output of all six. We then run the full test on staging from our side.
+Send us the output of all nine, **with the key removed** (it isn't in the output; just don't copy the `KEY=` line). We then run the full test on staging from our side.
 
-If check 5 is still a 404, open **Settings → Permalinks** in WordPress admin and click **Save Changes** without changing anything. That rebuilds the sitemap's address rules. Run check 5 again. If it's still a 404, check that Xagio SEO's sitemap is switched on, and tell us the sitemap address it shows. The live robots.txt points search engines to `sitemap_index.xml`.
+If check 7 is still a 404, open **Settings → Permalinks** in WordPress admin and click **Save Changes** without changing anything. That rebuilds the sitemap's address rules. Run check 7 again. If it's still a 404, check that Xagio SEO's sitemap is switched on, and tell us the sitemap address it shows. The live robots.txt points search engines to `sitemap_index.xml`.
 
-## 7. After the rehearsal (we'll tell you when)
+## 8. After the rehearsal (we'll tell you when)
 
 1. **Purge Varnish:** Application Settings → **Purge**. If a page-cache plugin is active, purge that too.
 2. Turn **Varnish back on** until launch day. Until then www still goes straight to WordPress, which Varnish keys under `www.painter1.com`, so it doesn't mix with anything.
 3. **On launch day, turn Varnish off again before the switch** (Application Settings → General → Varnish → off, then **Purge**), and leave it off for good. See step 5 for why.
 4. **Leave the country block (Really Simple Security Pro) on.** We'll ask you to turn it off on launch day, right after the switch to the new site, so blocking happens in one place.
 
-## 8. Undo
+## 9. Undo
 
 - **wp-config.php:** upload your downloaded copy over the one on the server (FileZilla), or `cp wp-config.php.bak-before-vercel wp-config.php` (SSH).
 - **A Redirection or Xagio SEO setting** (if step 4 changed one): switch it back on in the plugin.

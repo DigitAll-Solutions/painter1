@@ -7,7 +7,18 @@ import { test } from 'node:test'
 
 import { config } from '../proxy.ts'
 import { LIVE_LOCATIONS } from './legacy-redirects.ts'
-import { OWN_PATHS, WORDPRESS_ORIGIN, WORDPRESS_PROXY_HOST_PATTERN, wordpressHeaders, wordpressRewrites } from './wordpress-proxy.ts'
+import {
+  OWN_PATHS,
+  PROXY_HOST_HEADER,
+  PROXY_KEY_HEADER,
+  WORDPRESS_ORIGIN,
+  WORDPRESS_PROXY_HOST_PATTERN,
+  isWordpressPath,
+  wordpressHeaders,
+  wordpressRequestHeaders,
+  wordpressRewrites,
+  wordpressSource,
+} from './wordpress-proxy.ts'
 
 const { pathToRegexp } = createRequire(import.meta.url)('next/dist/compiled/path-to-regexp') as {
   pathToRegexp: (path: string, keys: { name: string | number }[], options: object) => RegExp
@@ -91,4 +102,27 @@ test("proxy.ts removes the slash on every live location and the Studio (its matc
   for (const slug of LIVE_LOCATIONS) assert.ok(config.matcher.includes(`/${slug}/:path*`), slug)
   assert.ok(config.matcher.includes('/studio/:path*'))
   assert.ok(OWN_PATHS.includes('studio'))
+})
+
+test('proxy.ts runs on exactly the proxied paths and hosts (its matcher repeats wordpressSource)', () => {
+  const rule = config.matcher.find((m) => typeof m !== 'string')
+  assert.deepEqual(rule, { source: wordpressSource(), has: [{ type: 'host', value: WORDPRESS_PROXY_HOST_PATTERN }] })
+  for (const path of ['/', '/atlanta/', '/blog/x/?a=1', '/wp-admin/', '/Studio', '/knoxvillex/', '/knoxville', '/knoxville/x/', '/studio/', '/api/estimate', '/_next/x']) {
+    assert.equal(isWordpressPath(path.split('?')[0]), proxied(path, 'www.painter1.com') !== undefined, path)
+  }
+})
+
+test('WordPress gets the proxy key and the visitor host, never ones the visitor sent', () => {
+  const key = 'k'.repeat(64)
+  const incoming = new Headers({ [PROXY_KEY_HEADER]: 'forged', [PROXY_HOST_HEADER]: 'evil.com', accept: 'text/html' })
+  const sent = wordpressRequestHeaders(incoming, 'Staging.Painter1.com:443', ` ${key} `)
+  assert.equal(sent.get(PROXY_KEY_HEADER), key)
+  assert.equal(sent.get(PROXY_HOST_HEADER), 'staging.painter1.com')
+  assert.equal(sent.get('accept'), 'text/html')
+  assert.equal(incoming.get(PROXY_KEY_HEADER), 'forged')
+  for (const missing of [undefined, '', 'short']) {
+    const without = wordpressRequestHeaders(incoming, 'www.painter1.com', missing)
+    assert.equal(without.get(PROXY_KEY_HEADER), null)
+    assert.equal(without.get(PROXY_HOST_HEADER), 'www.painter1.com')
+  }
 })
