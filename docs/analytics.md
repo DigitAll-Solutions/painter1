@@ -6,8 +6,16 @@ published in GTM.
 
 Each location's pages load that location's own container (Studio → location → "GTM container ID";
 Knoxville: GTM-PVDK2ZFJ, with GA4 G-LYVZ6Q3NQW). Without one, they load the site-wide `NEXT_PUBLIC_GTM_ID`.
-They never load both (`lib/gtm.ts`). Whether the location pages should use the corp container instead is
-still an open question. The steps below work in whichever container that is.
+They never load both (`lib/gtm.ts`). Rick decided (Nov 9) that location pages load **only their own
+location container**, never the corp container GTM-5LG3XH7S. The steps below go in each location's
+container.
+
+**Open: locations without a container** (Bozeman and Marietta, Nov 9). They fall back to
+`NEXT_PUBLIC_GTM_ID`. On Production that is GTM-PVDK2ZFJ, so their pages on painter1.vercel.app load
+**Knoxville's** container today, and their visits and leads would count in Knoxville's GA4. On Preview
+(staging) the variable is unset, so they load no GTM. To match Rick's rule, either unset
+`NEXT_PUBLIC_GTM_ID` on Production (no deploy of code needed, a redeploy picks it up) or drop the
+fallback in `lib/gtm.ts`. Then a location without a container loads no GTM.
 
 ## Events
 

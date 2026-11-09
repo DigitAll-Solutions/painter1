@@ -4,7 +4,7 @@
  *   - 200: "Main buttons go to" (bookingTarget) → "booking", and "Booking page" (schedulingUrl) →
  *     https://schedule.painter1.com/<slug>/. The old hasScheduling switch is removed if still there.
  *   - anything else (404 until the page is up): the location isn't touched and stays on the survey.
- *   - SURVEY_ONLY locations (Raleigh, Marietta) aren't checked at all and stay on the survey.
+ *   - SURVEY_ONLY locations (Raleigh, Marietta, Salt Lake City) aren't checked at all and stay on the survey.
  * The published document and its draft (if any) are both updated. Run it again whenever more booking
  * pages go up.
  *
@@ -27,8 +27,9 @@ export const SCHEDULE_HOST = 'https://schedule.painter1.com'
 export const bookingPageUrl = (slug: string) => `${SCHEDULE_HOST}/${slug}/`
 
 // Stay on the survey even if a booking page answers 200: Raleigh isn't on Rick's booking list ("Painter1
-// w/ SSA" sheet, Nov 3), though an earlier list had it; Marietta has a new owner, no booking (Nov 7)
-const SURVEY_ONLY = new Set(['raleigh', 'marietta'])
+// w/ SSA" sheet, Nov 3), though an earlier list had it; Marietta has a new owner, no booking (Nov 7);
+// Salt Lake City (Davidson Ativos) uses the quote request form only, no scheduling (Nov 9)
+const SURVEY_ONLY = new Set(['raleigh', 'marietta', 'slc'])
 
 function env(name: string) {
   const value = process.env[name]
