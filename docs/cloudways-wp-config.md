@@ -41,7 +41,7 @@ Please don't use a plugin to edit this file. If an edit breaks the site, the plu
    defined('WP_HOME') || define('WP_HOME', 'https://www.painter1.com');
    defined('WP_SITEURL') || define('WP_SITEURL', 'https://www.painter1.com');
    ```
-3. **Paste the block below** directly **above** those two lines. If there were none, paste it just above the line `/* That's all, stop editing! Happy blogging. */`. It must be below the first line `<?php`. Then replace `PASTE_P1_PROXY_KEY_HERE` (the first one, in `$p1_proxy_key = '…';`) with the `P1_PROXY_KEY` value from Vercel, exactly, between the quotes. Leave the second `PASTE_P1_PROXY_KEY_HERE` as it is: it stops the block from trusting anything while the key isn't filled in. Never paste the key in email or chat.
+3. **Paste the block below** directly **above** those two lines. If there were none, paste it just above the line `/* That's all, stop editing! Happy blogging. */`. It must be below the first line `<?php`. Then replace `PASTE_P1_PROXY_KEY_HERE` (it appears once, in `$p1_proxy_key = '…';`) with the `P1_PROXY_KEY` value from Vercel, exactly, between the quotes: 64 characters, 0-9 and a-f. Until it holds such a value, the block trusts nothing: direct visits still go to www, and requests from Vercel get a 403. Never paste the key in email or chat.
    ```php
    /* Painter1: WordPress behind Vercel (docs/cloudways-wp-config.md in the website repo). Vercel proxies
       www/staging.painter1.com to wp.painter1.com. Cloudways' nginx overwrites X-Forwarded-Host, X-Forwarded-For
@@ -51,7 +51,8 @@ Please don't use a plugin to edit this file. If an edit breaks the site, the plu
    $p1_host = isset($_SERVER['HTTP_HOST']) ? strtolower(preg_replace('/:\d+$/', '', (string) $_SERVER['HTTP_HOST'])) : '';
    if ($p1_host === 'wp.painter1.com') {
      $p1_given = isset($_SERVER['HTTP_X_P1_PROXY_KEY']) ? (string) $_SERVER['HTTP_X_P1_PROXY_KEY'] : '';
-     $p1_valid = strlen($p1_proxy_key) >= 32 && $p1_proxy_key !== 'PASTE_P1_PROXY_KEY_HERE' && hash_equals($p1_proxy_key, $p1_given);
+     // Set = 64 hex characters (the placeholder isn't), so nothing is trusted until the key is pasted in
+     $p1_valid = strlen($p1_proxy_key) === 64 && ctype_xdigit($p1_proxy_key) && hash_equals($p1_proxy_key, $p1_given);
      $p1_target = isset($_SERVER['HTTP_X_P1_HOST']) ? strtolower(trim((string) $_SERVER['HTTP_X_P1_HOST'])) : '';
      if ($p1_valid && ($p1_target === 'www.painter1.com' || $p1_target === 'staging.painter1.com')) {
        // Through Vercel: answer as the host the visitor asked for, over https
