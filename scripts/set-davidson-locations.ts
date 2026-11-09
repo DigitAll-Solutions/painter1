@@ -26,7 +26,7 @@ const LOCATIONS: Record<string, Ops> = {
   'location-greater-salt-lake': {
     set: {
       phone: '(801) 212-9945',
-      // The footer's address (the page's structured data has a different one: see the PR)
+      // The footer's address (Rick, Nov 9). Never the Manor View Court address in the old page's structured data.
       address: { street: '2601 S Constitution Blvd, Suite 100', city: 'West Valley City', state: 'UT', zip: '84119' },
     },
   },
