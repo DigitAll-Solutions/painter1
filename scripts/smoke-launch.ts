@@ -31,26 +31,42 @@ const get = (path: string) => fetch(new URL(path, base), { headers, redirect: 'm
 /** WordPress's sitemap index (Xagio SEO; the live site's Link rel="sitemap" header) */
 const WORDPRESS_SITEMAP = '/sitemap-xag.xml'
 
-/** The painter1.com hosts a page links to (absolute, protocol-relative or JSON-escaped URLs), with up to 3 example URLs each */
-function painter1Links(body: string) {
-  const hosts = new Map<string, { count: number; examples: string[] }>()
-  for (const m of body.matchAll(/(?:https?:)?(?:\\?\/){2}((?:[a-z0-9-]+\.)*painter1\.com)(?![a-z0-9.-])[^\s"'<>)\\]*/gi)) {
-    const host = m[1].toLowerCase()
-    const entry = hosts.get(host) ?? { count: 0, examples: [] }
-    entry.count++
-    if (entry.examples.length < 3 && !entry.examples.includes(m[0])) entry.examples.push(m[0])
-    hosts.set(host, entry)
-  }
-  return hosts
+let warnings = 0
+const warn = (label: string, detail = '') => {
+  warnings++
+  console.log(`WARN  ${label}${detail ? `  (${detail})` : ''}`)
 }
 
-/** Every painter1.com link is on the host being tested (staging or www), and there is at least one */
-function linksOnBaseHost(body: string, label: string) {
+/** The painter1.com links in a page (absolute, protocol-relative or JSON-escaped URLs): host and path of each */
+function painter1Links(body: string) {
+  return [...body.replace(/\\\//g, '/').matchAll(/(?:https?:)?\/\/((?:[a-z0-9-]+\.)*painter1\.com)(?![a-z0-9.-])([^\s"'<>)\\]*)/gi)].map((m) => ({
+    url: m[0],
+    host: m[1].toLowerCase(),
+    path: m[2],
+  }))
+}
+
+/** `host=count (e.g. up to 3 URLs)` per host */
+function linkSummary(links: ReturnType<typeof painter1Links>) {
+  const hosts = new Map<string, string[]>()
+  for (const { host, url } of links) hosts.set(host, [...(hosts.get(host) ?? []), url])
+  return [...hosts].map(([host, urls]) => `${host}=${urls.length} (e.g. ${[...new Set(urls)].slice(0, 3).join(' ')})`).join(', ')
+}
+
+/**
+ * Every painter1.com link is on the host being tested, and there is at least one. On staging, www links that
+ * WordPress stores as www (Xagio's sitemaps, assets under /wp-content/ such as Oxygen's CSS) are a warning:
+ * on www they are right. Any other www link, and any wp.painter1.com link, fails everywhere.
+ */
+function linksOnBaseHost(body: string, label: string, { sitemap = false } = {}) {
   const links = painter1Links(body)
-  const own = links.get(base.host)?.count ?? 0
-  const others = [...links].filter(([host]) => host !== base.host)
-  const detail = [`${base.host}=${own}`, ...others.map(([host, { count, examples }]) => `${host}=${count} (e.g. ${examples.join(' ')})`)].join(', ')
-  check(own > 0 && others.length === 0, `${label}: links on ${base.host} only`, detail)
+  const own = links.filter((l) => l.host === base.host)
+  const foreign = links.filter((l) => l.host !== base.host)
+  const tolerated = foreign.filter((l) => !production && l.host === 'www.painter1.com' && (sitemap || /^\/wp-content\//i.test(l.path)))
+  const wrong = foreign.filter((l) => !tolerated.includes(l))
+  const needsOwn = production || !sitemap
+  check((own.length > 0 || !needsOwn) && wrong.length === 0, `${label}: links on ${base.host} only`, [`${base.host}=${own.length}`, linkSummary(wrong)].filter(Boolean).join(', '))
+  if (tolerated.length) warn(`${label}: www links stored in WordPress (expected on staging only)`, linkSummary(tolerated))
 }
 
 /** Follows up to 5 redirects; the hops taken and the final response */
@@ -130,7 +146,7 @@ if (proxiesWordPress) {
   const indexXml = index.res ? await index.res.text() : ''
   const isXml = (res: Response) => /xml/.test(res.headers.get('content-type') ?? '')
   check(!!index.res && index.res.status === 200 && isXml(index.res), `${WORDPRESS_SITEMAP}: XML`, index.res ? `${index.res.status} ${index.res.headers.get('content-type')}` : 'redirect loop')
-  linksOnBaseHost(indexXml, WORDPRESS_SITEMAP)
+  linksOnBaseHost(indexXml, WORDPRESS_SITEMAP, { sitemap: true })
   const locs = [...indexXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1].replace(/&amp;/g, '&'))
   if (indexXml.includes('<sitemapindex')) {
     check(locs.length > 0, `${WORDPRESS_SITEMAP}: lists sub-sitemaps`, String(locs.length))
@@ -143,7 +159,7 @@ if (proxiesWordPress) {
       }
       const xml = await sub.res.text()
       check(sub.res.status === 200 && isXml(sub.res) && sub.url.host === base.host, `Sitemap ${pathname}: XML on ${base.host}`, [sub.res.status, sub.res.headers.get('content-type'), ...sub.hops].join(' → '))
-      linksOnBaseHost(xml, `Sitemap ${pathname}`)
+      linksOnBaseHost(xml, `Sitemap ${pathname}`, { sitemap: true })
       check(sub.res.headers.get('x-vercel-cache') !== 'HIT', `Sitemap ${pathname}: not served from Vercel's cache`, sub.res.headers.get('x-vercel-cache') ?? 'no x-vercel-cache')
     }
     if (locs.length > 12) console.log(`--    ${locs.length - 12} more sub-sitemaps not fetched`)
@@ -154,5 +170,5 @@ if (proxiesWordPress) {
   console.log(`--    ${base.host} doesn't proxy WordPress (only www, the apex and staging do): WordPress checks skipped`)
 }
 
-console.log(failures ? `\n${failures} check(s) failed` : '\nAll checks passed')
+console.log(`${failures ? `\n${failures} check(s) failed` : '\nAll checks passed'}${warnings ? `, ${warnings} warning(s)` : ''}`)
 process.exitCode = failures ? 1 : 0
