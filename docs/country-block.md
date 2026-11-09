@@ -4,11 +4,13 @@ Rick approved (Nov 7): **United States only**, as a single condition, "Country i
 
 **Status:** rules 1–3 are created now (Nov 7) with rule 3 on **Log**. Rule 3 is switched to **Deny** on launch day (`docs/go-live-plan.md`, step 13).
 
-## Pending question for Rick: US territories
+## US territories and DC (Rick, Nov 9: the 50 states only)
 
-Puerto Rico (PR), Guam (GU), the US Virgin Islands (VI), American Samoa (AS), the Northern Mariana Islands (MP) and the US Minor Outlying Islands (UM) have their own country codes, so "Country is not US" **blocks them**. Ask Rick whether he wants them in.
+Rick's answer: allow the **50 states and DC**, and keep the US territories blocked. Rule 3 already does exactly that, so nothing changes:
+- **Territories stay blocked.** Puerto Rico (PR), Guam (GU), the US Virgin Islands (VI), American Samoa (AS), the Northern Mariana Islands (MP) and the US Minor Outlying Islands (UM) have their own ISO country codes, so "Country does not equal United States" denies them.
+- **DC is allowed.** Washington, DC is a region inside the country code US, not a country of its own, so it passes like any state.
 
-To add them later, edit rule 3's country condition only:
+Don't add a territory to rule 3 unless Rick changes his answer. If he does, edit rule 3's country condition only:
 - Change it to **Country · is not any of · United States, Puerto Rico, Guam, …** (the codes he wants).
 - If the Country field has no "is not any of" operator, add one condition per territory instead, joined with **AND**: `… AND Country does not equal Puerto Rico AND Country does not equal Guam`.
 
