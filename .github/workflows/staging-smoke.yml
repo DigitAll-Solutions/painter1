@@ -1,5 +1,5 @@
 # Launch rehearsal from a US connection: WordPress refuses some countries, so staging's WordPress pages
-# can't be checked from the team's own machines. Manual only. Read-only GET requests. One optional secret, P1_DEBUG_TOKEN, for the p1-headers.php probe.
+# can't be checked from the team's own machines. Manual only. Read-only GET requests, no secrets.
 name: Staging smoke test
 
 on:
@@ -65,27 +65,25 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # One-off: what PHP on Cloudways receives, through staging (Vercel's external rewrite) and directly.
-      # Needs public_html/p1-headers.php (token-gated, not in git) and the P1_DEBUG_TOKEN secret; skipped
-      # without the secret. The probe prints header names, a few host/proto/IP values, never the token.
-      - name: What PHP receives (p1-headers.php)
-        if: always()
-        env:
-          P1_DEBUG_TOKEN: ${{ secrets.P1_DEBUG_TOKEN }}
+      - name: Raw first response for / and the WordPress sitemap (who redirects, who caches)
         run: |
           set +e
-          if [ -z "$P1_DEBUG_TOKEN" ]; then echo "P1_DEBUG_TOKEN secret not set: skipped"; exit 0; fi
-          # A unique query string, so no page cache (Varnish, Vercel) can answer for the probe
-          bust="p1=$(date +%s%N)"
-          echo '### What PHP receives (p1-headers.php)' >> "$GITHUB_STEP_SUMMARY"
-          for url in "$BASE/p1-headers.php?$bust" "https://wp.painter1.com/p1-headers.php?$bust"; do
-            curl -s --max-time 30 -D probe-headers.txt -o probe-body.txt -H "X-P1-Debug: $P1_DEBUG_TOKEN" "$url"
-            {
-              echo "#### ${url%%\?*}"
-              echo '```'
-              grep -iE '^(HTTP|location|server|cache-control|content-type|x-vercel-id|x-vercel-cache|x-cache|x-redirect-by):?' probe-headers.txt
-              echo
-              cat probe-body.txt
-              echo '```'
-            } | tee -a "$GITHUB_STEP_SUMMARY"
-          done
+          {
+            echo '### First response, no redirects followed'
+            echo '```'
+            for path in / /sitemap-xag.xml; do
+              echo "== $path"
+              curl -sI --max-time 30 "$BASE$path" | grep -iE '^(HTTP|location|x-redirect-by|x-robots-tag|x-cache|age|cache-control|x-vercel-cache|x-vercel-id|content-type):?'
+            done
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: WordPress plugins with an API (REST namespaces)
+        run: |
+          set +e
+          {
+            echo '### WordPress REST namespaces (shows SEO, redirect and security plugins)'
+            echo '```'
+            curl -s --max-time 30 "$BASE/wp-json/" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).namespaces.join("\n"))}catch{console.log("(not JSON)")}})'
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
