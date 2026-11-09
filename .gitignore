@@ -56,6 +56,9 @@ next-env.d.ts
 /docs/reference/Paint1 -Interior-moch-up .jpg
 # Client's location list (may hold private details); only its slugs are committed, via scripts/sync-location-slugs.ts
 /docs/reference/*.csv
+# Client spreadsheets (customer names, reviews) and data exported from them: local only
+/docs/reference/*.xlsx
+/docs/reference/ssa-locations.json
 # Client design mockups and reference photos (corporate pages, stock): local references only
 /docs/reference/corp/
 /docs/reference/Painter1-Our-Painting-Services-*.jpg
@@ -65,6 +68,9 @@ next-env.d.ts
 /docs/backups/
 # Knoxville's imported old-site copy, exported before it was removed from Sanity (M3 reference): local only
 /docs/reference/knoxville-imported-copy.json
+# WordPress files (config downloads and upload copies with DB passwords, salts and the proxy key; the p1-headers.php probe): never commit
+/docs/reference/*.php
+/docs/reference/upload/
 
 # Google Doc-ready copies for Rick (shared by hand, may contain emails)
 /docs/handoff/

@@ -138,6 +138,8 @@ export type Location = {
   bookingTarget?: 'survey' | 'booking'
   /** Ringbot web chat embed code or iID (this location's own install) */
   webchatId?: string
+  /** This location's own GTM container ID (GTM-XXXXXXX); empty: no GTM on its pages (lib/gtm.ts) */
+  gtmId?: string
   warranty?: PortableTextBlock[]
   warrantyEyebrow?: string
   warrantyHeading?: string
