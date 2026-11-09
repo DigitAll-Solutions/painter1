@@ -164,7 +164,15 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
     - a legacy URL such as `/knoxville/brick-painting/`
     - WP admin login
     - one Fluent Form on another location
-    - the Knoxville estimate form, and its Client Tether test (`docs/email-setup.md` §8)
+    - the Knoxville estimate form, and its Client Tether test (`docs/email-setup.md` §8), sent like this:
+      1. In a browser with no ad blocker, open a **service page**, not the form page:
+         `https://www.painter1.com/knoxville/interior-painting?utm_source=golive-test&utm_medium=cpc&utm_campaign=golive`.
+      2. Go to the free-estimate page through the site's own button, and submit the test request ("Client Tether Test").
+      3. In the Studio, open the test lead → Email → Body:
+         - `Ga Source: golive-test`, `Ga Medium: cpc` and `Ga Campaign: golive` are filled.
+         - The `PARSER:` line has a channel value. It is filled by Attributer, which loads from GTM-PVDK2ZFJ.
+      4. **An empty `PARSER:` line is a launch blocker.** Don't continue, and roll back if needed.
+      5. Rick or Keith confirm the lead in Client Tether shows the same source and channel.
     - `/robots.txt` (allows crawling, lists the sitemap), `/sitemap.xml` (only live locations, `www.painter1.com` URLs), and `curl -sI https://www.painter1.com/knoxville` has **no** `X-Robots-Tag`, while `curl -sI https://painter1.vercel.app/knoxville` still has `noindex, nofollow`
 11. **Cloudways' Cloudflare off** (Rick approved): once the checks in step 10 pass and DNS points to Vercel, Rick turns off Cloudways' Cloudflare add-on for **`www.painter1.com`** and **`painter1.com`** only. Vercel now serves both hostnames, so Cloudflare no longer sees their traffic. Don't change anything else in the add-on.
 12. **GTM, Knoxville's container only (GTM-PVDK2ZFJ):** once the Client Tether test lead has arrived, Rick pauses the old **"Click to Call"** and **"Schedule Page btn"** tags and publishes. They now count the same clicks as `phone_click` and `booking_click` (`docs/analytics.md`, step 5). **Never** pause them in the corp container **GTM-5LG3XH7S**, or in any other location's container: the 36 WordPress locations still use them.
