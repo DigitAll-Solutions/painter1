@@ -1,7 +1,8 @@
 /**
  * Launch smoke test (docs/launch-rehearsal.md): our Knoxville pages, legacy redirects, indexing rules and,
  * on the painter1.com hosts, the WordPress pages proxied behind Vercel (no redirect loop, no wp.painter1.com
- * links, never cached by Vercel's CDN). Read-only: GET requests only, no form is submitted.
+ * links, never cached by Vercel's CDN; /atlanta/ and the Xagio sitemaps link only to the host tested). Read-only:
+ * GET requests only, no form is submitted.
  *
  *   node scripts/smoke-launch.ts https://staging.painter1.com
  *   node scripts/smoke-launch.ts https://www.painter1.com            (launch day)
@@ -26,6 +27,31 @@ const check = (ok: boolean, label: string, detail = '') => {
 }
 
 const get = (path: string) => fetch(new URL(path, base), { headers, redirect: 'manual' })
+
+/** WordPress's sitemap index (Xagio SEO; the live site's Link rel="sitemap" header) */
+const WORDPRESS_SITEMAP = '/sitemap-xag.xml'
+
+/** The painter1.com hosts a page links to (absolute, protocol-relative or JSON-escaped URLs), with up to 3 example URLs each */
+function painter1Links(body: string) {
+  const hosts = new Map<string, { count: number; examples: string[] }>()
+  for (const m of body.matchAll(/(?:https?:)?(?:\\?\/){2}((?:[a-z0-9-]+\.)*painter1\.com)(?![a-z0-9.-])[^\s"'<>)\\]*/gi)) {
+    const host = m[1].toLowerCase()
+    const entry = hosts.get(host) ?? { count: 0, examples: [] }
+    entry.count++
+    if (entry.examples.length < 3 && !entry.examples.includes(m[0])) entry.examples.push(m[0])
+    hosts.set(host, entry)
+  }
+  return hosts
+}
+
+/** Every painter1.com link is on the host being tested (staging or www), and there is at least one */
+function linksOnBaseHost(body: string, label: string) {
+  const links = painter1Links(body)
+  const own = links.get(base.host)?.count ?? 0
+  const others = [...links].filter(([host]) => host !== base.host)
+  const detail = [`${base.host}=${own}`, ...others.map(([host, { count, examples }]) => `${host}=${count} (e.g. ${examples.join(' ')})`)].join(', ')
+  check(own > 0 && others.length === 0, `${label}: links on ${base.host} only`, detail)
+}
 
 /** Follows up to 5 redirects; the hops taken and the final response */
 async function follow(path: string) {
@@ -74,7 +100,7 @@ const knoxville = await get('/knoxville')
 const tag = knoxville.headers.get('x-robots-tag') ?? ''
 if (production) {
   check(!tag.includes('noindex'), 'production: no X-Robots-Tag noindex', tag)
-  check(/Sitemap: .*\/sitemap\.xml/.test(robots) && /Sitemap: .*\/sitemap_index\.xml/.test(robots), 'robots.txt lists our sitemap and WordPress’s')
+  check(/Sitemap: .*\/sitemap\.xml/.test(robots) && /Sitemap: .*\/sitemap-xag\.xml/.test(robots), 'robots.txt lists our sitemap and WordPress’s')
 } else {
   check(tag.includes('noindex'), `${base.host}: X-Robots-Tag noindex`, tag)
   check(/Disallow: \/\s*$/m.test(robots), `${base.host}: robots.txt disallows everything`)
@@ -85,7 +111,7 @@ check(sitemap.status === 200 && sitemapXml.includes('/knoxville<') && !sitemapXm
 
 // WordPress behind the proxy
 if (proxiesWordPress) {
-  for (const path of ['/', '/atlanta/', '/wp-login.php', '/wp-json/', '/sitemap_index.xml']) {
+  for (const path of ['/', '/atlanta/', '/wp-login.php', '/wp-json/', WORDPRESS_SITEMAP]) {
     const { res, hops, url } = await follow(path)
     if (!res) {
       check(false, `WordPress ${path}`, `redirect loop: ${hops.join(' → ')}`)
@@ -96,6 +122,33 @@ if (proxiesWordPress) {
     check(!body.includes('wp.painter1.com'), `WordPress ${path}: no wp.painter1.com links`)
     if (!production) check((res.headers.get('x-robots-tag') ?? '').includes('noindex'), `WordPress ${path}: noindex on ${base.host}`)
     check(res.headers.get('x-vercel-cache') !== 'HIT', `WordPress ${path}: not served from Vercel's cache`, res.headers.get('x-vercel-cache') ?? 'no x-vercel-cache')
+    if (path === '/atlanta/') linksOnBaseHost(body, `WordPress ${path}`)
+  }
+
+  // The sitemap index and its sub-sitemaps (their names come from the index): XML, every URL on this host
+  const index = await follow(WORDPRESS_SITEMAP)
+  const indexXml = index.res ? await index.res.text() : ''
+  const isXml = (res: Response) => /xml/.test(res.headers.get('content-type') ?? '')
+  check(!!index.res && index.res.status === 200 && isXml(index.res), `${WORDPRESS_SITEMAP}: XML`, index.res ? `${index.res.status} ${index.res.headers.get('content-type')}` : 'redirect loop')
+  linksOnBaseHost(indexXml, WORDPRESS_SITEMAP)
+  const locs = [...indexXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1].replace(/&amp;/g, '&'))
+  if (indexXml.includes('<sitemapindex')) {
+    check(locs.length > 0, `${WORDPRESS_SITEMAP}: lists sub-sitemaps`, String(locs.length))
+    for (const loc of locs.slice(0, 12)) {
+      const { pathname, search } = new URL(loc, base)
+      const sub = await follow(pathname + search)
+      if (!sub.res) {
+        check(false, `Sitemap ${pathname}`, `redirect loop: ${sub.hops.join(' → ')}`)
+        continue
+      }
+      const xml = await sub.res.text()
+      check(sub.res.status === 200 && isXml(sub.res) && sub.url.host === base.host, `Sitemap ${pathname}: XML on ${base.host}`, [sub.res.status, sub.res.headers.get('content-type'), ...sub.hops].join(' → '))
+      linksOnBaseHost(xml, `Sitemap ${pathname}`)
+      check(sub.res.headers.get('x-vercel-cache') !== 'HIT', `Sitemap ${pathname}: not served from Vercel's cache`, sub.res.headers.get('x-vercel-cache') ?? 'no x-vercel-cache')
+    }
+    if (locs.length > 12) console.log(`--    ${locs.length - 12} more sub-sitemaps not fetched`)
+  } else {
+    check(locs.length > 0, `${WORDPRESS_SITEMAP}: lists URLs`, String(locs.length))
   }
 } else {
   console.log(`--    ${base.host} doesn't proxy WordPress (only www, the apex and staging do): WordPress checks skipped`)

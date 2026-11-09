@@ -68,3 +68,7 @@ next-env.d.ts
 /docs/backups/
 # Knoxville's imported old-site copy, exported before it was removed from Sanity (M3 reference): local only
 /docs/reference/knoxville-imported-copy.json
+
+# WordPress files (config downloads and upload copies with DB passwords, salts and the proxy key): never commit
+/docs/reference/*.php
+/docs/reference/upload/

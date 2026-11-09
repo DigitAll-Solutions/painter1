@@ -15,7 +15,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   if (!isProductionHost((await headers()).get('host'))) return { rules: { userAgent: '*', disallow: '/' } }
   return {
     rules: { userAgent: '*', allow: ['/', '/_next/', '/sanity-img/'], disallow: ['/studio', ...WORDPRESS_DISALLOW] },
-    // Ours (live locations) and WordPress's (Yoast; everything still on WordPress)
-    sitemap: [absoluteUrl('/sitemap.xml'), absoluteUrl('/sitemap_index.xml')],
+    // Ours (live locations) and WordPress's (Xagio SEO's index, as in the live site's Link rel="sitemap" header)
+    sitemap: [absoluteUrl('/sitemap.xml'), absoluteUrl('/sitemap-xag.xml')],
   }
 }

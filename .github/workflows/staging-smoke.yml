@@ -71,7 +71,7 @@ jobs:
           {
             echo '### First response, no redirects followed'
             echo '```'
-            for path in / /sitemap_index.xml /wp-sitemap.xml; do
+            for path in / /sitemap-xag.xml; do
               echo "== $path"
               curl -sI --max-time 30 "$BASE$path" | grep -iE '^(HTTP|location|x-redirect-by|x-robots-tag|x-cache|age|cache-control|x-vercel-cache|x-vercel-id|content-type):?'
             done

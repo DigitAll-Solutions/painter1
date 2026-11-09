@@ -8,7 +8,7 @@ For us, Rick and his WordPress host. Written Oct 30, 2026, with the launch PR (b
   - `painter1.vercel.app`, previews and localhost don't proxy: every Sanity location still renders there, so Rick keeps previewing the ones he is filling in.
 - **Trailing slashes:** `skipTrailingSlashRedirect`, plus `proxy.ts`, which 308s `/knoxville/…/` and `/studio/…/` to the path without the slash. WordPress URLs keep theirs. Old Knoxville URLs with a slash now reach their new page in one hop.
 - **`/` → `/knoxville` is gone on painter1.com:** the homepage there is WordPress. It stays on `painter1.vercel.app`, which has no homepage of its own.
-- **robots.txt (production only):** our sitemap and WordPress's Yoast sitemap (`/sitemap_index.xml`), and WordPress's own disallow rules (`/*?*`, `/?*`, `*/page/*`). Ours stays `/sitemap.xml` because WordPress uses `/sitemap_index.xml`. Every other host still gets `Disallow: /`.
+- **robots.txt (production only):** our sitemap and WordPress's Xagio SEO sitemap index (`/sitemap-xag.xml`, from the live site's `Link: rel="sitemap"` header), and WordPress's own disallow rules (`/*?*`, `/?*`, `*/page/*`). Ours stays `/sitemap.xml` because WordPress uses `/sitemap-xag.xml`. Every other host still gets `Disallow: /`.
 - **GTM per location:** Studio → location → Leads & consent → "GTM container ID" (optional, only `GTM-XXXXXXX`). That location's pages load it instead of `NEXT_PUBLIC_GTM_ID`, never both, still on `lazyOnload`. WordPress pages keep whatever they load today.
 
 ## 1. The host: wp-config.php (replaces the 4 lines in the go-live plan)
@@ -96,7 +96,7 @@ First: `node scripts/smoke-launch.ts https://staging.painter1.com` (read-only; a
 | 8 | Legacy redirects: `/knoxville/brick-painting/`, `/knoxville/cabinet-refinishing`, `/knoxville/maryville/`, `/knoxville/contact/` | 308 to `/knoxville/exterior-painting#brick`, `/knoxville/cabinet-painting`, `/knoxville`, `/knoxville/free-estimate` |
 | 9 | `/knoxville/free-estimate`: submit one estimate | thank-you; the email arrives **only** at `LEAD_TEST_RECIPIENT`; lead in Studio marked test |
 | 10 | `/robots.txt` | `Disallow: /` (staging); production content is checked on launch day |
-| 11 | `/sitemap.xml` | Knoxville URLs only; `/sitemap_index.xml` is WordPress's |
+| 11 | `/sitemap.xml` | Knoxville URLs only; `/sitemap-xag.xml` is WordPress's (Xagio); its sub-sitemaps link to the host tested only |
 | 12 | `curl -sI https://staging.painter1.com/atlanta/` | `x-robots-tag: noindex, nofollow`; `x-vercel-cache` not `HIT` on a second request |
 | 13 | `curl -sIL --max-redirs 5 https://staging.painter1.com/atlanta` | ends 200 on staging (no loop) |
 | 14 | Vercel → Observability → External Origins | WordPress requests, no error spike |
