@@ -113,14 +113,14 @@ test('proxy.ts runs on exactly the proxied paths and hosts (its matcher repeats 
 })
 
 test('WordPress gets the proxy key and the visitor host, never ones the visitor sent', () => {
-  const key = 'k'.repeat(64)
+  const key = 'a1'.repeat(32)
   const incoming = new Headers({ [PROXY_KEY_HEADER]: 'forged', [PROXY_HOST_HEADER]: 'evil.com', accept: 'text/html' })
   const sent = wordpressRequestHeaders(incoming, 'Staging.Painter1.com:443', ` ${key} `)
   assert.equal(sent.get(PROXY_KEY_HEADER), key)
   assert.equal(sent.get(PROXY_HOST_HEADER), 'staging.painter1.com')
   assert.equal(sent.get('accept'), 'text/html')
   assert.equal(incoming.get(PROXY_KEY_HEADER), 'forged')
-  for (const missing of [undefined, '', 'short']) {
+  for (const missing of [undefined, '', 'short', 'k'.repeat(64), 'PASTE_P1_PROXY_KEY_HERE']) {
     const without = wordpressRequestHeaders(incoming, 'www.painter1.com', missing)
     assert.equal(without.get(PROXY_KEY_HEADER), null)
     assert.equal(without.get(PROXY_HOST_HEADER), 'www.painter1.com')

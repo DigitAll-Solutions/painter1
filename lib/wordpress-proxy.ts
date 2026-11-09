@@ -42,12 +42,12 @@ export function isWordpressPath(pathname: string, slugs: readonly string[] = LIV
  */
 export const PROXY_KEY_HEADER = 'x-p1-proxy-key'
 export const PROXY_HOST_HEADER = 'x-p1-host'
-/** Shortest P1_PROXY_KEY accepted (wp-config.php checks the same) */
-export const PROXY_KEY_MIN_LENGTH = 32
+/** The P1_PROXY_KEY format: 64 hex characters (`openssl rand -hex 32`); wp-config.php checks the same */
+export const PROXY_KEY_FORMAT = /^[0-9a-f]{64}$/i
 
 /**
  * The request headers WordPress gets: the visitor's own, minus any X-P1-* they sent, plus the key (from the
- * P1_PROXY_KEY env var; none when it is unset or too short, and WordPress then sends the request to www)
+ * P1_PROXY_KEY env var; none when it is unset or not 64 hex characters, and WordPress then answers 403)
  * and the host the visitor asked for.
  */
 export function wordpressRequestHeaders(incoming: Headers, host: string, key = process.env.P1_PROXY_KEY) {
@@ -55,7 +55,7 @@ export function wordpressRequestHeaders(incoming: Headers, host: string, key = p
   headers.delete(PROXY_KEY_HEADER)
   headers.delete(PROXY_HOST_HEADER)
   const proxyKey = key?.trim()
-  if (proxyKey && proxyKey.length >= PROXY_KEY_MIN_LENGTH) headers.set(PROXY_KEY_HEADER, proxyKey)
+  if (proxyKey && PROXY_KEY_FORMAT.test(proxyKey)) headers.set(PROXY_KEY_HEADER, proxyKey)
   headers.set(PROXY_HOST_HEADER, host.trim().toLowerCase().replace(/:\d+$/, ''))
   return headers
 }
