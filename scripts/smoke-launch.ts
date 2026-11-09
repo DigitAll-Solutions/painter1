@@ -46,6 +46,12 @@ function painter1Links(body: string) {
   }))
 }
 
+/**
+ * painter1.com subdomains linked to on purpose, on staging and www alike: the booking pages. The last www run
+ * (Nov 9) found no other subdomain on the pages checked; any other host but www/staging still fails.
+ */
+const ALLOWED_PAINTER1_HOSTS = ['schedule.painter1.com']
+
 /** `host=count (e.g. up to 3 URLs)` per host */
 function linkSummary(links: ReturnType<typeof painter1Links>) {
   const hosts = new Map<string, string[]>()
@@ -58,12 +64,15 @@ function linkSummary(links: ReturnType<typeof painter1Links>) {
  * staging (the wp-config block's host switch), but absolute www URLs stored in its database stay www: Xagio's
  * sitemaps, assets under /wp-content/ (Oxygen's CSS), Oxygen menu and content links. Those are warnings, as
  * they are right on www. A page fails only when www links outnumber staging links (the host switch broke);
- * any wp.painter1.com (or other painter1.com host) link fails everywhere.
+ * any wp.painter1.com (or other painter1.com host but ALLOWED_PAINTER1_HOSTS) link fails everywhere.
  */
 function linksOnBaseHost(body: string, label: string, { sitemap = false } = {}) {
-  const links = painter1Links(body)
+  const all = painter1Links(body)
+  const allowed = all.filter((l) => ALLOWED_PAINTER1_HOSTS.includes(l.host))
+  const links = all.filter((l) => !allowed.includes(l))
   const own = links.filter((l) => l.host === base.host)
   const foreign = links.filter((l) => l.host !== base.host)
+  if (allowed.length) console.log(`--    ${label}: allowed ${linkSummary(allowed)}`)
   if (production) {
     check(own.length > 0 && foreign.length === 0, `${label}: links on ${base.host} only`, [`${base.host}=${own.length}`, linkSummary(foreign)].filter(Boolean).join(', '))
     return
