@@ -9,7 +9,7 @@ For us, Rick and his WordPress host. Written Oct 30, 2026, with the launch PR (b
 - **Trailing slashes:** `skipTrailingSlashRedirect`, plus `proxy.ts`, which 308s `/knoxville/…/` and `/studio/…/` to the path without the slash. WordPress URLs keep theirs. Old Knoxville URLs with a slash now reach their new page in one hop.
 - **`/` → `/knoxville` is gone on painter1.com:** the homepage there is WordPress. It stays on `painter1.vercel.app`, which has no homepage of its own.
 - **robots.txt (production only):** our sitemap and WordPress's Yoast sitemap (`/sitemap_index.xml`), and WordPress's own disallow rules (`/*?*`, `/?*`, `*/page/*`). Ours stays `/sitemap.xml` because WordPress uses `/sitemap_index.xml`. Every other host still gets `Disallow: /`.
-- **GTM per location:** Studio → location → Leads & consent → "GTM container ID" (optional, only `GTM-XXXXXXX`). That location's pages load it instead of `NEXT_PUBLIC_GTM_ID`, never both, still on `lazyOnload`. WordPress pages keep whatever they load today.
+- **GTM per location:** Studio → location → Leads & consent → "GTM container ID" (optional, only `GTM-XXXXXXX`). That location's pages load only it; a location without one loads no GTM. `NEXT_PUBLIC_GTM_ID` (corp, GTM-5LG3XH7S) is for corp pages only. Still on `lazyOnload`. WordPress pages keep whatever they load today.
 
 ## 1. The host: wp-config.php (replaces the 4 lines in the go-live plan)
 
@@ -73,7 +73,7 @@ If Vercel also asks for a TXT record at `_vercel`, add that too, exactly as show
 **Vercel (us), project painter1:**
 1. **Settings → Domains → Add Domain** → `staging.painter1.com` → environment **Preview**, Git branch **`launch-knoxville`** → Save. Copy the CNAME value it shows and send it to Rick. When the record resolves, the domain shows "Valid Configuration" and Vercel issues the certificate.
 2. **Settings → Deployment Protection → Deployment Protection Exceptions** → add `staging.painter1.com`. Standard Protection covers every non-production domain, so without this the staging site asks for a Vercel login. That would stop Rick and his host, and WordPress's own requests.
-3. **Settings → Environment Variables, Preview:** `LEAD_TEST_RECIPIENT` set (leads go only to that address), `LEAD_SEND_LIVE` not `true`. `NEXT_PUBLIC_GTM_ID` as wanted. If `TURNSTILE_SITE_KEY` is set for Preview, the Turnstile widget's hostnames in Cloudflare must cover `staging.painter1.com`. Redeploy the branch after any change.
+3. **Settings → Environment Variables, Preview:** `LEAD_TEST_RECIPIENT` set (leads go only to that address), `LEAD_SEND_LIVE` not `true`. `NEXT_PUBLIC_GTM_ID` = `GTM-5LG3XH7S` (corp). If `TURNSTILE_SITE_KEY` is set for Preview, the Turnstile widget's hostnames in Cloudflare must cover `staging.painter1.com`. Redeploy the branch after any change.
 4. Each push to `launch-knoxville` updates staging. Remove the domain after launch.
 
 **Never indexed (confirmed):** `staging.painter1.com` isn't a production host (`lib/indexing.ts`, tested in `indexing.test.ts`). So our pages send `X-Robots-Tag: noindex, nofollow` and robots.txt is `Disallow: /`. Proxied WordPress pages get the same header from Vercel and from wp-config. The `X-Robots-Tag` on proxied pages and the CDN cache bypass come from Vercel's routing. `next start` doesn't apply them to external rewrites, so they're checked on staging (below).

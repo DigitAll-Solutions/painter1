@@ -647,7 +647,7 @@ export const location = defineType({
       type: 'string',
       group: 'leads',
       description:
-        'Optional. This location’s own Google Tag Manager container, e.g. GTM-PVDK2ZFJ: only the ID, never the script. Its pages then load this container instead of the site-wide one (never both). Empty: the site-wide container. It loads once the page has finished loading.',
+        'Optional. This location’s own Google Tag Manager container, e.g. GTM-PVDK2ZFJ: only the ID, never the script. Its pages load only this container. Empty: its pages load no GTM at all (no tracking). It loads once the page has finished loading.',
       validation: (rule) => rule.custom((value?: string) => (!value?.trim() || gtmId(value) ? true : 'Only the container ID: GTM- followed by capital letters and digits, e.g. GTM-PVDK2ZFJ. No script or URL.')),
     }),
 
