@@ -39,7 +39,7 @@ Please don't use a plugin to edit this file. If an edit breaks the site, the plu
    defined('WP_HOME') || define('WP_HOME', 'https://www.painter1.com');
    defined('WP_SITEURL') || define('WP_SITEURL', 'https://www.painter1.com');
    ```
-3. **Paste the block below** directly **above** those two lines. If there were none, paste it just above the line `/* That's all, stop editing! Happy publishing. */`. It must be below the first line `<?php`.
+3. **Paste the block below** directly **above** those two lines. If there were none, paste it just above the line `/* That's all, stop editing! Happy blogging. */`. It must be below the first line `<?php`.
    ```php
    /* Painter1: WordPress behind Vercel. Vercel proxies www/staging.painter1.com to wp.painter1.com and sends
       the visitor's host in X-Forwarded-Host. */
