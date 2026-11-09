@@ -1,5 +1,5 @@
 # Launch rehearsal from a US connection: WordPress refuses some countries, so staging's WordPress pages
-# can't be checked from the team's own machines. Manual only. Read-only GET requests, no secrets.
+# can't be checked from the team's own machines. Manual only. Read-only GET requests. One optional secret, P1_DEBUG_TOKEN, for the p1-headers.php probe.
 name: Staging smoke test
 
 on:
@@ -64,3 +64,28 @@ jobs:
             echo "links: staging.painter1.com=$staging wp.painter1.com=$wp www.painter1.com=$www"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # One-off: what PHP on Cloudways receives, through staging (Vercel's external rewrite) and directly.
+      # Needs public_html/p1-headers.php (token-gated, not in git) and the P1_DEBUG_TOKEN secret; skipped
+      # without the secret. The probe prints header names, a few host/proto/IP values, never the token.
+      - name: What PHP receives (p1-headers.php)
+        if: always()
+        env:
+          P1_DEBUG_TOKEN: ${{ secrets.P1_DEBUG_TOKEN }}
+        run: |
+          set +e
+          if [ -z "$P1_DEBUG_TOKEN" ]; then echo "P1_DEBUG_TOKEN secret not set: skipped"; exit 0; fi
+          # A unique query string, so no page cache (Varnish, Vercel) can answer for the probe
+          bust="p1=$(date +%s%N)"
+          echo '### What PHP receives (p1-headers.php)' >> "$GITHUB_STEP_SUMMARY"
+          for url in "$BASE/p1-headers.php?$bust" "https://wp.painter1.com/p1-headers.php?$bust"; do
+            curl -s --max-time 30 -D probe-headers.txt -o probe-body.txt -H "X-P1-Debug: $P1_DEBUG_TOKEN" "$url"
+            {
+              echo "#### ${url%%\?*}"
+              echo '```'
+              grep -iE '^(HTTP|location|server|cache-control|content-type|x-vercel-id|x-vercel-cache|x-cache|x-redirect-by):?' probe-headers.txt
+              echo
+              cat probe-body.txt
+              echo '```'
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+          done
