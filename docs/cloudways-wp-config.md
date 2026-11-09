@@ -6,6 +6,8 @@
 
 It takes about 20 minutes. Visitors see no change until DNS is switched on launch day.
 
+**Status (Nov 9, 2026):** the step 3 block is live on Cloudways, `P1_PROXY_KEY` is set in Vercel Production and Preview, and Varnish is off. NitroPack is still on: purge it on launch day, right after the switch. The `p1-headers.php` probe has been deleted from the server. Still open: step 6 (Rick).
+
 Do the steps in order. A typo in wp-config.php takes the whole site down until it's fixed, so make the backup in step 2 first, and keep the file window open until step 7 passes.
 
 ## 1. Logins and domains (Cloudways)
@@ -103,7 +105,7 @@ The redirect comes from **inside WordPress** (the response says `X-Redirect-By: 
 
 ## 5. Turn Varnish off for the rehearsal
 
-**Why it must be off:** Varnish sits in front of WordPress and stores each page by the address it was reached at (the `Host`) plus the path. It doesn't look at `X-P1-Host`. Every request from the new site reaches `wp.painter1.com`, whether the visitor asked for www or staging, and so does anyone who opens `wp.painter1.com` directly. Varnish keeps all three under the one key `wp.painter1.com/<path>` and hands whichever copy it stored first to everyone. Our Nov 7 test showed exactly that: the same pages answered differently a few seconds apart, and `/sitemap_index.xml` came back as a cached 404 (`x-cache: HIT`).
+**Why it must be off:** Varnish sits in front of WordPress and stores each page by the address it was reached at (the `Host`) plus the path. It doesn't look at `X-P1-Host`. Every request from the new site reaches `wp.painter1.com`, whether the visitor asked for www or staging, and so does anyone who opens `wp.painter1.com` directly. Varnish keeps all three under the one key `wp.painter1.com/<path>` and hands whichever copy it stored first to everyone. Our Nov 7 test showed exactly that: the same pages answered differently a few seconds apart, and `/sitemap_index.xml` (an address the site doesn't use; its sitemap is Xagio's `/sitemap-xag.xml`) came back as a cached 404 (`x-cache: HIT`).
 
 What that mix-up can do:
 - a staging copy (staging links, `noindex`) shown to www visitors and to Google
@@ -113,7 +115,9 @@ What that mix-up can do:
 The wp-config.php block from step 3 can't fix this. It runs inside WordPress, after Varnish has already answered.
 
 1. **Application Management → Application Settings → General → Varnish** → turn it **off**.
-2. If a page-cache plugin is active (Breeze, WP Rocket, W3 Total Cache…), purge it now.
+2. If a page-cache plugin is active (NitroPack, Breeze, WP Rocket, W3 Total Cache…), purge it now.
+
+Done Nov 9: Varnish is off. NitroPack stays on and is purged on launch day, right after the switch (it runs inside WordPress, after the step 3 block, so it keeps www and staging apart).
 
 **Behind the new site, Varnish stays off.** For it to be safe again, its cache key would have to include `X-P1-Host`, and it would have to stop caching redirects. Cloudways' panel only switches Varnish on or off and sets exclusions; the cache key is in their server config, which only Cloudways support could change. It isn't worth it: the new site serves Knoxville itself, and a page-cache plugin such as Breeze still works with Varnish off. Breeze runs inside WordPress after the step 3 block, so it sees the right address (www or staging) and keeps the copies apart.
 
@@ -123,16 +127,14 @@ The wp-config.php block from step 3 can't fix this. It runs inside WordPress, af
 
 **Wordfence (wp-admin):**
 1. **Wordfence → All Options → General Wordfence Options → "How does Wordfence get IPs"**: set it to **"Use PHP's built-in REMOTE_ADDR"** and save. Don't choose X-Forwarded-For, X-Real-IP or Cloudflare: through Cloudways' nginx those hold Vercel's IP. Note what it was set to before, and tell us.
-2. **Wordfence → Firewall → All Firewall Options → "Protection Level"**: tell us whether it says **Extended Protection** or **Basic WordPress Protection**.
-   - **Basic:** the firewall runs inside WordPress, after wp-config.php, so with step 1 it sees the real visitor IP. Nothing more to do.
-   - **Extended:** the firewall (`wordfence-waf.php`) runs **before** wp-config.php, so it still sees Vercel's IP. Its blocking and rate limiting would then hit every visitor at once. **Don't launch like this.** Either switch it to **Basic** for now (Wordfence's own button on that screen), or we give you a small file that sets the real IP before the firewall runs. We'll decide together from your answer and the probe result.
+2. **The firewall doesn't load before wp-config.php** (checked Nov 9: the server's `auto_prepend_file` is Really Simple Security's `advanced-headers.php`, not `wordfence-waf.php`). So Wordfence's firewall runs inside WordPress and, with step 1, sees the real visitor IP. Nothing more to do there. If Wordfence ever offers to "optimize" the firewall (Extended Protection), say no: it would then run before wp-config.php and see Vercel's IP.
 3. **Never allowlist Vercel's or Amazon's IP ranges** in Wordfence (Firewall → Allowlisted IP addresses). Every visitor arrives through them, attackers included, so that would switch the firewall off for everyone.
 4. **After the rehearsal:** browse a few staging WordPress pages, then open **Wordfence → Tools → Live Traffic**. The entries must show your own IP (whatismyip.com shows it), not an Amazon/Vercel address. **Wordfence → Firewall → Blocking** (and the "Blocked IPs" list) must not list a Vercel/Amazon address. If one is listed, unblock it and tell us.
 
 **Really Simple Security:**
-1. It loads first (its line at the top of wp-config.php, above the step 3 block), so its firewall sees Vercel's IP. Under **Really Simple Security → Settings → Firewall**, any **automatic IP blocking** (for example blocking IPs that cause too many 404s) must be **off** at launch, or it blocks Vercel, and with it everyone. Tell us which firewall options are on.
+1. It loads first (`advanced-headers.php`, PHP's `auto_prepend_file`, before wp-config.php), so its firewall sees Vercel's IP. Under **Really Simple Security → Settings → Firewall**, turn **automatic IP blocking** (for example blocking IPs that cause too many 404s) **off**, or it blocks Vercel, and with it everyone. Tell us which firewall options are still on.
 2. **Limit Login Attempts** (Settings → Login Protection), if on: it runs at login, after wp-config.php, so it should see the real IP. After the rehearsal, log in once through staging, then check its list of IPs: it must show your IP, not a Vercel/Amazon one.
-3. **The country block** sees Vercel's IP too, which is always in the US, so it can't block anyone through the new site. It is switched off on launch day anyway (`docs/go-live-plan.md` step 14); blocking then happens on Vercel.
+3. **The country block** still sees the real visitor through the new site (Nov 9: a request from India through staging got its "unavailable in your region" 403). It is switched off on launch day (`docs/go-live-plan.md` step 14); blocking then happens on Vercel.
 
 ## 7. Check it (any computer in the US: Terminal on a Mac)
 
@@ -159,8 +161,8 @@ curl -sI -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: www.painter1.com" https://wp.p
 # 6. As staging: 200, and a line "X-Robots-Tag: noindex, nofollow"
 curl -sI -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: staging.painter1.com" https://wp.painter1.com/
 
-# 7. The sitemap, as Vercel asks for www: 200 and an XML content type (it was a 404 through staging)
-curl -sI -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/sitemap_index.xml
+# 7. The sitemap (Xagio SEO), as Vercel asks for www: 200 and an XML content type
+curl -sI -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/sitemap-xag.xml
 
 # 8. The www page must not contain staging links: prints 0
 curl -s -H "X-P1-Proxy-Key: $KEY" -H "X-P1-Host: www.painter1.com" https://wp.painter1.com/atlanta/ | grep -c staging.painter1.com
@@ -171,13 +173,13 @@ curl -sI https://staging.painter1.com/atlanta/
 
 Send us the output of all nine, **with the key removed** (it isn't in the output; just don't copy the `KEY=` line). We then run the full test on staging from our side.
 
-If check 7 is still a 404, open **Settings → Permalinks** in WordPress admin and click **Save Changes** without changing anything. That rebuilds the sitemap's address rules. Run check 7 again. If it's still a 404, check that Xagio SEO's sitemap is switched on, and tell us the sitemap address it shows. The live robots.txt points search engines to `sitemap_index.xml`.
+If check 7 is still a 404, open **Settings → Permalinks** in WordPress admin and click **Save Changes** without changing anything. That rebuilds the sitemap's address rules. Run check 7 again. If it's still a 404, check that Xagio SEO's sitemap is switched on, and tell us the sitemap address it shows. The live site announces `/sitemap-xag.xml` (its `Link: rel="sitemap"` header), and the new robots.txt lists it.
 
 ## 8. After the rehearsal (we'll tell you when)
 
-1. **Purge Varnish:** Application Settings → **Purge**. If a page-cache plugin is active, purge that too.
-2. Turn **Varnish back on** until launch day. Until then www still goes straight to WordPress, which Varnish keys under `www.painter1.com`, so it doesn't mix with anything.
-3. **On launch day, turn Varnish off again before the switch** (Application Settings → General → Varnish → off, then **Purge**), and leave it off for good. See step 5 for why.
+1. **Leave Varnish off** for good (see step 5 for why). If it was switched back on, turn it off again before the switch on launch day and **Purge**.
+2. **On launch day, right after the switch, purge NitroPack**, so no page it stored before the switch is served.
+3. Really Simple Security's automatic IP blocking stays off, and Wordfence stays on REMOTE_ADDR (step 6).
 4. **Leave the country block (Really Simple Security Pro) on.** We'll ask you to turn it off on launch day, right after the switch to the new site, so blocking happens in one place.
 
 ## 9. Undo
