@@ -147,6 +147,8 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
      - `/knoxville`, a legacy redirect and the estimate form
    - Fix anything found. Repeat until clean.
 4. **Merge the launch PR.** Harmless before the DNS switch: only the painter1.com hosts proxy WordPress.
+   - **Just before merging:** Vercel → Settings → Environment Variables → **Production**: set `NEXT_PUBLIC_GTM_ID` to **`GTM-5LG3XH7S`** (the corp container; it is `GTM-PVDK2ZFJ`, Knoxville's, today). Save without redeploying, then merge: the merge's production build is the first one built with it (`NEXT_PUBLIC_` values are fixed at build time). Don't redeploy main in between: main's code loads that variable on every location page, so it would put the corp container on them.
+   - **After the merge deploy:** `painter1.vercel.app/knoxville` loads only GTM-PVDK2ZFJ, and `/bozeman` loads no GTM (`docs/analytics.md`). Location pages never load the corp container.
 
 **Two days before**
 5. At GoDaddy, **save the current DNS records** (screenshot and export), then lower the TTL of `www` and `@` to 300 s.
@@ -164,19 +166,20 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
     - one Fluent Form on another location
     - the Knoxville estimate form, and its Client Tether test (`docs/email-setup.md` §8)
     - `/robots.txt` (allows crawling, lists the sitemap), `/sitemap.xml` (only live locations, `www.painter1.com` URLs), and `curl -sI https://www.painter1.com/knoxville` has **no** `X-Robots-Tag`, while `curl -sI https://painter1.vercel.app/knoxville` still has `noindex, nofollow`
-11. **GTM, Knoxville's container only (GTM-PVDK2ZFJ):** once the Client Tether test lead has arrived, Rick pauses the old **"Click to Call"** and **"Schedule Page btn"** tags and publishes. They now count the same clicks as `phone_click` and `booking_click` (`docs/analytics.md`, step 5). **Never** pause them in the corp container **GTM-5LG3XH7S**, or in any other location's container: the 36 WordPress locations still use them.
-12. Point the Sanity webhook at `https://www.painter1.com/api/revalidate`, publish a small change, and see it live.
-13. **Country block** (`docs/country-block.md`, "On launch day"): switch the country rule ("US only") from **Log** to **Deny** in Vercel → Firewall, then ask Rick to turn off Really Simple Security's country block. In that order, so there's never a moment with no block.
-14. Watch for 2 hours: Vercel → Logs and Observability (External Origins: WordPress error rates), Vercel → Firewall (the "US only" rule), and WordPress's own error log.
+11. **Cloudways' Cloudflare off** (Rick approved): once the checks in step 10 pass and DNS points to Vercel, Rick turns off Cloudways' Cloudflare add-on for **`www.painter1.com`** and **`painter1.com`** only. Vercel now serves both hostnames, so Cloudflare no longer sees their traffic. Don't change anything else in the add-on.
+12. **GTM, Knoxville's container only (GTM-PVDK2ZFJ):** once the Client Tether test lead has arrived, Rick pauses the old **"Click to Call"** and **"Schedule Page btn"** tags and publishes. They now count the same clicks as `phone_click` and `booking_click` (`docs/analytics.md`, step 5). **Never** pause them in the corp container **GTM-5LG3XH7S**, or in any other location's container: the 36 WordPress locations still use them.
+13. Point the Sanity webhook at `https://www.painter1.com/api/revalidate`, publish a small change, and see it live.
+14. **Country block** (`docs/country-block.md`, "On launch day"): switch the country rule ("US only") from **Log** to **Deny** in Vercel → Firewall, then ask Rick to turn off Really Simple Security's country block. In that order, so there's never a moment with no block.
+15. Watch for 2 hours: Vercel → Logs and Observability (External Origins: WordPress error rates), Vercel → Firewall (the "US only" rule), and WordPress's own error log.
 
 **After**
-15. Search Console:
+16. Search Console:
     - submit our sitemap
     - URL-inspect `/knoxville` and two legacy redirects
     - watch coverage for a week
     - Settings → Crawl stats: no rise in 403s after the country block
-16. Google Ads: confirm the final URLs.
-17. Two weeks stable: remove Knoxville from WordPress's sitemap, set its old pages to noindex, and raise the DNS TTL back to 1 hour.
+17. Google Ads: confirm the final URLs.
+18. Two weeks stable: remove Knoxville from WordPress's sitemap, set its old pages to noindex, and raise the DNS TTL back to 1 hour.
 
 ## Rollback plan
 
@@ -187,12 +190,14 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 - certificate errors
 
 **Steps:**
-1. At GoDaddy, set `www` and `@` back to the saved values.
-2. Tell Rick. Visitors move back within 5–30 minutes (TTL 300 s); some resolvers take longer.
-3. WordPress serves everything again, including its old Knoxville pages.
-4. Point the Sanity webhook back at `painter1.vercel.app`.
-5. If step 13 already ran, ask Rick to turn Really Simple Security's country block back on: WordPress serves visitors directly again.
-6. If step 11 already ran, ask Rick to unpause "Click to Call" and "Schedule Page btn" in GTM-PVDK2ZFJ and publish: Knoxville is on WordPress again.
+1. If step 11 already ran, Rick turns Cloudways' Cloudflare back on for `www.painter1.com` and `painter1.com` **first**, so the restored DNS records reach WordPress the way they did before.
+2. At GoDaddy, set `www` and `@` back to the saved values.
+3. Tell Rick. Visitors move back within 5–30 minutes (TTL 300 s); some resolvers take longer.
+4. WordPress serves everything again, including its old Knoxville pages.
+5. Point the Sanity webhook back at `painter1.vercel.app`.
+6. If step 14 already ran, ask Rick to turn Really Simple Security's country block back on: WordPress serves visitors directly again.
+7. If step 12 already ran, ask Rick to unpause "Click to Call" and "Schedule Page btn" in GTM-PVDK2ZFJ and publish: Knoxville is on WordPress again.
+8. **Only if the launch PR itself is reverted on main** (a DNS-only rollback doesn't need this): set Production `NEXT_PUBLIC_GTM_ID` back to **`GTM-PVDK2ZFJ`** before merging the revert, so the revert's deploy builds with it. Main's old code loads that variable on every location page, and Knoxville's pages need their own container.
 
 **Afterwards:** reproduce the problem on `staging.painter1.com`, fix it, and schedule a new launch day.
 
