@@ -54,19 +54,29 @@ function linkSummary(links: ReturnType<typeof painter1Links>) {
 }
 
 /**
- * Every painter1.com link is on the host being tested, and there is at least one. On staging, www links that
- * WordPress stores as www (Xagio's sitemaps, assets under /wp-content/ such as Oxygen's CSS) are a warning:
- * on www they are right. Any other www link, and any wp.painter1.com link, fails everywhere.
+ * On www: every painter1.com link is on www, and there is at least one. On staging, WordPress's own links use
+ * staging (the wp-config block's host switch), but absolute www URLs stored in its database stay www: Xagio's
+ * sitemaps, assets under /wp-content/ (Oxygen's CSS), Oxygen menu and content links. Those are warnings, as
+ * they are right on www. A page fails only when www links outnumber staging links (the host switch broke);
+ * any wp.painter1.com (or other painter1.com host) link fails everywhere.
  */
 function linksOnBaseHost(body: string, label: string, { sitemap = false } = {}) {
   const links = painter1Links(body)
   const own = links.filter((l) => l.host === base.host)
   const foreign = links.filter((l) => l.host !== base.host)
-  const tolerated = foreign.filter((l) => !production && l.host === 'www.painter1.com' && (sitemap || /^\/wp-content\//i.test(l.path)))
-  const wrong = foreign.filter((l) => !tolerated.includes(l))
-  const needsOwn = production || !sitemap
-  check((own.length > 0 || !needsOwn) && wrong.length === 0, `${label}: links on ${base.host} only`, [`${base.host}=${own.length}`, linkSummary(wrong)].filter(Boolean).join(', '))
-  if (tolerated.length) warn(`${label}: www links stored in WordPress (expected on staging only)`, linkSummary(tolerated))
+  if (production) {
+    check(own.length > 0 && foreign.length === 0, `${label}: links on ${base.host} only`, [`${base.host}=${own.length}`, linkSummary(foreign)].filter(Boolean).join(', '))
+    return
+  }
+  const www = foreign.filter((l) => l.host === 'www.painter1.com')
+  const others = foreign.filter((l) => l.host !== 'www.painter1.com')
+  const switched = sitemap || (own.length > 0 && www.length <= own.length)
+  check(switched && others.length === 0, `${label}: ${sitemap ? '' : `links switched to ${base.host}, `}no wp.painter1.com links`, [`${base.host}=${own.length}`, linkSummary(others), !switched && www.length ? `more www than ${base.host}: ${linkSummary(www)}` : ''].filter(Boolean).join(', '))
+  if (!switched) return
+  const assets = sitemap ? www : www.filter((l) => /^\/wp-content\//i.test(l.path))
+  const pages = www.filter((l) => !assets.includes(l))
+  if (assets.length) warn(`${label}: www ${sitemap ? 'URLs' : 'asset URLs'} stored in WordPress, staging only`, linkSummary(assets))
+  if (pages.length) warn(`${label}: stored absolute links, staging only`, `${linkSummary(pages)}; paths: ${[...new Set(pages.map((l) => l.path || '/'))].join(' ')}`)
 }
 
 /** Follows up to 5 redirects; the hops taken and the final response */
