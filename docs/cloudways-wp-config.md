@@ -6,7 +6,7 @@
 
 It takes about 20 minutes. Visitors see no change until DNS is switched on launch day.
 
-**Status (Nov 9, 2026):** the step 3 block is live on Cloudways, `P1_PROXY_KEY` is set in Vercel Production and Preview, and Varnish is off. NitroPack is still on: purge it on launch day, right after the switch. The `p1-headers.php` probe has been deleted from the server. Still open: step 6 (Rick).
+**Status (Nov 9, 2026):** the step 3 block is live on Cloudways, `P1_PROXY_KEY` is set in Vercel Production and Preview, and Varnish is off. NitroPack is still on: purge it on launch day, right after the switch. The `p1-headers.php` probe has been deleted from the server. Step 6 done Nov 10 (Rick): nothing auto-blocks IPs.
 
 Do the steps in order. A typo in wp-config.php takes the whole site down until it's fixed, so make the backup in step 2 first, and keep the file window open until step 7 passes.
 
@@ -121,20 +121,17 @@ Done Nov 9: Varnish is off. NitroPack stays on and is purged on launch day, righ
 
 **Behind the new site, Varnish stays off.** For it to be safe again, its cache key would have to include `X-P1-Host`, and it would have to stop caching redirects. Cloudways' panel only switches Varnish on or off and sets exclusions; the cache key is in their server config, which only Cloudways support could change. It isn't worth it: the new site serves Knoxville itself, and a page-cache plugin such as Breeze still works with Varnish off. Breeze runs inside WordPress after the step 3 block, so it sees the right address (www or staging) and keeps the copies apart.
 
-## 6. Wordfence and Really Simple Security: the visitor's IP (must check)
+## 6. Really Simple Security: the visitor's IP (done Nov 10, 2026)
 
 **Why:** behind Vercel, every request reaches WordPress from a Vercel server, so PHP's own `REMOTE_ADDR` (and the `X-Forwarded-For` / `X-Real-IP` that nginx fills in) is a Vercel IP, the same few addresses for every visitor. The step 3 block puts the real visitor IP into `REMOTE_ADDR`, `X-Forwarded-For` and `X-Real-IP`, but only from wp-config.php onwards. A security plugin that reads the IP earlier, or from another source, sees Vercel. Then one bad visitor's rate limit or block hits Vercel, which means **everyone**: the whole WordPress part of www goes down for all visitors.
 
-**Wordfence (wp-admin):**
-1. **Wordfence → All Options → General Wordfence Options → "How does Wordfence get IPs"**: set it to **"Use PHP's built-in REMOTE_ADDR"** and save. Don't choose X-Forwarded-For, X-Real-IP or Cloudflare: through Cloudways' nginx those hold Vercel's IP. Note what it was set to before, and tell us.
-2. **The firewall doesn't load before wp-config.php** (checked Nov 9: the server's `auto_prepend_file` is Really Simple Security's `advanced-headers.php`, not `wordfence-waf.php`). So Wordfence's firewall runs inside WordPress and, with step 1, sees the real visitor IP. Nothing more to do there. If Wordfence ever offers to "optimize" the firewall (Extended Protection), say no: it would then run before wp-config.php and see Vercel's IP.
-3. **Never allowlist Vercel's or Amazon's IP ranges** in Wordfence (Firewall → Allowlisted IP addresses). Every visitor arrives through them, attackers included, so that would switch the firewall off for everyone.
-4. **After the rehearsal:** browse a few staging WordPress pages, then open **Wordfence → Tools → Live Traffic**. The entries must show your own IP (whatismyip.com shows it), not an Amazon/Vercel address. **Wordfence → Firewall → Blocking** (and the "Blocked IPs" list) must not list a Vercel/Amazon address. If one is listed, unblock it and tell us.
+**Wordfence isn't installed** (Rick, Nov 10). The `wordfence-waf.php` in `public_html` is a leftover file that nothing loads; the server's `auto_prepend_file` is Really Simple Security's `advanced-headers.php`.
 
-**Really Simple Security:**
-1. It loads first (`advanced-headers.php`, PHP's `auto_prepend_file`, before wp-config.php), so its firewall sees Vercel's IP. Under **Really Simple Security → Settings → Firewall**, turn **automatic IP blocking** (for example blocking IPs that cause too many 404s) **off**, or it blocks Vercel, and with it everyone. Tell us which firewall options are still on.
-2. **Limit Login Attempts** (Settings → Login Protection), if on: it runs at login, after wp-config.php, so it should see the real IP. After the rehearsal, log in once through staging, then check its list of IPs: it must show your IP, not a Vercel/Amazon one.
-3. **The country block** still sees the real visitor through the new site (Nov 9: a request from India through staging got its "unavailable in your region" 403). It is switched off on launch day (`docs/go-live-plan.md` step 14); blocking then happens on Vercel.
+**Really Simple Security** (done Nov 10, Rick):
+1. It loads first (`advanced-headers.php`, before wp-config.php), so its firewall would see Vercel's IP. **The firewall is off**, so nothing blocks IPs automatically.
+2. **Limit Login Attempts is off** too. Login limiting moves to Vercel after launch (`docs/go-live-plan.md`, "After": a rate limit on `/wp-login.php` and `/xmlrpc.php`).
+3. If either is ever switched back on, it must not block a Vercel/Amazon IP, and Vercel's or Amazon's IP ranges must never be allowlisted: every visitor, attackers included, arrives through them.
+4. **The country block** still sees the real visitor through the new site (Nov 9: a request from India through staging got its "unavailable in your region" 403). It is switched off on launch day (`docs/go-live-plan.md` step 14); blocking then happens on Vercel.
 
 ## 7. Check it (any computer in the US: Terminal on a Mac)
 
@@ -179,7 +176,7 @@ If check 7 is still a 404, open **Settings → Permalinks** in WordPress admin a
 
 1. **Leave Varnish off** for good (see step 5 for why). If it was switched back on, turn it off again before the switch on launch day and **Purge**.
 2. **On launch day, right after the switch, purge NitroPack**, so no page it stored before the switch is served.
-3. Really Simple Security's automatic IP blocking stays off, and Wordfence stays on REMOTE_ADDR (step 6).
+3. Really Simple Security's firewall and Limit Login Attempts stay off (step 6).
 4. **Leave the country block (Really Simple Security Pro) on.** We'll ask you to turn it off on launch day, right after the switch to the new site, so blocking happens in one place.
 
 ## 9. Undo

@@ -28,11 +28,9 @@ For us, Rick and his WordPress host. Written Oct 30, 2026, with the launch PR (b
 
 **For reviewers on staging:** some header and menu links (the logo, Services, FAQ…) jump to the live site on www.painter1.com. That is expected: they are absolute links stored in WordPress, and on launch day they point to the right site. Links WordPress builds itself stay on staging.
 
-**Must check before launch: the visitor's IP in security plugins** (`docs/cloudways-wp-config.md` step 6). Wordfence's firewall doesn't load before wp-config.php (the server's `auto_prepend_file` is Really Simple Security's `advanced-headers.php`), so Wordfence only needs "How does Wordfence get IPs" = REMOTE_ADDR. Really Simple Security's firewall does run first and sees Vercel's IP for every visitor, so its automatic IP blocking must be off, or one block would hit everyone. Rick checks both.
-- [ ] Wordfence "How does Wordfence get IPs" = REMOTE_ADDR (Rick tells us the old value)
-- [ ] No Vercel/Amazon IP range allowlisted in Wordfence
-- [ ] Really Simple Security: automatic IP blocking (404 blocking etc.) turned off in its firewall (Rick)
-- [ ] After the rehearsal: Wordfence Live Traffic shows our real IP, not a Vercel/Amazon one; no Vercel/Amazon IP in Wordfence's or Really Simple Security's blocked lists
+**The visitor's IP in security plugins** (`docs/cloudways-wp-config.md` step 6). Wordfence isn't installed (its `wordfence-waf.php` is a leftover file that isn't loaded). Really Simple Security runs before wp-config.php (`auto_prepend_file` = its `advanced-headers.php`) and would see Vercel's IP for every visitor, so one block would hit everyone.
+- [x] Really Simple Security: firewall and Limit Login Attempts turned off, so nothing auto-blocks IPs (Rick, 2026-11-10)
+- [ ] After launch: Vercel Firewall rate limit on `/wp-login.php` and `/xmlrpc.php` (`docs/go-live-plan.md`, "After")
 
 **Also for the host:**
 - **Page cache:** Varnish keys on `Host` only, so it stays off behind Vercel (`docs/cloudways-wp-config.md` step 5; off since Nov 9). NitroPack stays on; purge it on launch day.
