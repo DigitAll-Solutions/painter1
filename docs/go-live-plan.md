@@ -36,7 +36,7 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. This document compare
 
 1. Serve the same WordPress install at **`wp.painter1.com`** too (a server alias), with its own valid SSL certificate (Let's Encrypt on the host).
 2. Make WordPress **not redirect `wp.painter1.com` to `www` for Vercel's requests**, and answer them as the visitor's host. Cloudways' nginx overwrites `X-Forwarded-Host`/`-For`/`X-Real-IP`, so `proxy.ts` sends its own `X-P1-Proxy-Key` (the `P1_PROXY_KEY` secret, set in Vercel Production and Preview) and `X-P1-Host` (the visitor's host); wp-config.php trusts them only with the right key. Plain visits to `wp.painter1.com` 301 to `www`, so it never becomes a duplicate site. The `wp-config.php` block is in `docs/cloudways-wp-config.md` step 3 (how it works: `docs/launch-rehearsal.md` §1). `WP_HOME` and `WP_SITEURL` stay `https://www.painter1.com`.
-3. **The visitor's IP in security plugins (must check):** the wp-config.php block sets `REMOTE_ADDR` from Vercel's `X-Vercel-Forwarded-For` (the `X-Forwarded-For` nginx passes on holds Vercel's IP). Wordfence → "How does Wordfence get IPs": **REMOTE_ADDR** (its firewall doesn't load before wp-config.php; the `auto_prepend_file` is Really Simple Security's); Really Simple Security's automatic IP blocking off (it runs before wp-config.php). Rick checks both. Otherwise every visitor looks like a Vercel IP, and one block or lockout locks everyone out. Details: `docs/cloudways-wp-config.md` step 6.
+3. **The visitor's IP in security plugins (done Nov 10):** the wp-config.php block sets `REMOTE_ADDR` from Vercel's `X-Vercel-Forwarded-For` (the `X-Forwarded-For` nginx passes on holds Vercel's IP). Wordfence isn't installed. Really Simple Security runs before wp-config.php (the `auto_prepend_file`), so its firewall and Limit Login Attempts are off (done Nov 10, Rick); login limiting moves to Vercel after launch (step 19). Otherwise every visitor looks like a Vercel IP, and one block or lockout locks everyone out. Details: `docs/cloudways-wp-config.md` step 6.
 
 **DNS at GoDaddy:**
 - **New:** `wp` A → the WordPress server's IP.
@@ -187,6 +187,8 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
     - Settings → Crawl stats: no rise in 403s after the country block
 17. Google Ads: confirm the final URLs.
 18. Two weeks stable: remove Knoxville from WordPress's sitemap, set its old pages to noindex, and raise the DNS TTL back to 1 hour.
+19. **Login rate limit (first week):** Really Simple Security's Limit Login Attempts is off, so add a Vercel → Firewall rate-limit rule on `/wp-login.php` and `/xmlrpc.php` (per visitor IP; e.g. 10 requests a minute, then deny). Check it doesn't lock Rick out of wp-admin.
+20. **Review the WP File Manager plugin** with Rick: remove it if nobody needs it (it can edit any file on the server, and has had serious security holes); otherwise keep it updated and limited to admins.
 
 ## Rollback plan
 
