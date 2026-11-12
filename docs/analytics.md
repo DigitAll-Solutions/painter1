@@ -28,7 +28,7 @@ No event carries a name, email, phone number or address.
 | --- | --- | --- |
 | `generate_lead` | The estimate request was saved. Not sent for validation errors, the spam trap (honeypot), a failed spam check or a failed save. | `service_type` (e.g. "Interior Painting"; empty for "Not sure"), `lead_id` (16-character hash of the lead's internal id; unique per lead, not personal data) |
 | `phone_click` | Any click on a call link (`tel:`), anywhere on the site, including the success screen. | `link_url` (the `tel:` link: the location's own number), `link_text` |
-| `booking_click` | Any click on a link to schedule.painter1.com ("Pick a time now", booking buttons). | `link_url`, `link_text` |
+| `booking_click` | Any click on a link to schedule.painter1.com ("Pick a time now", booking buttons). Booking is off for launch, pending Painter1 corp's decision after Jan 15: no page links there, so it doesn't fire until booking is turned on (`docs/go-live-plan.md`). Keep the tag and trigger. | `link_url`, `link_text` |
 | `estimate_cta_click` | Any click on a link to a free-estimate page (`/<location>/free-estimate`). | `link_url`, `link_text` |
 | `estimate_step_view` | Each survey step shown (unchanged). | `step` (0–6), `step_key` |
 
@@ -142,7 +142,7 @@ Rules:
 1. Preview (Tag Assistant) on the staging site.
 2. Submit a test request: check that **GA4 - generate_lead** and the Ads conversion fire **once**, with the
    service and lead_id filled in.
-3. Click a call button, a booking button and a "Free estimate" button: each fires its tag once.
+3. Click a call button and a "Free estimate" button: each fires its tag once. (No booking button while booking is off; test `booking_click` when it is turned on.)
 4. Open two or three pages: one page_view per page.
 5. Then Submit → Publish.
 

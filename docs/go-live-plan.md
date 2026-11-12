@@ -17,7 +17,8 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. This document compare
 
 ## Needed whatever the option
 
-- **Knoxville ready:** Studio launch checklist green, booking URL decision, Turnstile production keys for `www.painter1.com`, lead email go-live checklist (`docs/email-setup.md` §8).
+- **Knoxville ready:** Studio launch checklist green, booking off (below), Turnstile production keys for `www.painter1.com`, lead email go-live checklist (`docs/email-setup.md` §8).
+- **Booking is off for launch** (Rick, Nov 12, 2026), pending Painter1 corp's decision on scheduling after its Jan 15 conference (maybe a multi-calendar tool for 4 locations, the CRM's scheduler for the rest). Every location's "Get Your FREE Estimate" button goes to the survey; no page links to schedule.painter1.com; the survey's success screen shows only the call button; `/knoxville/schedule/` goes to the survey. `scripts/clear-scheduling-url.ts` clears `schedulingUrl` and sets "Main buttons go to" back to the survey (today only Knoxville). To turn booking on later: `scripts/set-booking-target.ts`; the `booking_click` event stays in place.
 - **Redirects** for Knoxville's old WordPress URLs are in code (`lib/legacy-redirects.ts`, list in `docs/studio-plan.md` §7). Google Ads final URLs updated to `/knoxville/free-estimate`.
 - **Sanity:**
   - add `https://www.painter1.com` to CORS origins with credentials, and register the Studio host

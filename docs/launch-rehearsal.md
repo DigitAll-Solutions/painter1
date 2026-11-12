@@ -73,7 +73,7 @@ First: `node scripts/smoke-launch.ts https://staging.painter1.com` (read-only; a
 | 6 | `/wp-admin/` login, edit and save a draft, upload one typical photo (2–5 MB) to the Media Library | login stays on staging; save and upload succeed; delete the photo |
 | 7 | `/knoxville`, `/knoxville/interior-painting`, `/knoxville/our-work`, `/knoxville/about-us` | new site; `/knoxville/` 308s to `/knoxville` |
 | 8 | Legacy redirects: `/knoxville/brick-painting/`, `/knoxville/cabinet-refinishing`, `/knoxville/maryville/`, `/knoxville/contact/` | 308 to `/knoxville/exterior-painting#brick`, `/knoxville/cabinet-painting`, `/knoxville`, `/knoxville/free-estimate` |
-| 9 | `/knoxville/free-estimate`: submit one estimate | thank-you; the email arrives **only** at `LEAD_TEST_RECIPIENT`; lead in Studio marked test |
+| 9 | `/knoxville/free-estimate`: submit one estimate | thank-you with only the call button (no "Pick a time now": booking is off for launch, pending Painter1 corp's decision after Jan 15; `docs/go-live-plan.md`); the email arrives **only** at `LEAD_TEST_RECIPIENT`; lead in Studio marked test. Every "Get Your FREE Estimate" button goes to the survey, `/knoxville/schedule/` too, and no page links to schedule.painter1.com |
 | 10 | `/robots.txt` | `Disallow: /` (staging); production content is checked on launch day |
 | 11 | `/sitemap.xml` | Knoxville URLs only; `/sitemap-xag.xml` is WordPress's (Xagio); its sub-sitemaps link to the host tested only |
 | 12 | `curl -sI https://staging.painter1.com/atlanta/` | `x-robots-tag: noindex, nofollow`; `x-vercel-cache` not `HIT` on a second request |
