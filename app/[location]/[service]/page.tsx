@@ -44,10 +44,9 @@ async function loadPage(params: PageProps<'/[location]/[service]'>['params']) {
 
 export async function generateMetadata({ params }: PageProps<'/[location]/[service]'>): Promise<Metadata> {
   const { location, service, path } = await loadPage(params)
-  const { city } = tokenValues(location)
   const detail = location.services?.[service.locationKey]
   // Per-location override first, then the automatic title / the service's tokenised description
-  const title = detail?.metaTitle?.trim() || `${service.title} in ${cityName(location)} | Painter1 of ${city}`
+  const title = detail?.metaTitle?.trim() || `${service.title} in ${cityName(location)} | ${location.name}`
   const metaDescription = detail?.metaDescription?.trim() || service.metaDescription
   const description = metaDescription ? fillTokens(metaDescription, location) : undefined
   const ogImage = transformationPairs(detail)[0]?.after ?? location.heroImage

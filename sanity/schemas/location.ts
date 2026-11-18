@@ -110,7 +110,7 @@ export const location = defineType({
       name: 'address',
       type: 'object',
       group: 'basics',
-      description: 'Office address (footer and search data). City and state are used in every page title, e.g. "Painters in Knoxville, TN".',
+      description: 'Office address (footer and search data). City and state are used in page titles, e.g. "Painters in Knoxville, TN", unless "Market name" is set.',
       fields: [
         defineField({name: 'street', type: 'string', description: 'E.g. "5227 N. Middlebrook Pike, Suite D".'}),
         defineField({name: 'city', type: 'string', description: 'The main city, e.g. "Knoxville".', validation: (rule) => rule.required()}),
@@ -126,6 +126,30 @@ export const location = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: 'addressDisplay',
+      title: 'Show the address as',
+      type: 'string',
+      group: 'basics',
+      description:
+        'Home-based owner whose Google Business Profile hides the address? Choose "City and state only": the street and ZIP stay here in the Studio but never appear on the site or in search data.',
+      options: {
+        list: [
+          {value: 'full', title: 'Full street address'},
+          {value: 'cityState', title: 'City and state only'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'full',
+    }),
+    defineField({
+      name: 'marketName',
+      title: 'Market name',
+      type: 'string',
+      group: 'basics',
+      description:
+        'The area customers search for, used in the homepage heading, page titles and descriptions, e.g. "Upstate SC". Leave empty to use the office city and state (e.g. "Knoxville, TN"). Office in a small town at the edge of the area? Enter the market, not the town.',
+    }),
+    defineField({
       name: 'serviceArea',
       type: 'string',
       group: 'basics',
@@ -138,7 +162,7 @@ export const location = defineType({
       type: 'array',
       group: 'basics',
       fieldset: 'area',
-      description: 'Listed on the homepage and in search data ("areaServed"). One city per item, e.g. "Farragut, TN".',
+      description: 'Listed on the homepage and in search data ("areaServed"). One city per item, written "City, ST", e.g. "Farragut, TN" or "Greenville, SC". A city without ", ST" gets the office state in search data.',
       of: [defineArrayMember({type: 'string'})],
       validation: (rule) => rule.min(1).warning('Add at least one service city.'),
     }),

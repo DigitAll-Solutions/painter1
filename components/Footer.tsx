@@ -5,6 +5,7 @@ import { ChevronUp } from 'lucide-react'
 import CtaButton from './CtaButton'
 import SocialIcons from './SocialIcons'
 import { footerLinks, formatAddress, getCta, telHref } from '@/lib/location'
+import { publicAddress } from '@/lib/nap'
 import type { Location } from '@/sanity/lib/types'
 
 const heading = 'text-sm font-extrabold uppercase tracking-[0.25em] text-ink'
@@ -13,7 +14,7 @@ export default function Footer({ location }: { location: Location }) {
   const base = `/${location.slug}`
   const cta = getCta(location)
   const tel = telHref(location.phone)
-  const address = formatAddress(location.address)
+  const address = formatAddress(publicAddress(location))
   const serviceLinks = footerLinks(location)
 
   const legalLinks = [

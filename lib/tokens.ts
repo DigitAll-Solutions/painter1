@@ -1,6 +1,6 @@
 import type { Location } from '@/sanity/lib/types'
 
-import { cityOrPlace } from './place.ts'
+import { cityOrPlace, marketName } from './place.ts'
 
 // Copy in service documents can say {city}, {state} and {owner} (owner first name).
 // Every token always resolves, so a raw "{city}" never reaches the page.
@@ -14,8 +14,10 @@ export function tokenValues(location: Location) {
 
 export function fillTokens(text: string, location: Location) {
   const values = tokenValues(location)
+  // A market name is the whole place: "in {city}, {state}" reads "in Upstate SC", not "in Upstate SC, SC"
+  const place = marketName(location) ? text.replace(/\{city\},?[ \t]*\{state\}/gi, '{city}') : text
   // No state yet: drop ", {state}" with it, so "in {city}, {state} by…" doesn't read "in Upstate SC,  by…"
-  const source = values.state ? text : text.replace(/,?[ \t]*\{state\}/gi, '')
+  const source = values.state ? place : place.replace(/,?[ \t]*\{state\}/gi, '')
   return source.replace(/\{(city|state|owner)\}/gi, (_, key: string) => values[key.toLowerCase() as keyof typeof values])
 }
 

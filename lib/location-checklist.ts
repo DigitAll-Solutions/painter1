@@ -52,6 +52,13 @@ export type LocationDoc = {
   consentBlocks?: { name?: string; body?: Block[] }[]
   metaTitle?: string
   metaDescription?: string
+  marketName?: string
+}
+
+/** "10 listed", plus how many lack ", ST" (search data adds the office state to those) */
+function serviceCitiesDetail(cities?: string[]) {
+  const missing = (cities ?? []).filter((city) => city.trim() && !city.includes(',')).length
+  return `${cities?.length ?? 0} listed${missing ? `; ${missing} without ", ST" (write "City, ST")` : ''}`
 }
 
 export const SERVICE_KEYS = ['interior', 'exterior', 'cabinet'] as const
@@ -79,12 +86,12 @@ export function locationChecklist(doc: LocationDoc, recipients: number | null, s
   const slugProblem = slugError(slug)
   const slugNote = slugWarning(slug)
   add({ id: 'slug', area: 'Basics', label: 'URL slug matches the live site', level: 'required', ok: !slugProblem && !slugNote, detail: slugProblem ?? slugNote ?? (slug ? `/${slug}` : undefined), path: 'slug' })
-  add({ id: 'city', area: 'Basics', label: 'City', level: 'required', ok: has(doc.address?.city), detail: 'Used in every page title', path: 'address.city' })
+  add({ id: 'city', area: 'Basics', label: 'City', level: 'required', ok: has(doc.address?.city), detail: doc.marketName?.trim() ? 'Footer and search data (titles use the market name)' : 'Used in every page title; office in a small town? Set "Market name"', path: 'address.city' })
   add({ id: 'state', area: 'Basics', label: 'State', level: 'required', ok: has(doc.address?.state), detail: 'Groups the location in the Studio', path: 'address.state' })
   add({ id: 'phone', area: 'Basics', label: 'Phone', level: 'required', ok: has(doc.phone), detail: 'Header and every call button', path: 'phone' })
   add({ id: 'email', area: 'Basics', label: 'Public email', level: 'recommended', ok: has(doc.email), path: 'email' })
   add({ id: 'street', area: 'Basics', label: 'Street address', level: 'recommended', ok: has(doc.address?.street), path: 'address.street' })
-  add({ id: 'serviceCities', area: 'Basics', label: 'Service cities', level: 'recommended', ok: has(doc.serviceCities), detail: `${doc.serviceCities?.length ?? 0} listed`, path: 'serviceCities' })
+  add({ id: 'serviceCities', area: 'Basics', label: 'Service cities', level: 'recommended', ok: has(doc.serviceCities), detail: serviceCitiesDetail(doc.serviceCities), path: 'serviceCities' })
   add({ id: 'hours', area: 'Basics', label: 'Business hours', level: 'recommended', ok: has(doc.businessHours), path: 'businessHours' })
   add({ id: 'social', area: 'Basics', label: 'Social links', level: 'optional', ok: Object.values(doc.socialLinks ?? {}).some(has), path: 'socialLinks' })
 

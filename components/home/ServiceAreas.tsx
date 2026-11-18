@@ -1,12 +1,14 @@
 import { MapPin } from 'lucide-react'
 
 import Section from '../Section'
+import { cityOnly } from '@/lib/nap'
+import { marketName } from '@/lib/place'
 import type { Location } from '@/sanity/lib/types'
 
 export default function ServiceAreas({ location }: { location: Location }) {
-  const home = location.address?.city
-  // The home city is already in the eyebrow, so list the surrounding cities.
-  const cities = (location.serviceCities ?? []).filter((city) => !home || !city.startsWith(`${home},`))
+  const home = location.address?.city?.trim()
+  // The home city is already in the eyebrow, so list the surrounding cities ("Mauldin" or "Mauldin, SC")
+  const cities = (location.serviceCities ?? []).filter((city) => !home || cityOnly(city) !== home)
   if (!cities.length) return null
   const half = Math.ceil(cities.length / 2)
   const rows = [cities.slice(0, half), cities.slice(half)].filter((row) => row.length)
@@ -15,7 +17,7 @@ export default function ServiceAreas({ location }: { location: Location }) {
     <Section
       eyebrow={home ? `Based in ${home}` : undefined}
       eyebrowClassName="text-brand-blue-text"
-      title={`Proudly Painting Homes Across ${location.serviceArea ?? home ?? location.name}`}
+      title={`Proudly Painting Homes Across ${location.serviceArea ?? marketName(location) ?? home ?? location.name}`}
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-3">
         {rows.map((row) => (
