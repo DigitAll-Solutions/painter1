@@ -138,6 +138,7 @@ export const structure: StructureResolver = (S, context) =>
                 ),
               singleton(S, 'privacyPolicy', 'Privacy Policy', {documentId: 'privacy-policy'}),
               singleton(S, 'warrantyTerms', 'Warranty terms', {documentId: 'warranty-terms'}),
+              singleton(S, 'brandPhotos', 'Brand photos', {documentId: 'brand-photos'}),
             ]),
         ),
 

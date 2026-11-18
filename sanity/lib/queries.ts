@@ -6,12 +6,19 @@ const image = `alt, hotspot, crop, asset->{_id, metadata{lqip, dimensions{width,
 // null for it, so `location.heroImage ? urlFor(...)` and the like never get an image without a file
 const img = (field: string, extra = '') => `"${field}": select(defined(${field}.asset) => ${field}{${extra}${image}})`
 
-const service = `{
+// The location's own photo, else the shared one in Shared → Brand photos (document "brand-photos").
+// Only for general photos (hero, warranty); never people or projects, which show only when the location adds its own.
+const ownOrBrand = (field: string) =>
+  `"${field}": coalesce(select(defined(${field}.asset) => ${field}{${image}}), *[_id == "brand-photos" && defined(${field}.asset)][0].${field}{${image}})`
+
+const service = (key: string) => `{
   title, summary, cardBullets, transformationBody, metaTitle, metaDescription,
   ${img('heroImage')},
   transformations[]{_key, title, projectType, area, ${img('before')}, ${img('after')}},
   surfacePhotos[defined(surface) && defined(image.asset)]{_key, surface, image{${image}}},
-  images[defined(asset)]{_key, ${image}}
+  images[defined(asset)]{_key, ${image}},
+  // The shared service's hero (Shared → Services): the homepage service card's last fallback
+  "sharedHeroImage": *[_type == "service" && locationKey == "${key}" && !(_id in path("drafts.**")) && defined(heroImage.asset)][0].heroImage{${image}}
 }`
 
 export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current == $slug][0]{
@@ -22,23 +29,23 @@ export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current
   ${img('ownerPhoto')},
   ${img('ownerActionPhoto', 'caption, ')},
   teamMembers[]{_key, name, jobTitle, withOwnerSince, bio, namedInReviews, ${img('photo')}},
-  ${img('heroImage')},
+  ${ownOrBrand('heroImage')},
   ${img('transformationBeforeImage')},
   ${img('transformationAfterImage')},
   heroVideo{asset->{url, mimeType}},
-  ${img('warrantyImage')},
-  ${img('warrantyPageImage')},
+  ${ownOrBrand('warrantyImage')},
+  ${ownOrBrand('warrantyPageImage')},
   warrantyPdf{asset->{url, originalFilename}},
-  ${img('warrantyGraphic')},
+  ${ownOrBrand('warrantyGraphic')},
   galleryImages[defined(asset)]{
     _key, caption, title, projectType, area, city, "geo": geo{lat, lng}, "services": services[]._ref,
     notLocalProject, commercial, projectId, role, ${image}
   },
   reviews[]{..., "services": services[]._ref},
   services{
-    interior${service},
-    exterior${service},
-    cabinet${service}
+    interior${service('interior')},
+    exterior${service('exterior')},
+    cabinet${service('cabinet')}
   }
 }`)
 
@@ -59,7 +66,10 @@ export const SERVICE_SLUGS_QUERY = defineQuery(`*[_type == "service" && defined(
 // Service _id → locationKey (interior | exterior | cabinet), for the Our Work filters
 export const SERVICE_KEYS_QUERY = defineQuery(`*[_type == "service" && defined(locationKey) && !(_id in path("drafts.**"))]{_id, locationKey}`)
 
-export const LOCATION_PAGES_QUERY = defineQuery(`*[_type == "location" && defined(slug.current)]{"slug": slug.current, locationType}`)
+// hasWorkPhotos: the location has at least one photo Our Work may show (the same rule as lib/gallery.ts localPhotos)
+export const LOCATION_PAGES_QUERY = defineQuery(
+  `*[_type == "location" && defined(slug.current)]{"slug": slug.current, locationType, "hasWorkPhotos": count(galleryImages[defined(asset) && notLocalProject != true]) > 0}`,
+)
 
 // The location's own survey, else the default one (copy only; merged with built-in defaults in code)
 export const ESTIMATE_SURVEY_QUERY = defineQuery(

@@ -1,6 +1,7 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {SurfaceSelectInput} from '../../components/SurfaceSelectInput'
 import {altField} from './altField'
+import {WORK_NOTE} from '../brandPhotos'
 
 export const serviceDetail = defineType({
   name: 'serviceDetail',
@@ -48,7 +49,7 @@ export const serviceDetail = defineType({
       title: 'Before/after pairs',
       type: 'array',
       description:
-        'Service page "See The Transformation" (the first pair also shows on the homepage service card). One pair shows beside the text; two or more show as a row of sliders. Recent Work never repeats these photos.',
+        `${WORK_NOTE} Service page "See The Transformation" (the first pair also shows on the homepage service card). One pair shows beside the text; two or more show as a row of sliders; none hides the section. Recent Work never repeats these photos.`,
       of: [
         defineArrayMember({
           type: 'object',
@@ -79,7 +80,7 @@ export const serviceDetail = defineType({
       name: 'surfacePhotos',
       title: 'What We Paint photos',
       description:
-        'This location’s own job photo for a surface section on this service page (e.g. a Siding job you did). Only shown on this location’s page, where it replaces the surface’s default photo. Surfaces without one show the default photo (Shared → Services → What we paint), or text only when there’s no default either. The surfaces and their text are in Shared → Services.',
+        `${WORK_NOTE} This location’s own job photo for a surface section on this service page (e.g. a Siding job you did). Only shown on this location’s page, where it replaces the surface’s default photo. Surfaces without one show the default photo (Shared → Services → What we paint), or text only when there’s no default either. The surfaces and their text are in Shared → Services.`,
       type: 'array',
       validation: (rule) =>
         rule.custom((items: {surface?: string}[] | undefined) => {
@@ -112,7 +113,7 @@ export const serviceDetail = defineType({
     defineField({
       name: 'images',
       type: 'array',
-      description: 'Fallback photo for the homepage service card when there is no after photo (the best-sized one is used).',
+      description: `${WORK_NOTE} Fallback photo for the homepage service card when there is no after photo (the best-sized one is used). Empty: this service's hero, then the Shared → Services hero.`,
       of: [
         defineArrayMember({
           type: 'image',

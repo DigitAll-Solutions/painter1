@@ -29,6 +29,8 @@ const ROW_SIZES = '(min-width: 1280px) 300px, (min-width: 1024px) 25vw, (min-wid
 export default function TransformationBlock({ before, after, pairs, rowLabel, heading, body, cta }: Props) {
   const sizes = '(min-width: 1024px) 640px, 100vw'
   const all = pairs ?? (before && after ? [{ key: 'pair', before, after, title: '' }] : [])
+  // "See The Transformation" without this location's own before/after photos would be an empty claim
+  if (!all.length) return null
 
   const copy = (
     <div>

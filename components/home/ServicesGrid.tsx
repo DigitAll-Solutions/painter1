@@ -3,16 +3,10 @@ import { ArrowRight, Check } from 'lucide-react'
 
 import Section, { Accent } from '../Section'
 import SanityImage from '../SanityImage'
-import { transformationPairs } from '@/lib/gallery'
+import { cardFallback, transformationPairs } from '@/lib/gallery'
 import { servicePages } from '@/lib/location'
 import { cityOrPlace } from '@/lib/place'
-import type { Location, SanityImage as SanityImageType, ServiceDetail } from '@/sanity/lib/types'
-
-// Without a before/after pair, use the sharpest photo the service has
-const bestImage = (images: ServiceDetail['images']) =>
-  images?.reduce((best, img) =>
-    (img.asset.metadata?.dimensions?.width ?? 0) > (best.asset.metadata?.dimensions?.width ?? 0) ? img : best,
-  )
+import type { Location, SanityImage as SanityImageType } from '@/sanity/lib/types'
 
 const chip = 'absolute top-3 rounded-full bg-ink/80 px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white uppercase backdrop-blur'
 
@@ -70,7 +64,7 @@ export default function ServicesGrid({ location }: { location: Location }) {
             className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_16px_40px_-18px_rgb(11_27_51/0.3)] ring-1 ring-slate-200/70"
           >
             <div className="relative h-56 overflow-hidden bg-mist lg:h-64">
-              <CardMedia before={transformationPairs(service)[0]?.before} after={transformationPairs(service)[0]?.after} fallback={bestImage(service.images)} />
+              <CardMedia before={transformationPairs(service)[0]?.before} after={transformationPairs(service)[0]?.after} fallback={cardFallback(service)} />
             </div>
             <div className="flex flex-1 flex-col p-6 md:p-7">
               <h3 className="text-2xl font-extrabold tracking-tight">{service.title}</h3>

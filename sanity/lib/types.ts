@@ -53,6 +53,8 @@ export type ServiceDetail = {
   metaDescription?: string
   /** Crew-at-work photo for this location's service page hero */
   heroImage?: SanityImage
+  /** The shared service document's hero (query only): the homepage service card's last fallback */
+  sharedHeroImage?: SanityImage
   /** This location's own photo per What We Paint surface, keyed to the surface's _key */
   surfacePhotos?: { _key: string; surface: string; image: SanityImage }[]
   images?: (SanityImage & { _key: string })[]

@@ -4,7 +4,7 @@ import { test } from 'node:test'
 
 import type { SanityImage } from '@/sanity/lib/types'
 
-import { pairImages, sliderAssets, transformationPairs } from './gallery.ts'
+import { cardFallback, hasWorkPhotos, pairImages, sliderAssets, transformationPairs } from './gallery.ts'
 
 const img = (id: string): SanityImage => ({ asset: { _id: `image-${id}` } })
 
@@ -29,4 +29,19 @@ test('pairs keep their order, skip incomplete ones, and title falls back to type
 test('no pairs: nothing to show', () => {
   assert.deepEqual(transformationPairs({ transformations: [] }), [])
   assert.deepEqual(transformationPairs(undefined), [])
+})
+
+test('service card photo: widest own photo, then the service hero, then the shared Services hero', () => {
+  const wide = (id: string, width: number): SanityImage => ({ asset: { _id: `image-${id}`, metadata: { dimensions: { width, height: 1, aspectRatio: width } } } })
+  const images = [{ _key: 'a', ...wide('small', 800) }, { _key: 'b', ...wide('big', 2000) }]
+  assert.equal(cardFallback({ images, heroImage: img('hero'), sharedHeroImage: img('shared') })?.asset._id, 'image-big')
+  assert.equal(cardFallback({ images: [], heroImage: img('hero'), sharedHeroImage: img('shared') })?.asset._id, 'image-hero')
+  assert.equal(cardFallback({ sharedHeroImage: img('shared') })?.asset._id, 'image-shared')
+  assert.equal(cardFallback({}), undefined)
+})
+
+test('work photos: only local gallery photos count', () => {
+  assert.equal(hasWorkPhotos({}), false)
+  assert.equal(hasWorkPhotos({ galleryImages: [{ _key: 'x', notLocalProject: true, ...img('x') }] }), false)
+  assert.equal(hasWorkPhotos({ galleryImages: [{ _key: 'y', ...img('y') }] }), true)
 })

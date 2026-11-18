@@ -9,7 +9,7 @@ export const revalidate = 3600
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [locations, services] = await Promise.all([getLocationPages(), getServiceSlugs()])
   // Only locations live on the production domain (LIVE_LOCATIONS); the rest are still on WordPress
-  return locations.filter(({ slug }) => isLiveLocation(slug)).flatMap(({ slug, locationType }) => [
+  return locations.filter(({ slug }) => isLiveLocation(slug)).flatMap(({ slug, locationType, hasWorkPhotos }) => [
     { url: absoluteUrl(`/${slug}`), changeFrequency: 'weekly' as const, priority: 0.9 },
     { url: absoluteUrl(`/${slug}/free-estimate`), changeFrequency: 'monthly' as const, priority: 0.7 },
     { url: absoluteUrl(`/${slug}/privacy-policy`), changeFrequency: 'yearly' as const, priority: 0.2 },
@@ -18,7 +18,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ? []
       : [
           ...services.map((service) => ({ url: absoluteUrl(`/${slug}/${service}`), changeFrequency: 'monthly' as const, priority: 0.8 })),
-          { url: absoluteUrl(`/${slug}/our-work`), changeFrequency: 'monthly' as const, priority: 0.7 },
+          // Our Work only once it has photos (without them the page is noindex)
+          ...(hasWorkPhotos ? [{ url: absoluteUrl(`/${slug}/our-work`), changeFrequency: 'monthly' as const, priority: 0.7 }] : []),
           { url: absoluteUrl(`/${slug}/warranty`), changeFrequency: 'yearly' as const, priority: 0.5 },
           { url: absoluteUrl(`/${slug}/about-us`), changeFrequency: 'monthly' as const, priority: 0.6 },
         ]),
