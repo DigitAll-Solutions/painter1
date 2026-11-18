@@ -135,6 +135,8 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 
 ## Launch-day runbook (option (a))
 
+**Knoxville: Tuesday Nov 24, 2026, 10:00 ET (20:30 IST).** Dated checklist, times, owners and go/no-go points: `docs/launch-day.md`.
+
 **One to two weeks before**
 1. Host: `wp.painter1.com` live with SSL, `P1_PROXY_KEY` in Vercel Production and Preview (same value as in wp-config.php), the wp-config block, the security-plugin IP checks (step 3 above). Check it with the curl checks in `docs/cloudways-wp-config.md` step 7: with the key and `X-P1-Host: www.painter1.com`, `/atlanta/` must answer **200 with no redirect** and its links must be `www.painter1.com`; without the key, a 301 to `www` (or a 403 when it looks like Vercel) is expected.
 2. Find WordPress's sitemap URL and robots.txt rules.
@@ -151,7 +153,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
    - **After the merge deploy:** `painter1.vercel.app/knoxville` loads only GTM-PVDK2ZFJ, and `/bozeman` loads no GTM (`docs/analytics.md`). Location pages never load the corp container.
 
 **Two days before**
-5. At GoDaddy, **save the current DNS records** (screenshot and export), then lower the TTL of `www` and `@` to 300 s.
+5. At GoDaddy, **save the current DNS records** (screenshot and export), then lower the TTL of `www` and `@` to 600 s (by Nov 22 for Knoxville).
 6. In Vercel → Domains, add `www.painter1.com` and `painter1.com` and **pre-generate the certificates** (TXT `_acme-challenge` at GoDaddy). Verify with `curl --resolve www.painter1.com:443:76.76.21.21 https://www.painter1.com/knoxville` (use the IP Vercel shows).
 7. Sanity: CORS origin and Studio host for `https://www.painter1.com`. Vercel: `NEXT_PUBLIC_SITE_URL`, Turnstile keys.
 
@@ -202,7 +204,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 **Steps:**
 1. If step 11 already ran, Rick turns Cloudways' Cloudflare back on for `www.painter1.com` and `painter1.com` **first**, so the restored DNS records reach WordPress the way they did before.
 2. At GoDaddy, set `www` and `@` back to the saved values.
-3. Tell Rick. Visitors move back within 5–30 minutes (TTL 300 s); some resolvers take longer.
+3. Tell Rick. Visitors move back within 5–30 minutes (TTL 600 s); some resolvers take longer.
 4. WordPress serves everything again, including its old Knoxville pages.
 5. Point the Sanity webhook back at `painter1.vercel.app`.
 6. If step 14 already ran, ask Rick to turn Really Simple Security's country block back on: WordPress serves visitors directly again.
