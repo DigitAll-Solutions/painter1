@@ -34,8 +34,7 @@ const consentText: PortableTextComponents = {
 export async function generateMetadata({ params }: PageProps<'/[location]/free-estimate'>): Promise<Metadata> {
   const location = await getLocation((await params).location)
   if (!location) return {}
-  const { city } = tokenValues(location)
-  const title = `Free Estimate in ${cityName(location)} | Painter1 of ${city}`
+  const title = `Free Estimate in ${cityName(location)} | ${location.name}`
   const description = `Request a free, no-obligation painting estimate from ${location.name}. Answer a few quick questions and we'll reach out to schedule your on-site visit.`
   const url = absoluteUrl(`/${location.slug}/free-estimate`)
   return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } }
@@ -86,7 +85,7 @@ export default async function FreeEstimatePage({ params }: PageProps<'/[location
           {consents.length ? (
             <EstimateSurvey
               slug={location.slug}
-              city={city}
+              city={location.address?.city?.trim() ?? ''}
               state={location.address?.state ?? ''}
               phone={location.phone}
               tel={tel}

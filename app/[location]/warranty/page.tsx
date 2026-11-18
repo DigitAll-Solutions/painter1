@@ -29,8 +29,7 @@ async function load(slug: string) {
 
 export async function generateMetadata({ params }: PageProps<'/[location]/warranty'>): Promise<Metadata> {
   const { location } = await load((await params).location)
-  const { city } = tokenValues(location)
-  const title = `2-Year Workmanship Warranty | Painter1 of ${city}`
+  const title = `2-Year Workmanship Warranty | ${location.name}`
   const description = warrantyDescription(location)
   const url = absoluteUrl(`/${location.slug}/warranty`)
   return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } }

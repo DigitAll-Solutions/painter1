@@ -49,3 +49,17 @@ test('meta descriptions and the owner heading read cleanly without a city or own
   // Knoxville unchanged
   assert.equal(aboutMeta(knoxville, 'owner').description, 'Meet Keith Lane, owner of Painter1 of Knoxville, who gives every estimate, checks every finished job and stands behind the 2-year workmanship warranty.')
 })
+
+test('market name: titles and copy use the market, never the office town', () => {
+  // Upstate: the office is in Mauldin, at the edge of the area; customers search for "Upstate SC"
+  const upstate = { ...sparse, marketName: ' Upstate  SC ', address: { city: 'Mauldin', state: 'SC' } } as Location
+  assert.equal(cityOrPlace(upstate), 'Upstate SC')
+  assert.equal(cityStateOrPlace(upstate), 'Upstate SC')
+  assert.deepEqual(tokenValues(upstate), { city: 'Upstate SC', state: 'SC', owner: 'our owner' })
+  assert.equal(fillTokens('Interior painting in {city}, {state} by Painter1. Homes across {state}.', upstate), 'Interior painting in Upstate SC by Painter1. Homes across SC.')
+  assert.equal(warrantyDescription(upstate), 'What the two-year workmanship warranty from Painter1 of Upstate SC covers, what it requires, and how to reach Painter1 of Upstate SC with questions.')
+  for (const text of [warrantyDescription(upstate), aboutMeta(upstate, 'owner').description, fillTokens('{city}, {state}', upstate)]) assert.doesNotMatch(text, /Mauldin/, text)
+  // An empty market name changes nothing
+  assert.equal(cityStateOrPlace({ ...knoxville, marketName: '  ' }), 'Knoxville, TN')
+  assert.equal(fillTokens('in {city}, {state}', { ...knoxville, marketName: '' }), 'in Knoxville, TN')
+})

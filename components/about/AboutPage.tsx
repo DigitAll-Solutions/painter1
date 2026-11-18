@@ -80,13 +80,13 @@ export default function AboutPage({ location }: { location: Location }) {
 // ---------- Heroes ----------
 type Cta = ReturnType<typeof getCta>
 
-function HeroText({ crumbs, city, title, intro, children }: { crumbs: { name: string; href?: string }[]; city: string; title: React.ReactNode; intro?: string; children: React.ReactNode }) {
+function HeroText({ crumbs, name, title, intro, children }: { crumbs: { name: string; href?: string }[]; name: string; title: React.ReactNode; intro?: string; children: React.ReactNode }) {
   return (
     <div>
       <div className="text-slate-300">
         <Breadcrumbs crumbs={crumbs} />
       </div>
-      <p className="mt-6 text-sm font-bold tracking-[0.2em] text-orange-300 uppercase">About Painter1 of {city}</p>
+      <p className="mt-6 text-sm font-bold tracking-[0.2em] text-orange-300 uppercase">About {name}</p>
       <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-balance md:text-5xl lg:text-6xl">{title}</h1>
       {intro && <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-200">{intro}</p>}
       <div className="mt-8 flex flex-wrap gap-3">{children}</div>
@@ -103,7 +103,7 @@ function OwnerHero({ location, city, owner, first, cta, tel, crumbs }: { locatio
       <div className={`mx-auto grid max-w-7xl items-center gap-12 px-4 py-12 md:py-16 lg:py-20 ${photo ? 'lg:grid-cols-[7fr_5fr]' : ''}`}>
         <HeroText
           crumbs={crumbs}
-          city={city}
+          name={location.name}
           title={
             owner ? (
               <>
@@ -163,7 +163,7 @@ function TeamHero({ location, city, owner, people, hasTeam, cta, crumbs }: { loc
       <div className="mx-auto max-w-7xl px-4 py-12 md:py-16 lg:py-20">
         <HeroText
           crumbs={crumbs}
-          city={city}
+          name={location.name}
           title={
             <>
               The {city} team behind <span className="text-orange-300">every job</span>

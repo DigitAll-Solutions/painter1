@@ -17,6 +17,8 @@ const service = `{
 export const LOCATION_QUERY = defineQuery(`*[_type == "location" && slug.current == $slug][0]{
   ...,
   "slug": slug.current,
+  // "City and state only": the street and ZIP never leave Sanity (page HTML, RSC payload, schema, footer)
+  "address": select(addressDisplay == "cityState" => address{city, state}, address),
   ${img('ownerPhoto')},
   ${img('ownerActionPhoto', 'caption, ')},
   teamMembers[]{_key, name, jobTitle, withOwnerSince, bio, namedInReviews, ${img('photo')}},

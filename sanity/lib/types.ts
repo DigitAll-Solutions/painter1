@@ -91,7 +91,12 @@ export type Location = {
   tagline?: string
   phone?: string
   email?: string
+  /** Office address. With addressDisplay "cityState", LOCATION_QUERY returns only city and state */
   address?: { street?: string; city?: string; state?: string; zip?: string }
+  /** "cityState": the street and ZIP never reach the site (home-based owners); default "full" */
+  addressDisplay?: 'full' | 'cityState'
+  /** The market customers search for ("Upstate SC"): headings, titles and descriptions use it before the city */
+  marketName?: string
   serviceArea?: string
   serviceCities?: string[]
   businessHours?: string[]

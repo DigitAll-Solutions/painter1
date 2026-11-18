@@ -15,16 +15,15 @@ const DEFAULT_INTRO =
   'Discover the transformative power of color and craftsmanship from Painter1. Check out our project gallery below showcasing some of our most recent painting jobs!'
 
 export function ourWorkCopy(location: Location) {
-  const { city } = tokenValues(location)
   const page = location.ourWorkPage
   const fill = (text?: string) => (text?.trim() ? fillTokens(text.trim(), location) : undefined)
   return {
     heading: `Our Work in ${cityName(location)}`,
     intro: fill(page?.intro) ?? DEFAULT_INTRO,
-    metaTitle: fill(page?.metaTitle) ?? `Our Work in ${cityName(location)} | Painter1 of ${city}`,
+    metaTitle: fill(page?.metaTitle) ?? `Our Work in ${cityName(location)} | ${location.name}`,
     metaDescription:
       fill(page?.metaDescription) ??
-      `Before-and-after photos of recent interior, exterior, cabinet and commercial painting projects by Painter1 of ${city}. Get your free estimate.`,
+      `Before-and-after photos of recent interior, exterior, cabinet and commercial painting projects by ${location.name}. Get your free estimate.`,
   }
 }
 

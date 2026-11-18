@@ -1,17 +1,20 @@
 import { homepageReviews, reviewSchema } from './reviews'
-import { cityOrPlace, cityStateOrPlace } from './place'
+import { areaServedCities, cityOnly, publicAddress } from './nap'
+import { cityOrPlace, cityStateOrPlace, marketName } from './place'
 import { absoluteUrl } from './site'
 import { urlFor } from '@/sanity/lib/image'
 import type { Location, Review } from '@/sanity/lib/types'
 
-/** "Knoxville, TN"; without an address yet, the place part of the name ("Upstate SC"), never the full name */
+/** The market name ("Upstate SC"), else "Knoxville, TN"; without an address yet, the place part of the name, never the full name */
 export const cityName = (location: Location) => cityStateOrPlace(location)
 
 const MAX_DESCRIPTION = 160
 
 /**
  * Homepage meta description from location data, used when the location has no metaDescription.
- * Drops the owner clause, then the phone, if needed to stay within 160 characters.
+ * Drops the owner clause, then the phone, if needed to stay within 160 characters. With a market name,
+ * it names the first service cities too ("… in Upstate SC, including Greenville, Greer and Easley."),
+ * as many as fit.
  */
 export function autoHomeDescription(location: Location) {
   const place = cityName(location)
@@ -19,7 +22,11 @@ export function autoHomeDescription(location: Location) {
   const owner = location.ownerName ? ` Locally owned by ${location.ownerName}.` : ''
   const phone = location.phone ? ` Free estimate: ${location.phone}.` : ' Free estimates.'
   const base = `${location.name}: ${services} in ${place}.`
-  const candidates = [`${base}${owner}${phone}`, `${base}${phone}`, base]
+  const cities = marketName(location) ? areaServedCities(location).map(cityOnly) : []
+  const withCities = [4, 3, 2]
+    .filter((count) => cities.length >= count)
+    .map((count) => `${location.name}: ${services} in ${place}, including ${cities.slice(0, count - 1).join(', ')} and ${cities[count - 1]}.`)
+  const candidates = [...[...withCities, base].flatMap((text) => [`${text}${owner}${phone}`, `${text}${phone}`]), base]
   return candidates.find((text) => text.length <= MAX_DESCRIPTION) ?? base.slice(0, MAX_DESCRIPTION)
 }
 
@@ -30,6 +37,7 @@ export const pageTitle = (service: string, location: Location) => `${service} in
 export function businessNode(location: Location) {
   const url = absoluteUrl(`/${location.slug}`)
   const social = Object.values(location.socialLinks ?? {}).filter(Boolean)
+  const address = publicAddress(location)
 
   return {
     '@type': 'HousePainter',
@@ -42,15 +50,15 @@ export function businessNode(location: Location) {
     logo: absoluteUrl('/painter1-logo.svg'),
     slogan: location.tagline,
     founder: location.ownerName ? { '@type': 'Person', name: location.ownerName } : undefined,
-    address: location.address && {
+    address: address && {
       '@type': 'PostalAddress',
-      streetAddress: location.address.street,
-      addressLocality: location.address.city,
-      addressRegion: location.address.state,
-      postalCode: location.address.zip,
+      streetAddress: address.street,
+      addressLocality: address.city,
+      addressRegion: address.state,
+      postalCode: address.zip,
       addressCountry: 'US',
     },
-    areaServed: location.serviceCities?.map((name) => ({ '@type': 'City', name })),
+    areaServed: location.serviceCities ? areaServedCities(location).map((name) => ({ '@type': 'City', name })) : undefined,
     aggregateRating:
       location.rating && location.reviewsCount
         ? { '@type': 'AggregateRating', ratingValue: location.rating, reviewCount: location.reviewsCount, bestRating: 5 }
@@ -77,7 +85,10 @@ export function serviceSchema({ location, name, path, description, reviews }: { 
     serviceType: name,
     url: absoluteUrl(path),
     description,
-    areaServed: location.address?.city?.trim() ? { '@type': 'City', name: location.address.city.trim() } : { '@type': 'Place', name: cityOrPlace(location) },
+    areaServed:
+      !marketName(location) && location.address?.city?.trim()
+        ? { '@type': 'City', name: location.address.city.trim() }
+        : { '@type': 'Place', name: cityOrPlace(location) },
     provider: businessNode(location),
     review: reviews.length ? reviews.map(reviewSchema) : undefined,
   }
