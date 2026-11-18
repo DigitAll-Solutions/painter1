@@ -30,9 +30,30 @@ The dated version of the runbook in `docs/go-live-plan.md` ("Launch-day runbook 
 | Fri Nov 20 | Rick | Confirm he's free Tue 09:30–13:30 ET with access to GoDaddy, Cloudways, GTM (GTM-PVDK2ZFJ), Really Simple Security and Client Tether (or Keith on hand for Client Tether). | Rick's reply. |
 | by Sun Nov 22 | Rick | **TTL:** set `www` and `@` to **600** seconds (10 min) at GoDaddy. Only the TTL; the values stay. | Mon Nov 23: `Resolve-DnsName www.painter1.com -Server 8.8.8.8` and the same for `painter1.com` show TTL ≤ 600, and the values match the Nov 19 screenshot. |
 | Mon Nov 23 | me | **Final staging smoke:** `node scripts/smoke-launch.ts https://staging.painter1.com` (or the staging-smoke workflow) on the `launch-knoxville` branch; then the rehearsal spot checks in `docs/launch-rehearsal.md` (WP home, a location, WP admin login, `/knoxville`, a legacy redirect). | 0 failures (known warnings only). |
-| Mon Nov 23 | me | **Go/no-go A:** smoke clean, DNS snapshot saved, TTL 600, domains added (certificates ready or the short window accepted), Rick confirmed. No-go → move the launch; nothing to undo. | All of the above are checked. |
+| Mon Nov 23 | me | **Country block dry run, 2 minutes** (so L10 holds no surprise): Vercel → Firewall → rule 3 "US only" **Log → Deny** → Review Changes → Publish; run the two checks in "Country block dry run" below; then rule 3 **Deny → Log** → Publish. Only staging is affected: `www` and `painter1.com` don't reach Vercel yet. | With the `p1_dev` cookie: **200**. Without it, from India: **403**. Afterwards the rules list shows rule 3 on **Log** again, and the check without the cookie answers 200. |
+| Mon Nov 23 | me | **Go/no-go A:** smoke clean, country block dry run passed (rule 3 back on Log), DNS snapshot saved, TTL 600, domains added (certificates ready or the short window accepted), Rick confirmed. No-go → move the launch; nothing to undo. | All of the above are checked. |
 | Mon Nov 23 | me | **Merge the launch PR (#44):** set Production `NEXT_PUBLIC_GTM_ID=GTM-5LG3XH7S`, `NEXT_PUBLIC_SITE_URL` (if needed) and `LEAD_TEST_RECIPIENT` = the Client Tether parse address; save **without redeploying**; merge. The merge's build picks up all three. | `painter1.vercel.app/knoxville` loads only GTM-PVDK2ZFJ, `/bozeman` no GTM (`docs/analytics.md`). `www.painter1.com` still loads WordPress. No test request on production until L5 (it would reach Client Tether). |
 | Mon Nov 23 | me | Send Rick the launch-day sheet and a calendar hold for 09:30–13:30 ET. | Rick confirms. |
+
+### Country block dry run (Nov 23)
+
+PowerShell, with `curl.exe` (not PowerShell's `curl` alias). The cookie value is typed at a hidden prompt and read from `$env:P1_DEV`, so it never appears on screen or in the command history (history keeps `$env:P1_DEV`, not the value):
+
+```powershell
+# Once per session: type the p1_dev value at the hidden prompt
+$env:P1_DEV = [Net.NetworkCredential]::new('', (Read-Host 'p1_dev' -AsSecureString)).Password
+
+# With the cookie: expect 200
+curl.exe -s -o NUL -w "%{http_code}`n" -H "Cookie: p1_dev=$env:P1_DEV" https://staging.painter1.com/knoxville
+
+# Without it, from India: expect 403
+curl.exe -s -o NUL -w "%{http_code}`n" https://staging.painter1.com/knoxville
+
+# When done
+Remove-Item Env:P1_DEV
+```
+
+Use the same two checks at L10, with `https://www.painter1.com/knoxville`.
 
 ## Launch day: Tuesday Nov 24
 
@@ -49,7 +70,7 @@ Have open: the DNS screenshot (rollback values), Vercel's DNS values, Vercel →
 | **10:25** | **20:55** | me + Rick | **GO/NO-GO 2:** L4 all green. A rollback trigger (below) that lasts 10 min → no-go. | – | **No-go:** DNS rollback (L2). Nothing else has changed yet. |
 | 10:30 | 21:00 | me, then Rick + Keith | **L5 Client Tether test** (`docs/email-setup.md` §8 step 3): no ad blocker; open `https://www.painter1.com/knoxville/interior-painting?utm_source=golive-test&utm_medium=cpc&utm_campaign=golive`, reach the form through the site's button, submit "Client Tether Test". In Studio → the lead → Email → Body: `Ga Source: golive-test`, `Ga Medium: cpc`, `Ga Campaign: golive`, and a filled `PARSER:` line. Rick or Keith check Client Tether. | The email went only to the parse address, subject `[TEST]`. Client Tether shows the lead with every field in the right place, and the same source and channel. | – |
 | **10:45** | **21:15** | me + Rick | **GO/NO-GO 3:** `PARSER:` filled and Client Tether fields right. | – | **Empty `PARSER:` or wrong fields:** DNS rollback (L2). Leads stay safe in Sanity. Fix (Postmark if the fields are wrong, `docs/email-setup.md` §8.3.4), new date. |
-| 10:50 | 21:20 | me | **L6 Leads live:** remove `LEAD_TEST_RECIPIENT`, set `LEAD_SEND_LIVE=true`, redeploy Production. Delete the test lead in Studio; Rick or Keith delete it in Client Tether. Remind Keith's team: never "Unsubscribe" or "Report spam" on lead emails. | The new deployment is Ready and serves `www.painter1.com`. No test email to real recipients: the first real request shows email "sent" in Studio, and Keith confirms it arrived. | Set `LEAD_TEST_RECIPIENT` back, unset `LEAD_SEND_LIVE`, redeploy. Requests are still saved; Keith works them from Studio. |
+| 10:50 | 21:20 | me, Rick | **L6 Leads live:** remove `LEAD_TEST_RECIPIENT`, set `LEAD_SEND_LIVE=true`, redeploy Production. Delete the test lead in Studio; Rick or Keith delete it in Client Tether. Remind Keith's team: never "Unsubscribe" or "Report spam" on lead emails. | The new deployment is Ready and serves `www.painter1.com`. No test email to real recipients: the first real request shows email "sent" in Studio. **After:** Rick asks Keith to confirm the first real lead reached him (his email and Client Tether), and tells me. | Set `LEAD_TEST_RECIPIENT` back, unset `LEAD_SEND_LIVE`, redeploy. Requests are still saved; Keith works them from Studio. |
 | 11:00 | 21:30 | Rick | **L7 Cloudflare off:** Cloudways → Cloudflare add-on: turn it off for `www.painter1.com` and `painter1.com` only. | `www.painter1.com/` and `/knoxville` still 200 with `x-vercel-id`. Rick confirms nothing else changed in the add-on. | Rick turns it back on for both. **Before any DNS rollback after this point, this goes first.** |
 | 11:10 | 21:40 | Rick | **L8 GTM:** in **GTM-PVDK2ZFJ only**, pause "Click to Call" and "Schedule Page btn", then Publish. Never in GTM-5LG3XH7S or another location's container. | Tag Assistant on `www.painter1.com/knoxville` (me): a call click fires "GA4 - phone_click" once and not "Click to Call". | Rick unpauses both and publishes. |
 | 11:20 | 21:50 | me | **L9 Sanity webhook** → `https://www.painter1.com/api/revalidate`. Publish a small harmless change, then revert it. | The change shows on www within a minute; the webhook's attempts log shows 200. | Point it back at `painter1.vercel.app`. |
