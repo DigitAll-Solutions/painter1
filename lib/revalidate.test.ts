@@ -20,6 +20,7 @@ test('shared documents expire their tag, which every location’s pages use', ()
   assert.deepEqual(tagsFor({ _type: 'warrantyTerms' }), ['warrantyTerms'])
   assert.deepEqual(tagsFor({ _type: 'privacyPolicy' }), ['privacyPolicy'])
   assert.deepEqual(tagsFor({ _type: 'estimateSurvey' }), ['estimateSurvey'])
+  assert.deepEqual(tagsFor({ _type: 'brandPhotos' }), ['brandPhotos'])
 })
 
 test('documents the site does not render expire nothing', () => {

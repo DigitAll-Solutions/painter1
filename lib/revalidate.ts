@@ -11,6 +11,8 @@ export const TAGS = {
   warrantyTerms: 'warrantyTerms',
   privacyPolicy: 'privacyPolicy',
   estimateSurvey: 'estimateSurvey',
+  /** Shared → Brand photos: the fallback hero and warranty photos on every location's pages */
+  brandPhotos: 'brandPhotos',
 } as const
 
 /** What the webhook sends (its projection): {_type, "slug": slug.current, "previousSlug": before().slug.current} */
@@ -35,6 +37,8 @@ export function tagsFor(body: RevalidateBody): string[] {
       return [TAGS.privacyPolicy]
     case 'estimateSurvey':
       return [TAGS.estimateSurvey]
+    case 'brandPhotos':
+      return [TAGS.brandPhotos]
     default:
       return []
   }

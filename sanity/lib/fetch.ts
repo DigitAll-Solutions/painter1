@@ -15,7 +15,8 @@ import { publicServiceSlug, storedServiceSlugs } from '@/lib/service-slugs'
 const revalidate = 3600
 
 export const getLocation = cache(async (slug: string) =>
-  client.fetch<Location | null>(LOCATION_QUERY, { slug }, { next: { revalidate, tags: [TAGS.location(slug)] } }),
+  // Also reads Brand photos (fallback photos) and each shared service's hero (service card fallback)
+  client.fetch<Location | null>(LOCATION_QUERY, { slug }, { next: { revalidate, tags: [TAGS.location(slug), TAGS.brandPhotos, TAGS.service] } }),
 )
 
 export const getLocationSlugs = () =>
@@ -23,7 +24,7 @@ export const getLocationSlugs = () =>
 
 /** Slug and type of every location, for the sitemap */
 export const getLocationPages = () =>
-  client.fetch<{ slug: string; locationType?: Location['locationType'] }[]>(LOCATION_PAGES_QUERY, {}, { next: { revalidate, tags: [TAGS.locations] } })
+  client.fetch<{ slug: string; locationType?: Location['locationType']; hasWorkPhotos?: boolean }[]>(LOCATION_PAGES_QUERY, {}, { next: { revalidate, tags: [TAGS.locations] } })
 
 /** By public slug; the returned slug is always the public one (the cabinet rename, lib/service-slugs.ts) */
 export const getService = cache(async (slug: string) => {

@@ -15,8 +15,9 @@ import { warrantyTerms } from './warrantyTerms'
 import { franchisePage } from './franchisePage'
 import { locationsPage } from './locationsPage'
 import { franchiseOpportunities } from './franchiseOpportunities'
+import { brandPhotos } from './brandPhotos'
 
-export const singletonTypes = new Set(['franchisePage', 'locationsPage', 'franchiseOpportunities', 'privacyPolicy', 'warrantyTerms'])
+export const singletonTypes = new Set(['franchisePage', 'locationsPage', 'franchiseOpportunities', 'privacyPolicy', 'warrantyTerms', 'brandPhotos'])
 /** Created only with fixed private IDs (by Studio's structure or the server), never from the new-document menu */
 export const noCreateTypes = new Set(['leadSettings', 'lead'])
 
@@ -37,5 +38,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     franchisePage,
     locationsPage,
     franchiseOpportunities,
+    brandPhotos,
   ],
 }

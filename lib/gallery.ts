@@ -26,3 +26,16 @@ export function transformationPairs(detail: Pick<ServiceDetail, 'transformations
 
 /** Every photo in a service's pairs (so the same page's gallery can skip them) */
 export const pairImages = (pairs: TransformationPair[]) => pairs.flatMap((pair) => [pair.before, pair.after])
+
+// Without a before/after pair, use the sharpest photo the service has
+const bestImage = (images: ServiceDetail['images']) =>
+  images?.length
+    ? images.reduce((best, img) => ((img.asset.metadata?.dimensions?.width ?? 0) > (best.asset.metadata?.dimensions?.width ?? 0) ? img : best))
+    : undefined
+
+/** Homepage service card without a pair: the location's own service photos, then its own service hero, then the shared service's hero */
+export const cardFallback = (service: Pick<ServiceDetail, 'images' | 'heroImage' | 'sharedHeroImage'>) =>
+  bestImage(service.images) ?? service.heroImage ?? service.sharedHeroImage
+
+/** Our Work exists in the nav, footer and sitemap only once the location has a photo it may show */
+export const hasWorkPhotos = (location: Pick<Location, 'galleryImages'>) => localPhotos(location).length > 0

@@ -107,6 +107,18 @@ test('basic tier (fixture): the About URL 404s and neither nav nor footer links 
   assert.ok(hrefs(footerLinks(full)).includes('/fixture-full/about-us'))
 })
 
+test('Our Work is in the nav and footer only once the location has its own work photos', async () => {
+  const { footerLinks, getNavLinks } = await import('./location.ts')
+  const services = { interior: { title: 'Interior Painting' } }
+  const empty = { slug: 'fixture-full', locationType: 'growth' as const, services, galleryImages: [{ _key: 'k', notLocalProject: true, asset: { _id: 'image-k' } }] }
+  const withPhotos = { ...empty, galleryImages: [{ _key: 'k', asset: { _id: 'image-k' } }] }
+  const hasOurWork = (links: { href: string }[]) => links.some((l) => l.href === '/fixture-full/our-work')
+  assert.equal(hasOurWork(getNavLinks(empty)), false)
+  assert.equal(hasOurWork(footerLinks(empty)), false)
+  assert.equal(hasOurWork(getNavLinks(withPhotos)), true)
+  assert.equal(hasOurWork(footerLinks(withPhotos)), true)
+})
+
 test('team owner section: "Why I built a team" only when the owner wrote about it', async () => {
   const { teamStoryHeading } = await import('./about.ts')
   assert.equal(teamStoryHeading(storyParagraphs('I added a project manager so every job gets a daily check.')), 'Why I built a team instead of doing it all myself')

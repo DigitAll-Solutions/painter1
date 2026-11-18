@@ -2,6 +2,7 @@ import {defineArrayMember, defineField, defineType, type Rule} from 'sanity'
 import {MapPin} from 'lucide-react'
 
 import {altField} from './objects/altField'
+import {WORK_NOTE} from './brandPhotos'
 import {LockedSlugInput} from '../components/LockedSlugInput'
 import {slugError, slugify, slugWarning} from '../lib/location-slugs'
 import {US_STATES} from '../lib/us-states'
@@ -365,9 +366,9 @@ export const location = defineType({
     {
       ...imageWithAlt('transformationBeforeImage', 'Transformation: before image'),
       group: 'content',
-      description: 'Before/after slider under the hero. Use a pair shot from the same angle. The section hides if either image is missing.',
+      description: `${WORK_NOTE} Before/after slider under the hero. Use a pair shot from the same angle. The section hides if either image is missing.`,
     },
-    {...imageWithAlt('transformationAfterImage', 'Transformation: after image'), group: 'content', description: 'The "after" photo of the same pair, same angle.'},
+    {...imageWithAlt('transformationAfterImage', 'Transformation: after image'), group: 'content', description: `${WORK_NOTE} The "after" photo of the same pair, same angle.`},
     defineField({
       name: 'transformationBody',
       type: 'text',
@@ -414,8 +415,8 @@ export const location = defineType({
     {
       ...imageWithAlt('heroImage'),
       group: 'media',
-      description: 'Homepage hero background (also the fallback hero for service pages and the share image). Landscape, at least 1920px wide.',
-      validation: (rule: Rule) => rule.required().warning('The homepage hero has no photo.'),
+      description: 'Homepage hero background (also the fallback hero for service pages and the share image). Landscape, at least 1920px wide. Empty: the hero from Shared → Brand photos.',
+      validation: (rule: Rule) => rule.required().warning('The homepage hero has no photo of its own: Shared → Brand photos is used.'),
     },
     defineField({
       name: 'heroVideo',
@@ -429,7 +430,7 @@ export const location = defineType({
       type: 'array',
       group: 'media',
       description:
-        'Newest first: the top photo shows first on Our Work, the homepage and service pages. Drag new photos to the top.',
+        `${WORK_NOTE} Newest first: the top photo shows first on Our Work, the homepage and service pages. Drag new photos to the top. With no photos (or only ones marked not local), Our Work leaves the menu, footer and sitemap.`,
       // A before/after pair needs exactly one "before" and one "after" with the same project ID
       validation: (rule) =>
         rule.custom((images?: {projectId?: string; role?: string}[]) => {
@@ -665,12 +666,12 @@ export const location = defineType({
     }),
 
     // ---------- Warranty ----------
-    {...imageWithAlt('warrantyImage', 'Homepage warranty: photo'), group: 'legal', description: 'Photo shown beside the warranty banner on the homepage. The warranty page has its own photo (below).'},
+    {...imageWithAlt('warrantyImage', 'Homepage warranty: photo'), group: 'legal', description: 'Photo shown beside the warranty banner on the homepage. The warranty page has its own photo (below). Empty: the photo from Shared → Brand photos.'},
     {
       ...imageWithAlt('warrantyPageImage', 'Warranty page: photo'),
       group: 'legal',
       description:
-        'Photo at the top of this location’s warranty page, beside the 2-year shield. Use one of this location’s own jobs (e.g. the owner with a customer). Empty: the page shows the shield without a photo.',
+        'Photo at the top of this location’s warranty page, beside the 2-year shield. Use one of this location’s own jobs (e.g. the owner with a customer). Empty: the photo from Shared → Brand photos, or the shield alone.',
     },
     defineField({
       name: 'warrantyEyebrow',
@@ -719,7 +720,7 @@ export const location = defineType({
     {
       ...imageWithAlt('warrantyGraphic', 'Homepage warranty: graphic'),
       group: 'legal',
-      description: 'Shown beside the warranty copy on the homepage. Leave blank for the default blue paint fan-deck illustration.',
+      description: 'Shown beside the warranty copy on the homepage. Empty: the graphic from Shared → Brand photos, or the default blue paint fan-deck illustration.',
     },
 
     // ---------- SEO ----------

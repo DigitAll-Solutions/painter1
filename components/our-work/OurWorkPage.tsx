@@ -9,6 +9,7 @@ import OurWorkGallery from './OurWorkGallery'
 import OurWorkHero from './OurWorkHero'
 import WorkCard, { WorkCardLarge } from './WorkCard'
 import WorkMap from './WorkMap'
+import { isLiveLocation } from '@/lib/indexing'
 import { getCta, telHref } from '@/lib/location'
 import { activeFilter, imageGallerySchema, ourWorkCopy, ourWorkPath, workCards, workChips } from '@/lib/our-work'
 import { homepageReviews } from '@/lib/reviews'
@@ -35,6 +36,9 @@ export async function ourWorkMetadata(slug: string): Promise<Metadata> {
     title: copy.metaTitle,
     description: copy.metaDescription,
     alternates: { canonical: url },
+    // Reachable without photos ("coming soon"; old links redirect here) but not indexed, and out of the nav, footer and sitemap
+    // (follow stays off for a location that isn't live: its layout sets noindex, nofollow)
+    ...(cards.length ? {} : { robots: { index: false, follow: isLiveLocation(slug) } }),
     openGraph: {
       title: copy.metaTitle,
       description: copy.metaDescription,

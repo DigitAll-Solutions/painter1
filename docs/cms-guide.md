@@ -171,7 +171,7 @@ The next visit then shows the change (in our test, about 4 seconds after publish
    - **URL:** `https://painter1.vercel.app/api/revalidate` (after launch, the production domain, e.g. `https://www.painter1.com/api/revalidate`)
    - **Dataset:** `production`
    - **Trigger on:** Create, Update, Delete
-   - **Filter:** `_type in ["location", "service", "warrantyTerms", "privacyPolicy", "estimateSurvey"]`
+   - **Filter:** `_type in ["location", "service", "warrantyTerms", "privacyPolicy", "estimateSurvey", "brandPhotos"]` (a webhook made before Brand photos existed needs `"brandPhotos"` added; until then a Brand photos change shows within the hour)
    - **Projection:** `{_type, "slug": slug.current, "previousSlug": before().slug.current}`
    - **Status:** enabled · **HTTP method:** POST · **API version:** the newest offered
    - **Drafts** and **Versions:** leave unticked (only published changes)

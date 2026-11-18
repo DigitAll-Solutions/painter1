@@ -1,6 +1,7 @@
 import type { Location } from '@/sanity/lib/types'
 
 import { withAttribution } from './booking-params.ts'
+import { hasWorkPhotos } from './gallery.ts'
 import { cityOrPlace } from './place.ts'
 
 export type NavLink = { label: string; href: string }
@@ -76,7 +77,7 @@ export const servicePages = [
   { key: 'cabinet', path: 'cabinet-painting' },
 ] as const
 
-export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | 'services'>): NavLink[] {
+export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | 'services' | 'galleryImages'>): NavLink[] {
   const base = `/${location.slug}`
   // Basic tier (client's list): home and free estimate only
   if (location.locationType === 'maintenance') {
@@ -91,14 +92,14 @@ export function getNavLinks(location: Pick<Location, 'slug' | 'locationType' | '
       label: location.services?.[key]?.title ?? key,
       href: `${base}/${path}`,
     })),
-    { label: 'Our Work', href: `${base}/our-work` },
+    ...(hasWorkPhotos(location) ? [{ label: 'Our Work', href: `${base}/our-work` }] : []),
     { label: 'Warranty', href: `${base}/warranty` },
     { label: 'About Us', href: `${base}/about-us` },
   ]
 }
 
 /** Footer "Our Services" column: service pages, Our Work, Warranty and About for full tier; Free Estimate for all */
-export function footerLinks(location: Pick<Location, 'slug' | 'locationType' | 'services'>): NavLink[] {
+export function footerLinks(location: Pick<Location, 'slug' | 'locationType' | 'services' | 'galleryImages'>): NavLink[] {
   const base = `/${location.slug}`
   const full = location.locationType !== 'maintenance'
   const services = full
@@ -111,7 +112,7 @@ export function footerLinks(location: Pick<Location, 'slug' | 'locationType' | '
     ...services,
     ...(full
       ? [
-          { label: 'Our Work', href: `${base}/our-work` },
+          ...(hasWorkPhotos(location) ? [{ label: 'Our Work', href: `${base}/our-work` }] : []),
           ...(hasWarrantyPage(location) ? [{ label: 'Warranty', href: `${base}/warranty` }] : []),
           ...(hasAboutPage(location) ? [{ label: 'About Us', href: `${base}/about-us` }] : []),
         ]

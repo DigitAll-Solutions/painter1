@@ -46,7 +46,7 @@ export default function OwnerSection({ location }: { location: Location }) {
         </div>
 
         {/* Owner card */}
-        <div className="mt-12 grid overflow-hidden rounded-3xl bg-white shadow-[0_20px_50px_-20px_rgb(11_27_51/0.25)] md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className={`mt-12 grid overflow-hidden rounded-3xl bg-white shadow-[0_20px_50px_-20px_rgb(11_27_51/0.25)] ${photo ? 'md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]' : ''}`}>
           {photo && (
             <div className="relative min-h-80 md:min-h-full">
               <SanityImage image={photo} fill sizes="(min-width: 768px) 480px, 100vw" className="object-cover" />
