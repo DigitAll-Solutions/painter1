@@ -22,7 +22,7 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. This document compare
 - **Redirects** for Knoxville's old WordPress URLs are in code (`lib/legacy-redirects.ts`, list in `docs/studio-plan.md` §7). Google Ads final URLs updated to `/knoxville/free-estimate`.
 - **Sanity:**
   - add `https://www.painter1.com` to CORS origins with credentials, and register the Studio host
-  - point the publish webhook at `https://www.painter1.com/api/revalidate`
+  - no webhook change: the publish webhook stays on `painter1.vercel.app`, the same Production deployment (step 13)
 - **Vercel:**
   - set `NEXT_PUBLIC_SITE_URL=https://www.painter1.com`
   - confirm the team is on a plan that allows commercial use (Pro; Hobby is non-commercial only), and its bandwidth and request allowance
@@ -179,7 +179,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
     - `/robots.txt` (allows crawling, lists the sitemap), `/sitemap.xml` (only live locations, `www.painter1.com` URLs), and `curl -sI https://www.painter1.com/knoxville` has **no** `X-Robots-Tag`, while `curl -sI https://painter1.vercel.app/knoxville` still has `noindex, nofollow`
 11. **Cloudways' Cloudflare off** (Rick approved): once the checks in step 10 pass and DNS points to Vercel, I turn off Cloudways' Cloudflare add-on (Rick sends the login code) for **`www.painter1.com`** and **`painter1.com`** only. Vercel now serves both hostnames, so Cloudflare no longer sees their traffic. Don't change anything else in the add-on.
 12. **GTM, Knoxville's container only (GTM-PVDK2ZFJ):** once the Client Tether test lead has arrived, I pause the old **"Click to Call"** and **"Schedule Page btn"** tags and publishes. They now count the same clicks as `phone_click` and `booking_click` (`docs/analytics.md`, step 5). **Never** pause them in the corp container **GTM-5LG3XH7S**, or in any other location's container: the 36 WordPress locations still use them.
-13. Point the Sanity webhook at `https://www.painter1.com/api/revalidate`, publish a small change, and see it live.
+13. No Sanity webhook change: the production webhook stays on `https://painter1.vercel.app/api/revalidate`. It is the same Production deployment, and tag-based revalidation (`revalidateTag`, which `/api/revalidate` uses) "applies to every domain and deployment in the same project and environment" ([Vercel: ISR, on-demand revalidation limits](https://vercel.com/docs/incremental-static-regeneration)).
 14. **Country block** (`docs/country-block.md`, "On launch day"): switch the country rule ("US only") from **Log** to **Deny** in Vercel → Firewall, then ask Rick to turn off Really Simple Security's country block. In that order, so there's never a moment with no block.
 15. Watch for 2 hours: Vercel → Logs and Observability (External Origins: WordPress error rates), Vercel → Firewall (the "US only" rule), and WordPress's own error log.
 
@@ -207,7 +207,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 2. At GoDaddy (Rick, guided in chat): `@` A back to `161.35.184.151`; delete the `www` CNAME, then add A `www` → `161.35.184.151`, TTL 600.
 3. Tell Rick. Visitors move back within 10–30 minutes (TTL 600 s); some resolvers take longer.
 4. WordPress serves everything again, including its old Knoxville pages.
-5. Point the Sanity webhook back at `painter1.vercel.app`.
+5. Nothing to do for the Sanity webhook (it never moved, step 13).
 6. If step 14 already ran, ask Rick to turn Really Simple Security's country block back on: WordPress serves visitors directly again.
 7. If step 12 already ran, unpause "Click to Call" and "Schedule Page btn" in GTM-PVDK2ZFJ and publish: Knoxville is on WordPress again.
 8. **Only if the launch PR itself is reverted on main** (a DNS-only rollback doesn't need this): set Production `NEXT_PUBLIC_GTM_ID` back to **`GTM-PVDK2ZFJ`** before merging the revert, so the revert's deploy builds with it. Main's old code loads that variable on every location page, and Knoxville's pages need their own container.

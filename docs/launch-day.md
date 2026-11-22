@@ -91,10 +91,11 @@ Have open: "DNS: the final plan" (both values and the rollback), Vercel → Doma
 | 10:50 | 21:20 | me; after: Rick | **L6 Leads live:** remove `LEAD_TEST_RECIPIENT`, set `LEAD_SEND_LIVE=true`, redeploy Production. Delete the test lead in Studio; Rick or Keith delete it in Client Tether. Remind Keith's team: never "Unsubscribe" or "Report spam" on lead emails. | The new deployment is Ready and serves `www.painter1.com`. No test email to real recipients: the first real request shows email "sent" in Studio. **After:** Rick asks Keith to confirm the first real lead reached him (his email and Client Tether), and tells me. | Set `LEAD_TEST_RECIPIENT` back, unset `LEAD_SEND_LIVE`, redeploy. Requests are still saved; Keith works them from Studio. |
 | 11:00 | 21:30 | me (Rick sends the Cloudways login code) | **L7 Cloudflare off:** Cloudways → Cloudflare add-on: turn it off for `www.painter1.com` and `painter1.com` only. | `www.painter1.com/` and `/knoxville` still 200 with `x-vercel-id`. Nothing else changed in the add-on. | I turn it back on for both. **Before any DNS rollback after this point, this goes first.** |
 | 11:10 | 21:40 | me | **L8 GTM:** in **GTM-PVDK2ZFJ only**, pause "Click to Call" and "Schedule Page btn", then Publish. Never in GTM-5LG3XH7S or another location's container. | Tag Assistant on `www.painter1.com/knoxville` (me): a call click fires "GA4 - phone_click" once and not "Click to Call". | I unpause both and publish. |
-| 11:20 | 21:50 | me | **L9 Sanity webhook** → `https://www.painter1.com/api/revalidate`. Publish a small harmless change, then revert it. | The change shows on www within a minute; the webhook's attempts log shows 200. | Point it back at `painter1.vercel.app`. |
 | 11:30 | 22:00 | me, then Rick | **L10 Country block** (`docs/country-block.md`, "On launch day"): check the `p1_dev` cookie is in my browser; rule 3 **Log → Deny**, Review Changes → Publish. **Then** Rick turns off Really Simple Security's country block. | From India without the cookie: 403; with it: 200. Rick, from the US: a WordPress location page and `/knoxville` 200. | In reverse: Rick turns the RSS country block back on, then rule 3 back to Log. |
 | 11:40–13:40 | 22:10–00:10 | me | **L11 Watch 2 h:** Vercel → Logs and Observability (External Origins: WordPress errors), Firewall (rule 3 denies), WordPress error log, Studio (new leads "sent"). | No rollback trigger. | Full rollback (below). |
 | 13:40 | 00:10 (Nov 25) | me + Rick | **Done:** freeze lifted. Next: the "After" steps in `docs/go-live-plan.md` (16–20). | Rick told. | – |
+
+There is no L9. No Sanity webhook change: the production webhook stays on `https://painter1.vercel.app/api/revalidate`. It is the same Production deployment, and tag-based revalidation (`revalidateTag`, which `/api/revalidate` uses) "applies to every domain and deployment in the same project and environment" ([Vercel: ISR, on-demand revalidation limits](https://vercel.com/docs/incremental-static-regeneration)).
 
 ## Rollback
 
@@ -104,7 +105,6 @@ Have open: "DNS: the final plan" (both values and the rollback), Vercel → Doma
 1. L7 done → I turn Cloudflare back on for `www` and `@` **first** (Rick sends the Cloudways login code).
 2. Rick, guided in chat: `@` A back to `161.35.184.151`; delete the `www` CNAME, then add A `www` → `161.35.184.151`, TTL 600.
 3. L10 done → Rick turns the RSS country block back on (rule 3 can stay; it no longer sees www traffic).
-4. L8 done → I unpause the two GTM tags in GTM-PVDK2ZFJ and publishes.
-5. L9 done → webhook back to `painter1.vercel.app`.
-6. Leads: requests on `painter1.vercel.app` stay live (L6); WordPress's own forms take Knoxville again.
-7. Don't revert #44 on main for a DNS rollback. If it is reverted, set `NEXT_PUBLIC_GTM_ID` back to `GTM-PVDK2ZFJ` first (`docs/go-live-plan.md`, rollback step 8).
+4. L8 done → I unpause the two GTM tags in GTM-PVDK2ZFJ and publish.
+5. Leads: requests on `painter1.vercel.app` stay live (L6); WordPress's own forms take Knoxville again.
+6. Don't revert #44 on main for a DNS rollback. If it is reverted, set `NEXT_PUBLIC_GTM_ID` back to `GTM-PVDK2ZFJ` first (`docs/go-live-plan.md`, rollback step 8).
