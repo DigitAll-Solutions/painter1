@@ -42,15 +42,16 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. This document compare
 **DNS at GoDaddy:**
 - **New:** `wp` A → the WordPress server's IP.
 - **Changed:**
-  - `www` → the CNAME Vercel shows for the domain (typically `cname.vercel-dns.com`)
-  - `@` → the A record Vercel shows (typically `76.76.21.21`); Vercel then redirects `painter1.com` → `www.painter1.com`
+  - `www`: A `161.35.184.151` → CNAME `d2065241ab038245.vercel-dns-016.com`. GoDaddy can't change a record's type: delete the A record, then add the CNAME.
+  - `@`: A `161.35.184.151` → A `216.150.1.1`; Vercel then redirects `painter1.com` → `www.painter1.com` (308).
+  - Final values and the exact rollback (checked Nov 22): `docs/launch-day.md`, "DNS: the final plan".
 - **Everything else unchanged.** No nameserver change.
 
 **How things behave:**
 
 | | Behaviour |
 |---|---|
-| **SSL** | Vercel's certificates for `www` and the apex are **pre-generated** before the switch with a TXT `_acme-challenge` record ([Vercel: pre-generate SSL certs](https://vercel.com/docs/domains/pre-generating-ssl-certs)), so there is no certificate gap. The host keeps its own certificate for `wp.painter1.com`. |
+| **SSL** | Vercel verified both domains without a TXT record and nothing is pre-generated: it issues the certificates for `www` and the apex right after the switch (Let's Encrypt; the CAA record allows `letsencrypt.org`), so expect a minute or two of certificate errors. The host keeps its own certificate for `wp.painter1.com`. |
 | **WP admin** | `www.painter1.com/wp-admin` works through the proxy. Cookies stay on `www`, because the browser only ever sees `www`. Test a typical media upload in the rehearsal: very large uploads through a proxy are the most likely thing to fail. |
 | **Forms on the other 43 locations** | Fluent Forms posts to `/wp-admin/admin-ajax.php` or the REST API. Both are proxied, and their notification emails still go out from WordPress. Test one form in the rehearsal. |
 | **Sitemap, robots** | Next.js owns `/robots.txt` and `/sitemap.xml` (they are served before any rewrite). The launch PR makes our robots.txt list **both** our sitemap and WordPress's (Xagio SEO's `/sitemap-xag.xml`, from the live site's `Link: rel="sitemap"` header), and keep WordPress's own disallow rules. |
@@ -58,7 +59,7 @@ For Rick, his WordPress host and us. Written Oct 19, 2026. This document compare
 | **Studio CORS** | The Studio is served by Next.js at `www.painter1.com/studio`: add that origin (see above). Nothing else changes. |
 | **Our app** | Same host as today, so server actions (the estimate form), the visitor IP used for rate limiting and consent, and the webhook all work unchanged. |
 
-**Rollback:** at GoDaddy, put the old `www` and `@` records back (save them before the switch). With TTL lowered to 300 s beforehand, most visitors are back on WordPress within 5–30 minutes. WordPress still has its Knoxville pages. The `wp` record can stay.
+**Rollback:** at GoDaddy, `@` A back to `161.35.184.151`; delete the `www` CNAME, then add A `www` → `161.35.184.151`, TTL 600. With TTL 600 s, most visitors are back on WordPress within 10–30 minutes. WordPress still has its Knoxville pages. The `wp` record can stay.
 
 **Risk to the other 43 locations:** **medium.** All their traffic now passes through Vercel. The things that can go wrong are WordPress-behind-a-proxy issues: a redirect loop, IP-based lockouts, admin uploads, a plugin that checks the host. All of them are found in a **rehearsal on a test hostname** before touching `www`, and the fix for any surprise on the day is the DNS rollback.
 
@@ -153,13 +154,13 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
    - **After the merge deploy:** `painter1.vercel.app/knoxville` loads only GTM-PVDK2ZFJ, and `/bozeman` loads no GTM (`docs/analytics.md`). Location pages never load the corp container.
 
 **Two days before**
-5. At GoDaddy, **save the current DNS records** (screenshot and export), then lower the TTL of `www` and `@` to 600 s (by Nov 22 for Knoxville).
-6. In Vercel → Domains, add `www.painter1.com` and `painter1.com` and **pre-generate the certificates** (TXT `_acme-challenge` at GoDaddy). Verify with `curl --resolve www.painter1.com:443:76.76.21.21 https://www.painter1.com/knoxville` (use the IP Vercel shows).
+5. **Done:** current DNS records saved (`docs/launch-day.md`, "DNS: the final plan"); `www` and `@` were already at TTL 600 s, no change needed.
+6. **Done:** `www.painter1.com` (Production) and `painter1.com` (308 → www) added in Vercel → Domains; no TXT needed, certificates are issued at the switch. Check the new site before the switch: `curl.exe -k -sI --resolve www.painter1.com:443:216.150.1.1 https://www.painter1.com/knoxville` (200 with `x-vercel-id`).
 7. Sanity: CORS origin and Studio host for `https://www.painter1.com`. Vercel: `NEXT_PUBLIC_SITE_URL`, Turnstile keys.
 
 **Launch day (a quiet morning, US Eastern; not a Friday)**
-8. Freeze WordPress edits for the morning (no plugin updates). Rick turns **Varnish off** on Cloudways and purges it, and it stays off from now on: behind Vercel it would mix www and direct copies under one `wp.painter1.com` key (`docs/cloudways-wp-config.md`, step 5).
-9. GoDaddy: change `www` (CNAME) and `@` (A) to Vercel's values. Don't touch anything else.
+8. Freeze WordPress edits for the morning (no plugin updates). **Varnish stays off** on Cloudways (I check it with Rick's login code; if it is on, turn it off and purge), from now on: behind Vercel it would mix www and direct copies under one `wp.painter1.com` key (`docs/cloudways-wp-config.md`, step 5).
+9. GoDaddy (Rick, guided by me in chat, a screenshot after each step): `@` A → `216.150.1.1`; delete the `www` A record, then right away add CNAME `www` → `d2065241ab038245.vercel-dns-016.com`, TTL 600. Don't touch anything else.
 10. **Within 15 minutes, check over a phone network and a VPN:**
     - `www.painter1.com/knoxville` (new site)
     - `www.painter1.com/` and 3 other locations (WordPress)
@@ -176,8 +177,8 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
       4. **An empty `PARSER:` line is a launch blocker.** Don't continue, and roll back if needed.
       5. Rick or Keith confirm the lead in Client Tether shows the same source and channel.
     - `/robots.txt` (allows crawling, lists the sitemap), `/sitemap.xml` (only live locations, `www.painter1.com` URLs), and `curl -sI https://www.painter1.com/knoxville` has **no** `X-Robots-Tag`, while `curl -sI https://painter1.vercel.app/knoxville` still has `noindex, nofollow`
-11. **Cloudways' Cloudflare off** (Rick approved): once the checks in step 10 pass and DNS points to Vercel, Rick turns off Cloudways' Cloudflare add-on for **`www.painter1.com`** and **`painter1.com`** only. Vercel now serves both hostnames, so Cloudflare no longer sees their traffic. Don't change anything else in the add-on.
-12. **GTM, Knoxville's container only (GTM-PVDK2ZFJ):** once the Client Tether test lead has arrived, Rick pauses the old **"Click to Call"** and **"Schedule Page btn"** tags and publishes. They now count the same clicks as `phone_click` and `booking_click` (`docs/analytics.md`, step 5). **Never** pause them in the corp container **GTM-5LG3XH7S**, or in any other location's container: the 36 WordPress locations still use them.
+11. **Cloudways' Cloudflare off** (Rick approved): once the checks in step 10 pass and DNS points to Vercel, I turn off Cloudways' Cloudflare add-on (Rick sends the login code) for **`www.painter1.com`** and **`painter1.com`** only. Vercel now serves both hostnames, so Cloudflare no longer sees their traffic. Don't change anything else in the add-on.
+12. **GTM, Knoxville's container only (GTM-PVDK2ZFJ):** once the Client Tether test lead has arrived, I pause the old **"Click to Call"** and **"Schedule Page btn"** tags and publishes. They now count the same clicks as `phone_click` and `booking_click` (`docs/analytics.md`, step 5). **Never** pause them in the corp container **GTM-5LG3XH7S**, or in any other location's container: the 36 WordPress locations still use them.
 13. Point the Sanity webhook at `https://www.painter1.com/api/revalidate`, publish a small change, and see it live.
 14. **Country block** (`docs/country-block.md`, "On launch day"): switch the country rule ("US only") from **Log** to **Deny** in Vercel → Firewall, then ask Rick to turn off Really Simple Security's country block. In that order, so there's never a moment with no block.
 15. Watch for 2 hours: Vercel → Logs and Observability (External Origins: WordPress error rates), Vercel → Firewall (the "US only" rule), and WordPress's own error log.
@@ -202,13 +203,13 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 - certificate errors
 
 **Steps:**
-1. If step 11 already ran, Rick turns Cloudways' Cloudflare back on for `www.painter1.com` and `painter1.com` **first**, so the restored DNS records reach WordPress the way they did before.
-2. At GoDaddy, set `www` and `@` back to the saved values.
-3. Tell Rick. Visitors move back within 5–30 minutes (TTL 600 s); some resolvers take longer.
+1. If step 11 already ran, I turn Cloudways' Cloudflare back on for `www.painter1.com` and `painter1.com` **first**, so the restored DNS records reach WordPress the way they did before.
+2. At GoDaddy (Rick, guided in chat): `@` A back to `161.35.184.151`; delete the `www` CNAME, then add A `www` → `161.35.184.151`, TTL 600.
+3. Tell Rick. Visitors move back within 10–30 minutes (TTL 600 s); some resolvers take longer.
 4. WordPress serves everything again, including its old Knoxville pages.
 5. Point the Sanity webhook back at `painter1.vercel.app`.
 6. If step 14 already ran, ask Rick to turn Really Simple Security's country block back on: WordPress serves visitors directly again.
-7. If step 12 already ran, ask Rick to unpause "Click to Call" and "Schedule Page btn" in GTM-PVDK2ZFJ and publish: Knoxville is on WordPress again.
+7. If step 12 already ran, unpause "Click to Call" and "Schedule Page btn" in GTM-PVDK2ZFJ and publish: Knoxville is on WordPress again.
 8. **Only if the launch PR itself is reverted on main** (a DNS-only rollback doesn't need this): set Production `NEXT_PUBLIC_GTM_ID` back to **`GTM-PVDK2ZFJ`** before merging the revert, so the revert's deploy builds with it. Main's old code loads that variable on every location page, and Knoxville's pages need their own container.
 
 **Afterwards:** reproduce the problem on `staging.painter1.com`, fix it, and schedule a new launch day.
