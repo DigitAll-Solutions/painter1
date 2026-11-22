@@ -155,7 +155,7 @@ Its risk, WordPress behaving differently behind a proxy, is found in a rehearsal
 
 **Two days before**
 5. **Done:** current DNS records saved (`docs/launch-day.md`, "DNS: the final plan"); `www` and `@` were already at TTL 600 s, no change needed.
-6. **Done:** `www.painter1.com` (Production) and `painter1.com` (308 → www) added in Vercel → Domains; no TXT needed, certificates are issued at the switch. Check the new site before the switch: `curl.exe -k -sI --resolve www.painter1.com:443:216.150.1.1 https://www.painter1.com/knoxville` (200 with `x-vercel-id`).
+6. **Done:** `www.painter1.com` (Production) and `painter1.com` (308 → www) added in Vercel → Domains; no TXT needed, certificates are issued at the switch. Check the new site before the switch: `curl.exe -sI --resolve www.painter1.com:80:216.150.1.1 http://www.painter1.com/knoxville` (200 with `x-vercel-id`; plain HTTP, since there is no certificate before the switch).
 7. Sanity: CORS origin and Studio host for `https://www.painter1.com`. Vercel: `NEXT_PUBLIC_SITE_URL`, Turnstile keys.
 
 **Launch day (a quiet morning, US Eastern; not a Friday)**
