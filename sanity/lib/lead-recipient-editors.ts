@@ -5,6 +5,7 @@
 // (and deleting the document) by everyone else in the Studio.
 export const LEAD_RECIPIENT_EDITORS: readonly string[] = [
   'pQLEHelgs', // Sagar Bharvadiya
+  'pbEvnxS4U', // Rick Pierce
 ]
 
 export const canEditLeadRecipients = (user: { id?: string } | null | undefined) => Boolean(user?.id && LEAD_RECIPIENT_EDITORS.includes(user.id))

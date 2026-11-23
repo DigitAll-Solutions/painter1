@@ -12,6 +12,7 @@ import ServiceHero, { type Crumb } from '@/components/service/ServiceHero'
 import ServiceProcess from '@/components/service/ServiceProcess'
 import WhatWePaint from '@/components/service/WhatWePaint'
 import { localPhotos, pairImages, sliderAssets, transformationPairs } from '@/lib/gallery'
+import { recentWorkCards } from '@/lib/work-cards'
 import { paintSurfaces } from '@/lib/paint-surfaces'
 import { getCta, telHref } from '@/lib/location'
 import { serviceReviews } from '@/lib/reviews'
@@ -86,9 +87,11 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
   // "See The Transformation" pairs; Recent Work never repeats any of their photos or the surface photos
   const pairs = transformationPairs(detail)
   const inSlider = sliderAssets(...pairImages(pairs), ...surfaces.map((surface) => surface.image))
-  const gallery = localPhotos(location)
-    .filter((image) => image.services?.includes(service._id) && !inSlider.has(image.asset._id))
-    .slice(0, MAX_GALLERY)
+  // Before/after pairs show as one slider card; MAX_GALLERY counts cards, MIN_GALLERY photos
+  const gallery = recentWorkCards(
+    localPhotos(location).filter((image) => image.services?.includes(service._id) && !inSlider.has(image.asset._id)),
+    MAX_GALLERY,
+  )
 
   // Hero photo: this location's for this service → the service default → the location's homepage hero
   const heroImage = detail?.heroImage ?? service.heroImage ?? location.heroImage
@@ -143,8 +146,8 @@ export default async function ServicePage({ params }: PageProps<'/[location]/[se
       {/* Cards, then one H3 section per surface (#siding, #stucco…); photos are this location's own */}
       <WhatWePaint service={service} location={location} surfaces={surfaces} />
 
-      {gallery.length >= MIN_GALLERY && (
-        <RecentWork images={gallery} title={`${service.shortName} Projects in ${city}`} label={`${service.shortName} projects in ${city}`} />
+      {gallery.photos >= MIN_GALLERY && (
+        <RecentWork cards={gallery.cards} title={`${service.shortName} Projects in ${city}`} label={`${service.shortName} projects in ${city}`} />
       )}
 
       <ServiceReviews reviews={reviews} title={reviewsTitle} />

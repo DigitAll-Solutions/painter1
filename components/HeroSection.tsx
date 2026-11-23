@@ -51,7 +51,7 @@ export default function HeroSection({ location, headline, subheadline, image, ho
         <p className="text-sm font-bold uppercase tracking-[0.2em] text-orange-300">{location.name}</p>
         <h1
           className={`mt-4 font-extrabold tracking-tight text-balance uppercase [text-shadow:0_2px_24px_rgb(0_0_0/0.35)] ${
-            home ? 'text-3xl leading-[1.08] sm:text-5xl lg:text-6xl xl:text-7xl' : 'text-4xl sm:text-5xl lg:text-6xl'
+            home ? 'text-3xl leading-[1.08] [word-spacing:0.12em] sm:text-5xl lg:text-6xl xl:text-7xl' : 'text-4xl sm:text-5xl lg:text-6xl'
           }`}
         >
           {title}
