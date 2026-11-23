@@ -11,6 +11,7 @@ import Header from '@/components/Header'
 import HideOnPath from '@/components/HideOnPath'
 import MobileCtaBar from '@/components/MobileCtaBar'
 import RingbotWidget from '@/components/RingbotWidget'
+import { locationGtmId } from '@/lib/gtm'
 import { isLiveLocation } from '@/lib/indexing'
 import { ringbotId } from '@/lib/ringbot'
 import { getLocation, getLocationSlugs } from '@/sanity/lib/fetch'
@@ -39,6 +40,8 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
   // Every page's hero / LCP image comes from the Sanity image CDN: open that connection with the HTML
   preconnect('https://cdn.sanity.io')
   const webchat = ringbotId(location.webchatId)
+  // Only this location's own container; none if it has none (never the corp NEXT_PUBLIC_GTM_ID)
+  const gtm = locationGtmId(location.gtmId)
 
   return (
     <>
@@ -58,7 +61,8 @@ export default async function LocationLayout({ children, params }: LayoutProps<'
       <AttributionCapture />
       {/* phone_click, booking_click, estimate_cta_click for GTM (docs/analytics.md) */}
       <AnalyticsClicks slug={location.slug} />
-      <GoogleTagManager />
+      {/* This location's own GTM container, else the site-wide one: never both */}
+      {gtm && <GoogleTagManager id={gtm} />}
     </>
   )
 }

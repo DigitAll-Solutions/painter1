@@ -4,9 +4,20 @@ The new site sends these events to the GTM dataLayer. They do nothing until GTM 
 for them. This page lists each event, then the exact GTM items to add. Nothing has been changed or
 published in GTM.
 
-The container the site loads is set by `NEXT_PUBLIC_GTM_ID` (today GTM-PVDK2ZFJ, Knoxville's container with
-GA4 G-LYVZ6Q3NQW). Which container the location pages should use is still an open question. The steps
-below work in whichever container that is.
+Every page loads **at most one** container (Rick, Nov 9; `lib/gtm.ts`, tested in `lib/gtm.test.ts`):
+
+| Page | Container |
+| --- | --- |
+| Location pages (`/<location>/…`) | That location's own (Studio → location → "GTM container ID"; Knoxville: GTM-PVDK2ZFJ, with GA4 G-LYVZ6Q3NQW). **None** if it has no container: no fallback. |
+| Corp pages (anything not under a location) | `NEXT_PUBLIC_GTM_ID`, the corp container **GTM-5LG3XH7S** (Production and Preview). Today Next.js serves no corp page: `/` goes to WordPress (or to /knoxville on other hosts), and `/studio` loads no GTM. |
+| WordPress pages proxied by this site | Their own tags, unchanged |
+
+**Bozeman and Marietta have no tracking** until Rick gives them a container (Nov 9). Their pages load no
+GTM, so they send no GA4 page views, no events, no Ads conversions, and Attributer doesn't fill the
+survey's channel fields. Once Rick has a container ID for one of them, paste it into Studio (location →
+Leads & consent → "GTM container ID") and publish. No code change is needed.
+
+The steps below go in each location's own container.
 
 ## Events
 
@@ -17,7 +28,7 @@ No event carries a name, email, phone number or address.
 | --- | --- | --- |
 | `generate_lead` | The estimate request was saved. Not sent for validation errors, the spam trap (honeypot), a failed spam check or a failed save. | `service_type` (e.g. "Interior Painting"; empty for "Not sure"), `lead_id` (16-character hash of the lead's internal id; unique per lead, not personal data) |
 | `phone_click` | Any click on a call link (`tel:`), anywhere on the site, including the success screen. | `link_url` (the `tel:` link: the location's own number), `link_text` |
-| `booking_click` | Any click on a link to schedule.painter1.com ("Pick a time now", booking buttons). | `link_url`, `link_text` |
+| `booking_click` | Any click on a link to schedule.painter1.com ("Pick a time now", booking buttons). Booking is off for launch, pending Painter1 corp's decision after Jan 15: no page links there, so it doesn't fire until booking is turned on (`docs/go-live-plan.md`). Keep the tag and trigger. | `link_url`, `link_text` |
 | `estimate_cta_click` | Any click on a link to a free-estimate page (`/<location>/free-estimate`). | `link_url`, `link_text` |
 | `estimate_step_view` | Each survey step shown (unchanged). | `step` (0–6), `step_key` |
 
@@ -131,7 +142,7 @@ Rules:
 1. Preview (Tag Assistant) on the staging site.
 2. Submit a test request: check that **GA4 - generate_lead** and the Ads conversion fire **once**, with the
    service and lead_id filled in.
-3. Click a call button, a booking button and a "Free estimate" button: each fires its tag once.
+3. Click a call button and a "Free estimate" button: each fires its tag once. (No booking button while booking is off; test `booking_click` when it is turned on.)
 4. Open two or three pages: one page_view per page.
 5. Then Submit → Publish.
 
