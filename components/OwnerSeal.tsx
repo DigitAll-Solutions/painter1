@@ -3,7 +3,9 @@ import type { SanityImage as SanityImageType } from '@/sanity/lib/types'
 
 type Props = { photo: SanityImageType; ownerName: string; businessName: string }
 
-// Round badge: owner photo inside a ring of text, in the spirit of a brand seal.
+// Round badge: owner photo inside a ring of text, in the spirit of a brand seal. The text's baseline
+// is a circle of radius 64 in the 160 viewBox (the letters sit outside it), so the photo (70%, radius
+// 56) leaves an 8-unit gap inside the text.
 export default function OwnerSeal({ photo, ownerName, businessName }: Props) {
   const ring = `${ownerName} · Owner · ${businessName} · `.toUpperCase()
 
@@ -23,11 +25,11 @@ export default function OwnerSeal({ photo, ownerName, businessName }: Props) {
         image={photo}
         alt={`${ownerName}, owner of ${businessName}`}
         aspect={1}
-        width={96}
-        height={96}
-        sizes="96px"
+        width={112}
+        height={112}
+        sizes="112px"
         loading="eager"
-        className="absolute inset-[22%] size-[56%] rounded-full border-2 border-white object-cover"
+        className="absolute inset-[15%] size-[70%] rounded-full border-2 border-white object-cover"
       />
     </div>
   )

@@ -62,6 +62,15 @@ export function workCards(location: Pick<Location, 'galleryImages'>, serviceKeys
   return cards
 }
 
+/**
+ * Service page Recent Work: the given photos as cards, a before/after pair as one card (same rule as
+ * Our Work, only within these photos), at most `max` cards. `photos` counts the photos they show.
+ */
+export function recentWorkCards(photos: GalleryImage[], max: number) {
+  const cards = workCards({ galleryImages: photos }, {}).slice(0, max)
+  return { cards, photos: cards.reduce((count, card) => count + (card.before ? 2 : 1), 0) }
+}
+
 /** Chip list: All, then each filter with at least one card */
 export function workChips(location: Pick<Location, 'slug'>, cards: WorkCard[]) {
   const path = ourWorkPath(location)

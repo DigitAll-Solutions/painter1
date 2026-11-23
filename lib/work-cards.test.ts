@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import type { GalleryImage } from '../sanity/lib/types.ts'
-import { activeFilter, workCards, workChips } from './work-cards.ts'
+import { activeFilter, recentWorkCards, workCards, workChips } from './work-cards.ts'
 
 const SERVICE_KEYS = { 'service-interior-painting': 'interior', 'service-exterior-painting': 'exterior', 'service-cabinet-refinishing': 'cabinet' }
 
@@ -60,4 +60,17 @@ test('chips: All first, then only filters with cards; activeFilter falls back to
   assert.equal(activeFilter('interior', cards), 'interior')
   assert.equal(activeFilter('cabinet', cards), null) // no cabinet cards
   assert.equal(activeFilter('nonsense', cards), null)
+})
+
+test('Recent Work: pairs within the given photos become one card, capped at max, photos counted', () => {
+  const before = photo({ projectId: 'deck', role: 'before' })
+  const after = photo({ projectId: 'deck', role: 'after' })
+  const lone = photo({ projectId: 'porch', role: 'before' }) // its after isn't in the list
+  const singles = [photo(), photo(), photo()]
+  const { cards, photos } = recentWorkCards([before, lone, after, ...singles], 4)
+  assert.deepEqual(cards.map((c) => c.key), ['project-deck', lone._key, singles[0]._key, singles[1]._key])
+  assert.equal(cards[0].before, before)
+  assert.equal(cards[0].image, after)
+  assert.equal(cards[1].before, undefined)
+  assert.equal(photos, 5)
 })
