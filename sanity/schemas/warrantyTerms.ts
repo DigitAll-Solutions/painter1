@@ -95,7 +95,7 @@ export const warrantyTerms = defineType({
       type: 'string',
       group: 'request',
       description:
-        'One line under the heading. {ownerTeam} becomes "Keith’s team" (the owner’s first name), or "our team" when the location has no owner name. Empty: "Reach out to {ownerTeam} by phone, text or email and we’ll help." The Call, Text and Email buttons come from the location’s phone and email.',
+        'One line under the heading. {ownerTeam} becomes "Keith’s team" (the owner’s first name), or "our team" when the location has no owner name. Empty: "Reach out to {ownerTeam} by email or phone and we’ll help." The Email and Call buttons come from the location’s email and phone.',
     }),
     defineField({name: 'disclaimer', type: 'string', group: 'request', description: `Small print at the bottom of the page. ${TOKENS}`}),
     defineField({

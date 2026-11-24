@@ -1,6 +1,6 @@
 # Email setup: Brevo
 
-For Rick. The website sends one kind of email through Brevo: estimate requests, to each location's lead recipients (including Client Tether), as plain text, through Brevo's **SMTP relay** (not its API: see section 6). (The warranty request form was removed on Oct 14; the warranty page now offers Call, Text and Email instead.) Nothing reaches real recipients until launch: see "Safety switches" below.
+For Rick. The website sends one kind of email through Brevo: estimate requests, to each location's lead recipients (including Client Tether), as plain text, through Brevo's **SMTP relay** (not its API: see section 6). (The warranty request form was removed on Oct 14; the warranty page now offers Email and Call instead.) Nothing reaches real recipients until launch: see "Safety switches" below.
 
 ## 1. Brevo account
 
