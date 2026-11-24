@@ -1,5 +1,5 @@
-// The warranty page's contact block (it replaced the repair request form, Oct 14). Every location's
-// main business line accepts texts (Rick, Oct 14), so Call and Text both use the main phone.
+// The warranty page's contact block (it replaced the repair request form, Oct 14). Warranty claims go by
+// email (Rick, Nov 24), so Email comes first, then Call on the main phone; there is no Text link.
 // Tested in warranty-contact.test.ts.
 import type { Location, WarrantyTerms } from '@/sanity/lib/types'
 
@@ -7,7 +7,7 @@ import { cityStateOrPlace } from './place.ts'
 
 export const CONTACT_ANCHOR = 'warranty-contact'
 const DEFAULT_HEADING = 'Questions About Your Warranty?'
-const DEFAULT_TEXT = 'Reach out to {ownerTeam} by phone, text or email and we’ll help.'
+const DEFAULT_TEXT = 'Reach out to {ownerTeam} by email or phone and we’ll help.'
 
 /** Meta description (≤ 160 characters): drops the repeated place, then the location name, when names are long */
 export function warrantyDescription(location: Pick<Location, 'name' | 'address' | 'marketName'>) {
@@ -21,7 +21,7 @@ export function warrantyDescription(location: Pick<Location, 'name' | 'address' 
   return options.find((o) => o.length <= 160) ?? options[options.length - 1].slice(0, 160)
 }
 
-export type ContactLink = { kind: 'call' | 'text' | 'email'; href: string; verb: string; value: string; label: string }
+export type ContactLink = { kind: 'call' | 'email'; href: string; verb: string; value: string; label: string }
 
 export function warrantyContact(location: Pick<Location, 'name' | 'phone' | 'email' | 'ownerName'>, terms: Pick<WarrantyTerms, 'contactHeading' | 'contactText'>) {
   const first = location.ownerName?.trim().split(/\s+/)[0]
@@ -31,8 +31,8 @@ export function warrantyContact(location: Pick<Location, 'name' | 'phone' | 'ema
   // Visible: "Call (865) 345-5800"; screen readers: "Call Painter1 of Knoxville at (865) 345-5800"
   const link = (kind: ContactLink['kind'], href: string, verb: string, value: string): ContactLink => ({ kind, href, verb, value, label: `${verb} ${location.name} at ${value}` })
   const links: ContactLink[] = [
-    ...(digits ? [link('call', `tel:${digits}`, 'Call', location.phone!.trim()), link('text', `sms:${digits}`, 'Text', location.phone!.trim())] : []),
     ...(email ? [link('email', `mailto:${email}`, 'Email', email)] : []),
+    ...(digits ? [link('call', `tel:${digits}`, 'Call', location.phone!.trim())] : []),
   ]
   return {
     heading: terms.contactHeading?.trim() || DEFAULT_HEADING,

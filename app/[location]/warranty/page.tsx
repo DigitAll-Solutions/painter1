@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { CalendarDays, ClipboardList, Download, Mail, MessageSquareText, PenLine, Phone, ShieldCheck, User, Wrench, type LucideIcon } from 'lucide-react'
+import { CalendarDays, ClipboardList, Download, Mail, PenLine, Phone, ShieldCheck, User, Wrench, type LucideIcon } from 'lucide-react'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
 import CTASection from '@/components/CTASection'
@@ -17,7 +17,7 @@ import { tokenValues } from '@/lib/tokens'
 import { CONTACT_ANCHOR, warrantyContact, warrantyDescription } from '@/lib/warranty-contact'
 import { getLocation, getWarrantyTerms } from '@/sanity/lib/fetch'
 
-const CONTACT_ICONS = { call: Phone, text: MessageSquareText, email: Mail }
+const CONTACT_ICONS = { call: Phone, email: Mail }
 const STAT_ICONS: Record<string, LucideIcon> = { calendar: CalendarDays, shield: ShieldCheck, wrench: Wrench, user: User }
 
 async function load(slug: string) {
