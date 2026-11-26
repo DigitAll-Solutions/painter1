@@ -63,7 +63,11 @@ export default function OwnerSection({ location }: { location: Location }) {
               {withTeam ? 'Owner' : 'Owner & Estimator'}, {location.name}
               {since && ` · Since ${since}`}
             </p>
-            <p className="mt-5 text-lg leading-relaxed text-slate-600">{body}</p>
+            {body.map((text, i) => (
+              <p key={i} className={`${i ? 'mt-4' : 'mt-5'} text-lg leading-relaxed text-slate-600`}>
+                {text}
+              </p>
+            ))}
             {location.ownerQuote && (
               <figure className="mt-6 rounded-2xl border-l-4 border-brand-orange bg-orange-50 p-5">
                 <blockquote className="text-lg font-medium text-ink">&ldquo;{location.ownerQuote}&rdquo;</blockquote>
