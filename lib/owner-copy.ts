@@ -19,18 +19,30 @@ export function ownerWords(pronoun: Location['ownerPronoun'], first: string): Wo
   }
 }
 
-type OwnerInfo = Pick<Location, 'name' | 'ownerPronoun' | 'ownerSinceYear' | 'ownerBackground' | 'ownerPersonalLine' | 'franchiseStructure'>
+type OwnerInfo = Pick<Location, 'ownerPronoun' | 'ownerBackground' | 'ownerPersonalLine' | 'franchiseStructure'>
 
-/** The paragraph on the owner card */
-export function ownerBody(location: OwnerInfo, first: string): string {
+/** Studio "Owner background" exactly as written, split into paragraphs at blank lines; [] when empty */
+export const backgroundParagraphs = (background?: string) =>
+  (background ?? '')
+    .split(/\r?\n\s*\r?\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+
+/**
+ * The paragraphs on the owner card: "Owner background" exactly as written (no template around it; Rick,
+ * Nov 26), then the sentences about how the owner works, which continue its last paragraph. Empty
+ * background: just those sentences.
+ */
+export function ownerBody(location: OwnerInfo, first: string): string[] {
   const p = ownerWords(location.ownerPronoun, first)
-  const since = location.ownerSinceYear
-  const opened = `${first} opened ${location.name}${since ? ` in ${since}` : ''}${location.ownerBackground ? ` after ${location.ownerBackground}` : ''}.`
-  return location.franchiseStructure === 'owner-with-team'
-    ? `${opened} ${p.Subj} or one of ${p.poss} project leads walks every estimate in person, and ${p.subj} personally ${p.reviews} every job before it closes.${
-        location.ownerPersonalLine ? ` ${location.ownerPersonalLine}` : ''
-      }`
-    : `${opened} ${p.Subj} ${p.does} every estimate ${p.self}, ${p.runs} every job ${p.self}, and ${p.is} the one who walks it with you at the end.`
+  const how =
+    location.franchiseStructure === 'owner-with-team'
+      ? `${p.Subj} or one of ${p.poss} project leads walks every estimate in person, and ${p.subj} personally ${p.reviews} every job before it closes.${
+          location.ownerPersonalLine ? ` ${location.ownerPersonalLine}` : ''
+        }`
+      : `${p.Subj} ${p.does} every estimate ${p.self}, ${p.runs} every job ${p.self}, and ${p.is} the one who walks it with you at the end.`
+  const story = backgroundParagraphs(location.ownerBackground)
+  return story.length ? [...story.slice(0, -1), `${story[story.length - 1]} ${how}`] : [how]
 }
 
 /** Step 3 of the owner-led process strip */

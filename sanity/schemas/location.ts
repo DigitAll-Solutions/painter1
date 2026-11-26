@@ -220,7 +220,7 @@ export const location = defineType({
       type: 'text',
       rows: 2,
       group: 'owner',
-      description: 'Completes "…opened Painter1 of [City] in [Year] after ___". E.g. "15 years running crews for a Knoxville remodeler".',
+      description: "Shown exactly as written. Write full sentences, e.g. 'Keith opened Painter1 of Knoxville in 2019 after 15 years in construction.'",
     }),
     defineField({name: 'ownerPersonalLine', type: 'text', rows: 2, group: 'owner', description: 'One personal line shown on the owner card for teams.'}),
     defineField({
