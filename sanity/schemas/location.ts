@@ -677,12 +677,12 @@ export const location = defineType({
     }),
 
     // ---------- Warranty ----------
-    {...imageWithAlt('warrantyImage', 'Homepage warranty: photo'), group: 'legal', description: 'Photo shown beside the warranty banner on the homepage. The warranty page has its own photo (below). Empty: the photo from Shared → Brand photos.'},
+    {...imageWithAlt('warrantyImage', 'Homepage warranty: photo'), group: 'legal', description: 'PHOTO for the homepage warranty banner, e.g. the owner shaking hands with a customer. Cropped to fill its panel (tall on desktop, wide on phones): use a landscape photo, at least 1600 × 1067 px (3:2), and set the hotspot on the faces. The warranty page has its own photo (below). Empty: the photo from Shared → Brand photos.'},
     {
       ...imageWithAlt('warrantyPageImage', 'Warranty page: photo'),
       group: 'legal',
       description:
-        'Photo at the top of this location’s warranty page, beside the 2-year shield. Use one of this location’s own jobs (e.g. the owner with a customer). Empty: the photo from Shared → Brand photos, or the shield alone.',
+        'PHOTO at the top of this location’s warranty page, beside the 2-year shield. Use one of this location’s own jobs (e.g. the owner with a customer). Cropped to 4:3: use a landscape photo, at least 1200 × 900 px, and set the hotspot on the faces. Empty: the photo from Shared → Brand photos, or the shield alone.',
     },
     defineField({
       name: 'warrantyEyebrow',
@@ -731,7 +731,8 @@ export const location = defineType({
     {
       ...imageWithAlt('warrantyGraphic', 'Homepage warranty: graphic'),
       group: 'legal',
-      description: 'Shown beside the warranty copy on the homepage. Empty: the graphic from Shared → Brand photos, or the default blue paint fan-deck illustration.',
+      description:
+        'Small GRAPHIC, not a photo: a badge, seal or illustration, best as a PNG or SVG with a transparent background, about 800 × 600 px. Shown whole (never cropped) in a box beside the warranty copy, up to 384 × 288 px. A photo goes in “Homepage warranty: photo” above. Empty: the graphic from Shared → Brand photos, or the default blue paint fan-deck illustration.',
     },
 
     // ---------- SEO ----------

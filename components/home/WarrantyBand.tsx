@@ -21,9 +21,23 @@ export default function WarrantyBand({ location }: { location: Location }) {
   const body = location.warrantyBody || DEFAULT_COPY.body
   const button = location.warrantyButtonLabel || DEFAULT_COPY.button
   const photo = location.warrantyImage
+  const graphic = location.warrantyGraphic
 
   // Background matches the fan-deck SVG so they blend; #047bc0 keeps white text at 4.57:1 (WCAG AA)
   const warrantyHref = getWarrantyHref(location)
+  const copy = (
+    <>
+      <p className="text-sm font-bold tracking-[0.2em] uppercase">{eyebrow}</p>
+      <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{heading}</h2>
+      <p className="mt-6 text-lg leading-relaxed">{body}</p>
+      {/* Basic-tier locations have no warranty page: no button */}
+      {warrantyHref && (
+        <CtaButton href={warrantyHref} size="md" className="mt-9 text-sm tracking-[0.15em] uppercase focus-visible:outline-white">
+          {button}
+        </CtaButton>
+      )}
+    </>
+  )
   return (
     <section className="relative flex flex-col overflow-hidden bg-[#047bc0] text-white lg:block">
       {/* Photo: on top with a curved bottom on mobile, a band with a curved top on tablet,
@@ -41,37 +55,40 @@ export default function WarrantyBand({ location }: { location: Location }) {
         </div>
       )}
 
-      <div className="relative isolate">
-        {/* Decorative fan-deck, pivoting from below the bottom-left corner and bleeding off the left edge.
-            Hidden on mobile, where it would run under the copy. */}
+      {graphic ? (
+        // An uploaded graphic (Studio "Homepage warranty: graphic", any size or shape): its own box, never under
+        // the copy. Stacked above the copy on phones; beside it from tablet up, left of the photo on desktop.
         <div
-          className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden aspect-2/1 w-[59vw] -translate-x-[10%] md:block lg:w-[42vw] xl:w-[61vw]"
-          aria-hidden
-        >
-          {location.warrantyGraphic ? (
-            <SanityImage image={location.warrantyGraphic} alt="" fill sizes="61vw" className="object-cover" />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element -- static SVG, nothing to optimize
-            <img src={DEFAULT_GRAPHIC} alt="" width={800} height={400} loading="lazy" decoding="async" className="absolute inset-0 size-full" />
-          )}
-        </div>
-
-        <div
-          className={`mx-auto w-full max-w-xl px-4 py-16 md:mr-0 md:ml-[32%] md:max-w-lg md:px-8 md:py-24 ${
-            photo ? 'lg:ml-[21%] lg:w-[42%] lg:max-w-none xl:ml-[30%] xl:w-[30%]' : 'lg:mx-auto lg:max-w-xl'
+          className={`relative mx-auto flex w-full max-w-xl flex-col items-center gap-10 px-4 py-16 md:max-w-none md:flex-row md:gap-12 md:px-8 md:py-24 ${
+            photo ? 'lg:ml-0 lg:w-[64%] xl:w-[58%]' : 'lg:max-w-5xl'
           }`}
         >
-          <p className="text-sm font-bold tracking-[0.2em] uppercase">{eyebrow}</p>
-          <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{heading}</h2>
-          <p className="mt-6 text-lg leading-relaxed">{body}</p>
-          {/* Basic-tier locations have no warranty page: no button */}
-          {warrantyHref && (
-            <CtaButton href={warrantyHref} size="md" className="mt-9 text-sm tracking-[0.15em] uppercase focus-visible:outline-white">
-              {button}
-            </CtaButton>
-          )}
+          <div className="relative h-56 w-full max-w-xs shrink-0 md:h-72 md:w-2/5 md:max-w-sm" aria-hidden>
+            <SanityImage image={graphic} alt="" fill sizes="(min-width: 768px) 384px, 320px" className="object-contain" />
+          </div>
+          <div className="w-full min-w-0 md:max-w-lg md:flex-1">{copy}</div>
         </div>
-      </div>
+      ) : (
+        <div className="relative isolate">
+          {/* Decorative fan-deck, pivoting from below the bottom-left corner and bleeding off the left edge.
+              Hidden on mobile, where it would run under the copy. */}
+          <div
+            className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden aspect-2/1 w-[59vw] -translate-x-[10%] md:block lg:w-[42vw] xl:w-[61vw]"
+            aria-hidden
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- static SVG, nothing to optimize */}
+            <img src={DEFAULT_GRAPHIC} alt="" width={800} height={400} loading="lazy" decoding="async" className="absolute inset-0 size-full" />
+          </div>
+
+          <div
+            className={`mx-auto w-full max-w-xl px-4 py-16 md:mr-0 md:ml-[32%] md:max-w-lg md:px-8 md:py-24 ${
+              photo ? 'lg:ml-[21%] lg:w-[42%] lg:max-w-none xl:ml-[30%] xl:w-[30%]' : 'lg:mx-auto lg:max-w-xl'
+            }`}
+          >
+            {copy}
+          </div>
+        </div>
+      )}
     </section>
   )
 }

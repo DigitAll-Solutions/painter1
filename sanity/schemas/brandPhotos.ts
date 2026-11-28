@@ -24,9 +24,9 @@ export const brandPhotos = defineType({
   fieldsets: [{name: 'photos', title: 'Brand photos', description: BRAND_NOTE}],
   fields: [
     photo('heroImage', 'Homepage hero', 'Homepage hero background (and the share image) for a location with no hero of its own. Landscape, at least 1920px wide.'),
-    photo('warrantyImage', 'Homepage warranty: photo', 'Beside the warranty banner on the homepage, for a location with none of its own.'),
-    photo('warrantyGraphic', 'Homepage warranty: graphic', 'Beside the warranty copy on the homepage. Empty: the blue paint fan-deck illustration.'),
-    photo('warrantyPageImage', 'Warranty page: photo', 'Top of the warranty page, beside the 2-year shield, for a location with none of its own. Empty: the shield alone.'),
+    photo('warrantyImage', 'Homepage warranty: photo', 'PHOTO beside the warranty banner on the homepage, for a location with none of its own. Cropped to fill its panel: landscape, at least 1600 × 1067 px (3:2), hotspot on the faces.'),
+    photo('warrantyGraphic', 'Homepage warranty: graphic', 'Small GRAPHIC, not a photo: a badge, seal or illustration (PNG or SVG, transparent background, about 800 × 600 px), shown whole beside the warranty copy, up to 384 × 288 px. Photos go in “Homepage warranty: photo”. Empty: the blue paint fan-deck illustration.'),
+    photo('warrantyPageImage', 'Warranty page: photo', 'PHOTO at the top of the warranty page, beside the 2-year shield, for a location with none of its own. Cropped to 4:3: landscape, at least 1200 × 900 px. Empty: the shield alone.'),
   ],
   preview: {prepare: () => ({title: 'Brand photos', subtitle: BRAND_NOTE})},
 })
